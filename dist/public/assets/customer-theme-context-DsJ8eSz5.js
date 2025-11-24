@@ -1,1 +1,0 @@
-import{r as t}from"./index-DALcbLRd.js";const o=t.createContext(void 0);function s(){const e=t.useContext(o);if(e===void 0)throw new Error("useCustomerTheme must be used within a CustomerThemeProvider");return e}export{s as u};

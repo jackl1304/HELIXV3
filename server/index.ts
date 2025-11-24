@@ -127,7 +127,7 @@ setImmediate(() => {
 setImmediate(async () => {
   try {
     const { storage } = await import('./storage.js');
-    const allRegulatoryS ources = [
+    const allRegulatorySources = [
       // USA - FDA (Comprehensive)
       { id: 'fda_pma', name: 'FDA PMA Database', url: 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpma/pma.cfm', type: 'regulatory', status: 'active', region: 'US', country: 'US' },
       { id: 'fda_510k', name: 'FDA 510(k) Database', url: 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm', type: 'regulatory', status: 'active', region: 'US', country: 'US' },
@@ -293,7 +293,7 @@ setImmediate(async () => {
     ];
     
     let added = 0;
-    for (const source of allRegulatoryS ources) {
+    for (const source of allRegulatorySources) {
       try {
         await storage.createDataSource(source);
         added++;
@@ -301,7 +301,7 @@ setImmediate(async () => {
         // Ignore conflicts (already exists)
       }
     }
-    console.log(`✅ Verified ${allRegulatoryS ources.length} data sources (${added} newly added)`);
+    console.log(`✅ Verified ${allRegulatorySources.length} data sources (${added} newly added)`);
   } catch (error) {
     console.warn('⚠️ Could not verify data sources:', error);
   }

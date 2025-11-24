@@ -1,8 +1,17 @@
 {
   "name": "rest-express",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
-    "start": "node index.cjs"
+    "start": "node index.js"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.1",
+    "openai": "^6.9.1",
+    "winston": "^3.17.0",
+    "pg": "^8.13.1",
+    "@neondatabase/serverless": "^0.10.4",
+    "express-session": "^1.18.1",
+    "connect-pg-simple": "^9.0.1"
+  }
 }

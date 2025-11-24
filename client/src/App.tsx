@@ -41,6 +41,7 @@ const CustomerGlobalSources = withErrorHandling(() => import("@/pages/customer-g
 const CustomerHistoricalData = withErrorHandling(() => import("@/pages/customer-historical-data"));
 const SystemSettings = withErrorHandling(() => import("@/pages/system-settings"));
 const RegulatoryUpdates = withErrorHandling(() => import("@/pages/regulatory-updates"));
+const RegulatoryIntelligence = withErrorHandling(() => import("@/pages/regulatory-intelligence"));
 const DataCollection = withErrorHandling(() => import("@/pages/data-collection"));
 const NewsletterAdmin = withErrorHandling(() => import("@/pages/newsletter-admin"));
 const EmailManagement = withErrorHandling(() => import("@/pages/email-management"));
@@ -170,6 +171,7 @@ function App() {
 
                   {/* Compliance & Regulation */}
                   <Route path="/regulatory-updates" component={RegulatoryUpdates} />
+                  <Route path="/regulatory-intelligence" component={RegulatoryIntelligence} />
                   <Route path="/rechtsprechung" component={RechtsprechungFixed} />
                   <Route path="/rechtsprechung-analyse" component={RechtsprechungAnalyse} />
 

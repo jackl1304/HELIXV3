@@ -1,9 +1,4 @@
-import { createRequire as __helix_createRequire } from 'module';
-import { fileURLToPath as __helix_fileURLToPath } from 'url';
-import { dirname as __helix_dirname } from 'path';
-const require = __helix_createRequire(import.meta.url);
-const __filename = __helix_fileURLToPath(import.meta.url);
-const __dirname = __helix_dirname(__filename);
+import { createRequire } from 'module'; const require = createRequire(import.meta.url);
 var __defProp = Object.defineProperty;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {

@@ -1,5 +1,5 @@
 {
-  "buildTime": "2025-11-24T09:54:48.887Z",
+  "buildTime": "2025-11-24T10:47:52.490Z",
   "buildType": "production-optimized",
   "bundledPackages": [
     "cors",
@@ -14,6 +14,19 @@
     "axios",
     "node-fetch"
   ],
-  "externalPackages": [],
+  "externalPackages": [
+    "nodemailer",
+    "@anthropic-ai/sdk",
+    "openai",
+    "@sendgrid/mail",
+    "winston",
+    "pg",
+    "@neondatabase/serverless",
+    "passport",
+    "passport-local",
+    "express-session",
+    "connect-pg-simple",
+    "memorystore"
+  ],
   "nodeVersion": "v24.11.0"
 }
