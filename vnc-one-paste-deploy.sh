@@ -75,19 +75,3 @@ echo "⚙️  Falls Server nicht läuft:"
 echo "  1. Prüfe .env Datei: cat /opt/helix/.env"
 echo "  2. Prüfe Logs: pm2 logs helix-app --lines 50"
 echo "  3. Manueller Start: cd /opt/helix && node dist/index.js"
-
-echo "📊 Status:"
-pm2 status
-
-echo "🏥 Testing health endpoint..."
-sleep 2
-curl http://localhost:5000/health
-
-echo ""
-echo "✅ Deployment abgeschlossen!"
-echo "🌐 Server erreichbar unter: http://152.53.191.99:5000/"
-echo ""
-echo "📝 Nächste Schritte:"
-echo "  - Prüfe: curl http://localhost:5000/health"
-echo "  - Logs: pm2 logs helix"
-echo "  - Restart: pm2 restart helix"
