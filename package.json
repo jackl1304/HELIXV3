@@ -14,6 +14,7 @@
     "test:sanitization": "tsx scripts/test-sanitization.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.1",
     "@google-cloud/vertexai": "^1.9.0",
     "@hookform/resolvers": "^5.2.2",
     "@neondatabase/serverless": "^0.10.4",
@@ -67,8 +68,10 @@
     "groq-sdk": "^0.36.0",
     "helmet": "^8.0.0",
     "input-otp": "^1.4.2",
+    "lightningcss": "^1.30.2",
     "lucide-react": "^0.554.0",
     "node-fetch": "^3.3.2",
+    "openai": "^6.9.1",
     "pg": "^8.13.1",
     "postgres": "^3.4.5",
     "react": "^19.2.0",

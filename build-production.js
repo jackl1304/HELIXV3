@@ -46,36 +46,13 @@ async function buildForProduction() {
       format: 'esm',
       outdir: 'dist',
       external: [
-        // Keep Node.js built-ins external
-        'fs',
-        'path',
-        'http',
-        'https',
-        'crypto',
-        'os',
-        'url',
-        'util',
-        'events',
-        'stream',
-        'buffer',
-        'querystring',
-        'child_process',
-        // Keep large/complex packages external but ensure they're in dependencies
-        'nodemailer',
-        '@anthropic-ai/sdk',
-        'openai',
-        '@sendgrid/mail',
-        'winston',
-        'pg',
-        '@neondatabase/serverless',
-        'passport',
-        'passport-local',
-        'express-session',
-        'connect-pg-simple',
-        'memorystore'
-        ,'lightningcss'
-        ,'@babel/preset-typescript'
-        ,'@babel/preset-typescript/package.json'
+        // Keep ONLY Node.js built-ins external - bundle everything else
+        'fs', 'path', 'http', 'https', 'crypto', 'os', 'url', 'util', 
+        'events', 'stream', 'buffer', 'querystring', 'child_process',
+        'dns', 'net', 'tls', 'zlib', 'assert', 'constants', 'module',
+        'worker_threads', 'perf_hooks', 'v8', 'vm', 'async_hooks',
+        // These have native dependencies and can't be bundled
+        'lightningcss', '@babel/preset-typescript', '@babel/preset-typescript/package.json'
       ],
       define: {
         'import.meta.url': 'import.meta.url'
@@ -117,21 +94,8 @@ async function buildForProduction() {
 
     const originalPkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
 
-    // Only include essential runtime dependencies
-    const prodDependencies = {
-      'nodemailer': originalPkg.dependencies.nodemailer,
-      '@anthropic-ai/sdk': originalPkg.dependencies['@anthropic-ai/sdk'],
-      'openai': originalPkg.dependencies.openai,
-      '@sendgrid/mail': originalPkg.dependencies['@sendgrid/mail'],
-      'winston': originalPkg.dependencies.winston,
-      'pg': originalPkg.dependencies.pg || '^8.11.3',
-      '@neondatabase/serverless': originalPkg.dependencies['@neondatabase/serverless'],
-      'passport': originalPkg.dependencies.passport,
-      'passport-local': originalPkg.dependencies['passport-local'],
-      'express-session': originalPkg.dependencies['express-session'],
-      'connect-pg-simple': originalPkg.dependencies['connect-pg-simple'],
-      'memorystore': originalPkg.dependencies.memorystore
-    };
+    // MINIMAL dependencies - everything else is bundled
+    const prodDependencies = {};
 
     const prodPackage = {
       name: originalPkg.name,

@@ -5,11 +5,5 @@
   "scripts": {
     "start": "node index.js"
   },
-  "dependencies": {
-    "winston": "^3.17.0",
-    "pg": "^8.13.1",
-    "@neondatabase/serverless": "^0.10.4",
-    "express-session": "^1.18.1",
-    "connect-pg-simple": "^9.0.1"
-  }
+  "dependencies": {}
 }
