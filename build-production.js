@@ -43,23 +43,49 @@ async function buildForProduction() {
       bundle: true,
       platform: 'node',
       target: 'node20',
-      format: 'cjs',
+      format: 'esm',
       outdir: 'dist',
-      outExtension: { '.js': '.cjs' },
       external: [
-        // Keep ONLY Node.js built-ins external - bundle everything else
-        'fs', 'path', 'http', 'https', 'crypto', 'os', 'url', 'util', 
-        'events', 'stream', 'buffer', 'querystring', 'child_process',
-        'dns', 'net', 'tls', 'zlib', 'assert', 'constants', 'module',
-        'worker_threads', 'perf_hooks', 'v8', 'vm', 'async_hooks',
-        // These have native dependencies and can't be bundled
-        'lightningcss', '@babel/preset-typescript', '@babel/preset-typescript/package.json'
+        // Keep Node.js built-ins external
+        'fs',
+        'path',
+        'http',
+        'https',
+        'crypto',
+        'os',
+        'url',
+        'util',
+        'events',
+        'stream',
+        'buffer',
+        'querystring',
+        'child_process',
+        // Keep large/complex packages external but ensure they're in dependencies
+        'nodemailer',
+        '@anthropic-ai/sdk',
+        'openai',
+        '@sendgrid/mail',
+        'winston',
+        'pg',
+        '@neondatabase/serverless',
+        'passport',
+        'passport-local',
+        'express-session',
+        'connect-pg-simple',
+        'memorystore'
+        ,'lightningcss'
+        ,'@babel/preset-typescript'
+        ,'@babel/preset-typescript/package.json'
       ],
       define: {
         'import.meta.url': 'import.meta.url'
       },
       banner: {
-        js: ''
+        js: `
+// Production build banner
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+        `.trim()
       }
     });
 
@@ -87,14 +113,7 @@ async function buildForProduction() {
         'nodemailer','@anthropic-ai/sdk','openai','@sendgrid/mail','winston','pg','@neondatabase/serverless','passport','passport-local','express-session','connect-pg-simple','memorystore'
         ,'lightningcss','@babel/preset-typescript','@babel/preset-typescript/package.json'
       ],
-      banner: {
-        js: `import { createRequire as __helix_createRequire } from 'module';
-import { fileURLToPath as __helix_fileURLToPath } from 'url';
-import { dirname as __helix_dirname } from 'path';
-const require = __helix_createRequire(import.meta.url);
-const __filename = __helix_fileURLToPath(import.meta.url);
-const __dirname = __helix_dirname(__filename);`
-      }
+      banner: { js: `import { createRequire } from 'module'; const require = createRequire(import.meta.url);` }
     });
 
     // 3. Create a minimal package.json for production
@@ -102,14 +121,28 @@ const __dirname = __helix_dirname(__filename);`
 
     const originalPkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
 
-    // MINIMAL dependencies - everything else is bundled
-    const prodDependencies = {};
+    // Only include essential runtime dependencies
+    const prodDependencies = {
+      'nodemailer': originalPkg.dependencies.nodemailer,
+      '@anthropic-ai/sdk': originalPkg.dependencies['@anthropic-ai/sdk'],
+      'openai': originalPkg.dependencies.openai,
+      '@sendgrid/mail': originalPkg.dependencies['@sendgrid/mail'],
+      'winston': originalPkg.dependencies.winston,
+      'pg': originalPkg.dependencies.pg || '^8.11.3',
+      '@neondatabase/serverless': originalPkg.dependencies['@neondatabase/serverless'],
+      'passport': originalPkg.dependencies.passport,
+      'passport-local': originalPkg.dependencies['passport-local'],
+      'express-session': originalPkg.dependencies['express-session'],
+      'connect-pg-simple': originalPkg.dependencies['connect-pg-simple'],
+      'memorystore': originalPkg.dependencies.memorystore
+    };
 
     const prodPackage = {
       name: originalPkg.name,
       version: originalPkg.version,
+      type: 'module',
       scripts: {
-        start: 'node index.cjs'
+        start: 'node index.js'
       },
       dependencies: prodDependencies
     };
@@ -135,7 +168,7 @@ const __dirname = __helix_dirname(__filename);`
 
     log('✅ Production build completed successfully!');
     log('📦 Build artifacts:');
-    log('  - dist/index.cjs (server bundle)');
+    log('  - dist/index.js (server bundle)');
     log('  - dist/public/ (frontend assets)');
     log('  - dist/package.json (production dependencies)');
     log('  - dist/import-scripts/* (gebündelte Import-Skripte)');
