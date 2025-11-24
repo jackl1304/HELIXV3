@@ -116,12 +116,9 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
-// Initialize daily sync scheduler for live data sources (NON-BLOCKING)
-setImmediate(() => {
-  dailySyncScheduler.startScheduledSync()
-    .then(() => console.log('✅ Daily sync scheduler started successfully'))
-    .catch(error => console.error('⚠️ Daily sync scheduler failed:', error));
-});
+// Daily sync scheduler DISABLED - blockiert Server-Start
+// Manueller Trigger über: POST /api/data-collection/sync-all
+console.log('ℹ️  Auto-sync disabled for fast startup. Use /api/data-collection/sync-all');
 
 // Ensure ALL regulatory data sources exist on startup - comprehensive global coverage
 setImmediate(async () => {

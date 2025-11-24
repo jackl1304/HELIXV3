@@ -17,23 +17,18 @@ export class DailySyncScheduler {
   private isSyncing = false;
 
   private readonly SYNC_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
-  private readonly IMMEDIATE_SYNC_ON_START = process.env.REG_AUTO_ENABLED !== 'false';
+  private readonly IMMEDIATE_SYNC_ON_START = false; // DISABLED: Server muss sofort starten
 
   async startScheduledSync(): Promise<void> {
-    logger.info('Starting daily sync scheduler...');
+    logger.info('Starting daily sync scheduler (no immediate sync)...');
 
-    if (this.IMMEDIATE_SYNC_ON_START) {
-      logger.info('Running immediate sync on startup...');
-      await this.runCompleteSyncCycle();
-    } else {
-      logger.info('REG_AUTO_ENABLED=false -> Skipping immediate startup sync');
-    }
-
+    // Schedule for later, not on startup
     this.syncInterval = setInterval(async () => {
       await this.runCompleteSyncCycle();
     }, this.SYNC_INTERVAL_MS);
 
     logger.info(`Daily sync scheduled every ${this.SYNC_INTERVAL_MS / 1000 / 60 / 60} hours`);
+    logger.info('To manually trigger sync: POST /api/data-collection/sync-all');
   }
 
   async runCompleteSyncCycle(): Promise<void> {
