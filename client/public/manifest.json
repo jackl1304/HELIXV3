@@ -1,0 +1,36 @@
+
+{
+  "name": "Helix Regulatory Intelligence",
+  "short_name": "Helix",
+  "description": "KI-gestützte Compliance-Überwachung für Medizintechnik",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#07233e",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/src/assets/helix-logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/src/assets/helix-logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity", "medical"],
+  "lang": "de-DE",
+  "dir": "ltr",
+  "scope": "/",
+  "screenshots": [
+    {
+      "src": "/src/assets/helix-logo.jpg",
+      "type": "image/jpeg",
+      "sizes": "1280x720"
+    }
+  ]
+}

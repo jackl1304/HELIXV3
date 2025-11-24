@@ -1,0 +1,61 @@
+name: Regulatory Data Import
+
+on:
+  schedule:
+    # Täglich um 6:00 UTC (7:00/8:00 CET je nach Sommer-/Winterzeit)
+    - cron: '0 6 * * *'
+
+  workflow_dispatch:
+    # Ermöglicht manuellen Trigger im GitHub UI
+
+jobs:
+  import-regulatory-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Scheduled Imports
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NODE_ENV: production
+        run: |
+          npm run import:scheduled
+
+      - name: Upload Import Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: import-logs-${{ github.run_number }}
+          path: logs/
+          retention-days: 30
+
+      - name: Notify on Failure (Optional)
+        if: failure()
+        uses: slackapi/slack-github-action@v1
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "⚠️ HELIX Regulatory Import Failed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Regulatory Import Failure*\nRun: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|#${{ github.run_number }}>\nBranch: `${{ github.ref_name }}`"
+                  }
+                }
+              ]
+            }

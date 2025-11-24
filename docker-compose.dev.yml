@@ -1,0 +1,54 @@
+# Docker Compose für lokale Entwicklung - Nur Datenbanken
+# Startet PostgreSQL und Redis für Entwicklung
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: helix-postgres
+    environment:
+      - POSTGRES_DB=helix_regulatory
+      - POSTGRES_USER=helix_user
+      - POSTGRES_PASSWORD=helix_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U helix_user -d helix_regulatory"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - helix-dev-network
+
+  # Redis for Caching
+  redis:
+    image: redis:7-alpine
+    container_name: helix-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - helix-dev-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  helix-dev-network:
+    driver: bridge
+
+
+

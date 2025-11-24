@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helix Server Check</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #0a0e27;
+            color: #e0e0e0;
+        }
+        .check-box {
+            background: #1a1f3a;
+            border: 1px solid #2a3550;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        button {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0052a3;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .warning { color: #fbbf24; }
+        pre {
+            background: #0a0e27;
+            border: 1px solid #2a3550;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            max-height: 400px;
+        }
+        .loading { opacity: 0.6; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Helix Server Status Check</h1>
+
+    <div class="check-box">
+        <h2>Server Erreichbarkeit</h2>
+        <button onclick="checkHealth()">Health Check</button>
+        <button onclick="checkSchedulerStatus()">Scheduler Status</button>
+        <div id="health-result"></div>
+    </div>
+
+    <div class="check-box">
+        <h2>Daten-Status</h2>
+        <button onclick="checkRegulatoryUpdates()">Regulatory Updates</button>
+        <button onclick="checkDataSources()">Data Sources</button>
+        <button onclick="checkLegalCases()">Legal Cases</button>
+        <div id="data-result"></div>
+    </div>
+
+    <div class="check-box">
+        <h2>Import Trigger (falls Endpoint existiert)</h2>
+        <button onclick="triggerImport()">Import Starten</button>
+        <div id="trigger-result"></div>
+    </div>
+
+    <script>
+        const SERVER = 'http://152.53.191.99:5000';
+
+        async function checkHealth() {
+            const result = document.getElementById('health-result');
+            result.innerHTML = '<p class="loading">Prüfe...</p>';
+            try {
+                const res = await fetch(`${SERVER}/health`);
+                const data = await res.json();
+                result.innerHTML = `<pre class="success">${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (e) {
+                result.innerHTML = `<p class="error">❌ Fehler: ${e.message}</p>`;
+            }
+        }
+
+        async function checkSchedulerStatus() {
+            const result = document.getElementById('health-result');
+            result.innerHTML = '<p class="loading">Prüfe Scheduler...</p>';
+            try {
+                const res = await fetch(`${SERVER}/api/source-import/status`);
+                const data = await res.json();
+                result.innerHTML = `<pre class="success">${JSON.stringify(data, null, 2)}</pre>`;
+
+                if (data.lastExitCode === null) {
+                    result.innerHTML += '<p class="warning">⚠️ Scheduler noch nie gelaufen!</p>';
+                }
+            } catch (e) {
+                result.innerHTML = `<p class="error">❌ Fehler: ${e.message}</p>`;
+            }
+        }
+
+        async function checkRegulatoryUpdates() {
+            const result = document.getElementById('data-result');
+            result.innerHTML = '<p class="loading">Lade Regulatory Updates...</p>';
+            try {
+                const res = await fetch(`${SERVER}/api/regulatory-updates`);
+                const data = await res.json();
+                const count = Array.isArray(data) ? data.length : 0;
+
+                if (count === 0) {
+                    result.innerHTML = `<p class="error">❌ Keine Regulatory Updates gefunden!</p>`;
+                } else {
+                    result.innerHTML = `<p class="success">✅ ${count} Regulatory Updates gefunden</p>`;
+                    result.innerHTML += `<pre>${JSON.stringify(data.slice(0, 3), null, 2)}</pre>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<p class="error">❌ Fehler: ${e.message}</p>`;
+            }
+        }
+
+        async function checkDataSources() {
+            const result = document.getElementById('data-result');
+            result.innerHTML = '<p class="loading">Lade Data Sources...</p>';
+            try {
+                const res = await fetch(`${SERVER}/api/data-sources`);
+                const data = await res.json();
+                const count = Array.isArray(data) ? data.length : 0;
+
+                if (count === 0) {
+                    result.innerHTML = `<p class="error">❌ Keine Data Sources gefunden!</p>`;
+                } else {
+                    result.innerHTML = `<p class="success">✅ ${count} Data Sources gefunden</p>`;
+                    result.innerHTML += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<p class="error">❌ Fehler: ${e.message}</p>`;
+            }
+        }
+
+        async function checkLegalCases() {
+            const result = document.getElementById('data-result');
+            result.innerHTML = '<p class="loading">Lade Legal Cases...</p>';
+            try {
+                const res = await fetch(`${SERVER}/api/rechtsprechung`);
+                const data = await res.json();
+                const count = Array.isArray(data) ? data.length : 0;
+
+                if (count === 0) {
+                    result.innerHTML = `<p class="error">❌ Keine Legal Cases gefunden!</p>`;
+                } else {
+                    result.innerHTML = `<p class="success">✅ ${count} Legal Cases gefunden</p>`;
+                    result.innerHTML += `<pre>${JSON.stringify(data.slice(0, 2), null, 2)}</pre>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<p class="error">❌ Fehler: ${e.message}</p>`;
+            }
+        }
+
+        async function triggerImport() {
+            const result = document.getElementById('trigger-result');
+            result.innerHTML = '<p class="loading">Triggere Import...</p>';
+            try {
+                const res = await fetch(`${SERVER}/api/source-import/trigger`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                result.innerHTML = `<pre class="success">${JSON.stringify(data, null, 2)}</pre>`;
+                result.innerHTML += '<p class="success">✅ Import gestartet! Warte 30 Sekunden und prüfe dann die Daten erneut.</p>';
+            } catch (e) {
+                result.innerHTML = `<p class="error">❌ Endpoint existiert noch nicht oder Fehler: ${e.message}</p>`;
+                result.innerHTML += '<p class="warning">Trigger-Endpoint muss erst deployed werden.</p>';
+            }
+        }
+
+        // Auto-check beim Laden
+        window.onload = () => {
+            checkHealth();
+        };
+    </script>
+</body>
+</html>

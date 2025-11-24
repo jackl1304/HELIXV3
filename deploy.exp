@@ -1,0 +1,15 @@
+
+spawn scp -o StrictHostKeyChecking=no helix-deploy-20251124-065422.tar.gz root@152.53.191.99:/tmp/helix-deploy.tar.gz
+expect "password:"
+send "KkZrHw5wrJJnn6TH\r"
+expect eof
+
+spawn scp -o StrictHostKeyChecking=no deploy-script.sh root@152.53.191.99:/tmp/deploy-script.sh  
+expect "password:"
+send "KkZrHw5wrJJnn6TH\r"
+expect eof
+
+spawn ssh -o StrictHostKeyChecking=no root@152.53.191.99 "bash /tmp/deploy-script.sh"
+expect "password:"
+send "KkZrHw5wrJJnn6TH\r"
+expect eof
