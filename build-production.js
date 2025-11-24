@@ -58,7 +58,12 @@ async function buildForProduction() {
         'import.meta.url': 'import.meta.url'
       },
       banner: {
-        js: ''
+        js: `import { createRequire as __helix_createRequire } from 'module';
+import { fileURLToPath as __helix_fileURLToPath } from 'url';
+import { dirname as __helix_dirname } from 'path';
+const require = __helix_createRequire(import.meta.url);
+const __filename = __helix_fileURLToPath(import.meta.url);
+const __dirname = __helix_dirname(__filename);`
       }
     });
 
@@ -86,7 +91,14 @@ async function buildForProduction() {
         'nodemailer','@anthropic-ai/sdk','openai','@sendgrid/mail','winston','pg','@neondatabase/serverless','passport','passport-local','express-session','connect-pg-simple','memorystore'
         ,'lightningcss','@babel/preset-typescript','@babel/preset-typescript/package.json'
       ],
-      banner: { js: '' }
+      banner: {
+        js: `import { createRequire as __helix_createRequire } from 'module';
+import { fileURLToPath as __helix_fileURLToPath } from 'url';
+import { dirname as __helix_dirname } from 'path';
+const require = __helix_createRequire(import.meta.url);
+const __filename = __helix_fileURLToPath(import.meta.url);
+const __dirname = __helix_dirname(__filename);`
+      }
     });
 
     // 3. Create a minimal package.json for production
