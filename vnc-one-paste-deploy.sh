@@ -45,6 +45,13 @@ if ! command -v pm2 &> /dev/null; then
     npm install -g pm2
 fi
 
+# Install dependencies and build
+echo "📦 Installing dependencies..."
+npm install --production=false
+
+echo "🔨 Building application..."
+npm run build
+
 echo "▶️ Starting with PM2..."
 pm2 delete helix-app 2>/dev/null || true
 pm2 start dist/index.js --name helix-app --node-args="--max-old-space-size=2048"

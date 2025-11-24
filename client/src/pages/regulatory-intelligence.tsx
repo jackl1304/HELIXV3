@@ -59,29 +59,29 @@ export default function RegulatoryIntelligence() {
   const [jurisdictionFilter, setJurisdictionFilter] = useState<string>("all");
   const [riskFilter, setRiskFilter] = useState<string>("all");
   const [expandedUpdate, setExpandedUpdate] = useState<string | null>(null);
-  
+
   const queryClient = useQueryClient();
-  
+
   // Fetch all regulatory updates
   const { data: updates = [], isLoading } = useQuery<RegulatoryUpdate[]>({
     queryKey: ["/api/regulatory-updates"],
   });
-  
+
   // Trigger data collection
   const syncMutation = useMutation({
     mutationFn: async (type?: string) => {
-      const endpoint = type 
+      const endpoint = type
         ? `/api/data-collection/sync-by-type`
         : `/api/data-collection/sync-all`;
-      
+
       const body = type ? { type } : {};
-      
+
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-      
+
       if (!response.ok) throw new Error('Sync failed');
       return response.json();
     },
@@ -91,7 +91,7 @@ export default function RegulatoryIntelligence() {
       }, 5000); // Refresh after 5 seconds
     }
   });
-  
+
   // Calculate source type from source_id
   const getSourceType = (sourceId: string): string => {
     if (sourceId.startsWith('fda_') || sourceId.startsWith('ema_') || sourceId.startsWith('mhra_') || sourceId.startsWith('tga_')) {
@@ -111,24 +111,24 @@ export default function RegulatoryIntelligence() {
     }
     return 'other';
   };
-  
+
   // Filtered and sorted updates
   const filteredUpdates = useMemo(() => {
     return updates.filter((update) => {
-      const matchesSearch = 
+      const matchesSearch =
         update.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         update.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         update.reference_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         update.source_name?.toLowerCase().includes(searchQuery.toLowerCase());
-      
+
       const sourceType = getSourceType(update.source_id);
       const matchesType = sourceTypeFilter === "all" || sourceType === sourceTypeFilter;
-      
+
       const matchesJurisdiction = jurisdictionFilter === "all" || update.jurisdiction === jurisdictionFilter;
-      
+
       const riskCategory = update.metadata?.formatted?.risk_category || 'Low';
       const matchesRisk = riskFilter === "all" || riskCategory === riskFilter;
-      
+
       return matchesSearch && matchesType && matchesJurisdiction && matchesRisk;
     }).sort((a, b) => {
       const dateA = new Date(a.published_date || a.created_at || 0).getTime();
@@ -136,13 +136,13 @@ export default function RegulatoryIntelligence() {
       return dateB - dateA; // Most recent first
     });
   }, [updates, searchQuery, sourceTypeFilter, jurisdictionFilter, riskFilter]);
-  
+
   // Extract unique jurisdictions
   const jurisdictions = useMemo(() => {
     const unique = new Set(updates.map(u => u.jurisdiction).filter(Boolean));
     return Array.from(unique).sort();
   }, [updates]);
-  
+
   // Statistics
   const stats = useMemo(() => {
     const now = Date.now();
@@ -150,12 +150,12 @@ export default function RegulatoryIntelligence() {
       const date = new Date(u.published_date || u.created_at || 0).getTime();
       return (now - date) < 24 * 60 * 60 * 1000;
     }).length;
-    
+
     const last7d = updates.filter(u => {
       const date = new Date(u.published_date || u.created_at || 0).getTime();
       return (now - date) < 7 * 24 * 60 * 60 * 1000;
     }).length;
-    
+
     const byType = {
       regulatory: 0,
       patents: 0,
@@ -164,15 +164,15 @@ export default function RegulatoryIntelligence() {
       safety: 0,
       other: 0
     };
-    
+
     updates.forEach(u => {
       const type = getSourceType(u.source_id);
       byType[type as keyof typeof byType]++;
     });
-    
+
     return { total: updates.length, last24h, last7d, byType };
   }, [updates]);
-  
+
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return 'N/A';
     const date = new Date(dateStr);
@@ -182,14 +182,14 @@ export default function RegulatoryIntelligence() {
       day: 'numeric'
     }).format(date);
   };
-  
+
   const isNew = (publishedDate?: string, createdAt?: string) => {
     const date = new Date(publishedDate || createdAt || 0);
     const now = new Date();
     const diffDays = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24);
     return diffDays <= 7;
   };
-  
+
   const getTypeIcon = (sourceId: string) => {
     const type = getSourceType(sourceId);
     switch (type) {
@@ -201,7 +201,7 @@ export default function RegulatoryIntelligence() {
       default: return <AlertCircle className="w-4 h-4" />;
     }
   };
-  
+
   const getTypeName = (sourceId: string) => {
     const type = getSourceType(sourceId);
     const names: Record<string, string> = {
@@ -214,7 +214,7 @@ export default function RegulatoryIntelligence() {
     };
     return names[type] || 'Update';
   };
-  
+
   const getRiskBadgeColor = (risk?: string) => {
     switch (risk?.toLowerCase()) {
       case 'high': return 'destructive';
@@ -223,7 +223,7 @@ export default function RegulatoryIntelligence() {
       default: return 'outline';
     }
   };
-  
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -234,7 +234,7 @@ export default function RegulatoryIntelligence() {
       </div>
     );
   }
-  
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
@@ -245,7 +245,7 @@ export default function RegulatoryIntelligence() {
             Comprehensive monitoring across 110+ global data sources
           </p>
         </div>
-        
+
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -274,9 +274,9 @@ export default function RegulatoryIntelligence() {
           </Button>
         </div>
       </div>
-      
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+
+      {/* Statistics Cards - Only show categories with data */}
+      <div className="grid grid-cols-1 md:grid-cols-auto-fit gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Total Updates</CardTitle>
@@ -288,56 +288,64 @@ export default function RegulatoryIntelligence() {
             </p>
           </CardContent>
         </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Last 24 Hours</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.last24h}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Recent additions
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Regulatory</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.byType.regulatory}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              FDA, EMA, Notified Bodies
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Patents & IP</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.byType.patents}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              USPTO, EPO, WIPO
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Legal Cases</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.byType.legal}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Court decisions
-            </p>
-          </CardContent>
-        </Card>
+
+        {stats.last24h > 0 && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Last 24 Hours</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">{stats.last24h}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Recent additions
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {stats.byType.regulatory > 0 && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">FDA/EMA Regulatory</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-purple-600">{stats.byType.regulatory}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                FDA, EMA, Notified Bodies
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {stats.byType.patents > 0 && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">USPTO/EPO Patents</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-600">{stats.byType.patents}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                USPTO, EPO, WIPO
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {stats.byType.legal > 0 && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Court Cases</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">{stats.byType.legal}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Court decisions
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
-      
+
       {/* Filters */}
       <Card>
         <CardHeader>
@@ -353,7 +361,7 @@ export default function RegulatoryIntelligence() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="max-w-md"
           />
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Source Type</label>
@@ -371,7 +379,7 @@ export default function RegulatoryIntelligence() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <label className="text-sm font-medium mb-2 block">Jurisdiction</label>
               <Select value={jurisdictionFilter} onValueChange={setJurisdictionFilter}>
@@ -380,13 +388,13 @@ export default function RegulatoryIntelligence() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Jurisdictions</SelectItem>
-                  {jurisdictions.map(j => (
+                  {jurisdictions.map(j => j && (
                     <SelectItem key={j} value={j}>{j}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <label className="text-sm font-medium mb-2 block">Risk Level</label>
               <Select value={riskFilter} onValueChange={setRiskFilter}>
@@ -404,7 +412,7 @@ export default function RegulatoryIntelligence() {
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Updates List */}
       <div className="space-y-4">
         <div className="flex justify-between items-center">
@@ -412,7 +420,7 @@ export default function RegulatoryIntelligence() {
             Showing {filteredUpdates.length} of {updates.length} updates
           </p>
         </div>
-        
+
         {filteredUpdates.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
@@ -429,7 +437,7 @@ export default function RegulatoryIntelligence() {
             const riskCategory = update.metadata?.formatted?.risk_category;
             const sectors = update.metadata?.formatted?.affected_sectors || [];
             const insights = update.metadata?.formatted?.actionable_insights || [];
-            
+
             return (
               <Card key={update.id} className="hover:shadow-md transition-shadow">
                 <CardHeader>
@@ -450,14 +458,23 @@ export default function RegulatoryIntelligence() {
                           <Badge variant="secondary">{update.reference_number}</Badge>
                         )}
                       </div>
-                      
+
                       <CardTitle className="text-xl mb-2">{update.title}</CardTitle>
-                      
+
                       <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 font-medium text-gray-900">
                           <Building2 className="w-4 h-4" />
                           <span>{update.source_name || update.source_id}</span>
                         </div>
+                        {update.published_date && (
+                          <div className="flex items-center gap-1 font-medium text-blue-600">
+                            📅 {new Date(update.published_date).toLocaleDateString('de-DE', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </div>
+                        )}
                         {update.jurisdiction && (
                           <div className="flex items-center gap-1">
                             <Globe className="w-4 h-4" />
@@ -470,7 +487,7 @@ export default function RegulatoryIntelligence() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex gap-2">
                       {update.url && (
                         <Button
@@ -491,10 +508,10 @@ export default function RegulatoryIntelligence() {
                     </div>
                   </div>
                 </CardHeader>
-                
+
                 <CardContent>
                   <p className="text-sm mb-4">{update.description}</p>
-                  
+
                   {sectors.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-4">
                       <span className="text-xs font-medium text-muted-foreground">Affected Sectors:</span>
@@ -503,7 +520,7 @@ export default function RegulatoryIntelligence() {
                       ))}
                     </div>
                   )}
-                  
+
                   {isExpanded && (
                     <div className="mt-4 pt-4 border-t space-y-4">
                       {update.full_content && (
@@ -512,7 +529,7 @@ export default function RegulatoryIntelligence() {
                           <div className="whitespace-pre-wrap text-sm">{update.full_content}</div>
                         </div>
                       )}
-                      
+
                       {insights.length > 0 && (
                         <div>
                           <h4 className="font-semibold mb-2">Actionable Insights</h4>
@@ -523,7 +540,7 @@ export default function RegulatoryIntelligence() {
                           </ul>
                         </div>
                       )}
-                      
+
                       {update.document_type && (
                         <div className="flex items-center gap-2 text-sm">
                           <FileText className="w-4 h-4" />

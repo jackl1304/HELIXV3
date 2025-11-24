@@ -1138,7 +1138,7 @@ Diese Entscheidung betrifft tausende Software-Entwickler in der EU und erfordert
   // ==========================================
   // COMPREHENSIVE DATA COLLECTION ENDPOINTS
   // ==========================================
-  
+
   /**
    * Trigger full sync across all 110+ data sources
    * Professional regulatory intelligence, patent monitoring, legal case tracking
@@ -1146,16 +1146,16 @@ Diese Entscheidung betrifft tausende Software-Entwickler in der EU und erfordert
   app.post("/api/data-collection/sync-all", async (req, res) => {
     try {
       const { maxResultsPerSource = 50 } = req.body;
-      
+
       console.log('[API] Starting comprehensive data collection across all sources...');
-      
+
       // Return immediately, run in background
       res.status(202).json({
         message: 'Data collection started',
         status: 'processing',
         estimated_duration: '10-30 minutes'
       });
-      
+
       // Background processing
       setImmediate(async () => {
         try {
@@ -1170,30 +1170,30 @@ Diese Entscheidung betrifft tausende Software-Entwickler in der EU und erfordert
           console.error('[API] Data collection failed:', error.message);
         }
       });
-      
+
     } catch (err: any) {
       res.status(500).json({ error: "Failed to start data collection", message: err.message });
     }
   });
-  
+
   /**
    * Sync specific source types (regulatory, patents, legal, standards, etc.)
    */
   app.post("/api/data-collection/sync-by-type", async (req, res) => {
     try {
       const { type, maxResultsPerSource = 50 } = req.body;
-      
+
       if (!type) {
         return res.status(400).json({ error: 'type parameter required' });
       }
-      
+
       console.log(`[API] Starting sync for source type: ${type}`);
-      
+
       res.status(202).json({
         message: `${type} data collection started`,
         status: 'processing'
       });
-      
+
       setImmediate(async () => {
         try {
           const report = await dataOrchestrator.syncSourcesByType(type, maxResultsPerSource);
@@ -1205,27 +1205,27 @@ Diese Entscheidung betrifft tausende Software-Entwickler in der EU und erfordert
           console.error(`[API] ${type} collection failed:`, error.message);
         }
       });
-      
+
     } catch (err: any) {
       res.status(500).json({ error: "Failed to start type-specific sync", message: err.message });
     }
   });
-  
+
   /**
    * Sync specific sources by ID
    */
   app.post("/api/data-collection/sync-sources", async (req, res) => {
     try {
       const { sourceIds, maxResultsPerSource = 50 } = req.body;
-      
+
       if (!Array.isArray(sourceIds) || sourceIds.length === 0) {
         return res.status(400).json({ error: 'sourceIds array required' });
       }
-      
+
       console.log(`[API] Starting sync for ${sourceIds.length} specific sources`);
-      
+
       const report = await dataOrchestrator.syncSpecificSources(sourceIds, maxResultsPerSource);
-      
+
       res.json({
         success: true,
         report: {
@@ -1237,7 +1237,7 @@ Diese Entscheidung betrifft tausende Software-Entwickler in der EU und erfordert
           results: report.results
         }
       });
-      
+
     } catch (err: any) {
       res.status(500).json({ error: "Failed to sync specific sources", message: err.message });
     }

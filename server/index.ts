@@ -136,102 +136,102 @@ setImmediate(async () => {
       { id: 'fda_enforcement', name: 'FDA Enforcement Reports', url: 'https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts', type: 'regulatory', status: 'active', region: 'US', country: 'US' },
       { id: 'fda_guidance', name: 'FDA Guidance Documents', url: 'https://www.fda.gov/medical-devices/device-advice-comprehensive-regulatory-assistance/guidance-documents-medical-devices-and-radiation-emitting-products', type: 'regulatory', status: 'active', region: 'US', country: 'US' },
       { id: 'fda_safety', name: 'FDA Safety Communications', url: 'https://www.fda.gov/medical-devices/safety-communications', type: 'regulatory', status: 'active', region: 'US', country: 'US' },
-      
+
       // Europa - EMA & EU
       { id: 'ema_epar', name: 'EMA EPAR Database', url: 'https://www.ema.europa.eu/en/medicines/human/EPAR', type: 'regulatory', status: 'active', region: 'EU', country: 'EU' },
       { id: 'ema_news', name: 'EMA News & Updates', url: 'https://www.ema.europa.eu/en/news', type: 'regulatory', status: 'active', region: 'EU', country: 'EU' },
       { id: 'ema_safety', name: 'EMA Safety Updates', url: 'https://www.ema.europa.eu/en/human-regulatory/post-authorisation/pharmacovigilance', type: 'regulatory', status: 'active', region: 'EU', country: 'EU' },
       { id: 'ec_nando', name: 'EU NANDO Notified Bodies', url: 'https://ec.europa.eu/growth/tools-databases/nando/', type: 'regulatory', status: 'active', region: 'EU', country: 'EU' },
       { id: 'eudamed', name: 'EU EUDAMED Database', url: 'https://ec.europa.eu/health/medical-devices-eudamed_en', type: 'regulatory', status: 'active', region: 'EU', country: 'EU' },
-      
+
       // Deutschland
       { id: 'bfarm', name: 'BfArM Germany', url: 'https://www.bfarm.de', type: 'regulatory', status: 'active', region: 'EU', country: 'DE' },
       { id: 'bfarm_news', name: 'BfArM Aktuelle Meldungen', url: 'https://www.bfarm.de/DE/Home/_node.html', type: 'regulatory', status: 'active', region: 'EU', country: 'DE' },
       { id: 'dimdi', name: 'DIMDI Medical Devices', url: 'https://www.dimdi.de/dynamic/de/medizinprodukte/', type: 'regulatory', status: 'active', region: 'EU', country: 'DE' },
-      
+
       // UK
       { id: 'mhra', name: 'MHRA UK', url: 'https://www.gov.uk/government/organisations/medicines-and-healthcare-products-regulatory-agency', type: 'regulatory', status: 'active', region: 'UK', country: 'GB' },
       { id: 'mhra_alerts', name: 'MHRA Drug Safety Updates', url: 'https://www.gov.uk/drug-safety-update', type: 'regulatory', status: 'active', region: 'UK', country: 'GB' },
       { id: 'mhra_devices', name: 'MHRA Medical Device Alerts', url: 'https://www.gov.uk/drug-device-alerts', type: 'regulatory', status: 'active', region: 'UK', country: 'GB' },
-      
+
       // Kanada
       { id: 'health_canada', name: 'Health Canada Medical Devices', url: 'https://health-products.canada.ca/api/medical-devices/', type: 'regulatory', status: 'active', region: 'Americas', country: 'CA' },
       { id: 'health_canada_recalls', name: 'Health Canada Recalls', url: 'https://recalls-rappels.canada.ca/en', type: 'regulatory', status: 'active', region: 'Americas', country: 'CA' },
       { id: 'health_canada_notices', name: 'Health Canada Safety Notices', url: 'https://www.canada.ca/en/health-canada/services/drugs-health-products/medeffect-canada/health-product-advisories.html', type: 'regulatory', status: 'active', region: 'Americas', country: 'CA' },
-      
+
       // Schweiz
       { id: 'swissmedic', name: 'Swissmedic', url: 'https://www.swissmedic.ch', type: 'regulatory', status: 'active', region: 'EU', country: 'CH' },
       { id: 'swissmedic_news', name: 'Swissmedic News', url: 'https://www.swissmedic.ch/swissmedic/en/home/news.html', type: 'regulatory', status: 'active', region: 'EU', country: 'CH' },
-      
+
       // Japan
       { id: 'pmda', name: 'PMDA Japan', url: 'https://www.pmda.go.jp/english/', type: 'regulatory', status: 'active', region: 'Asia', country: 'JP' },
       { id: 'pmda_approvals', name: 'PMDA New Approvals', url: 'https://www.pmda.go.jp/english/review-services/reviews/0002.html', type: 'regulatory', status: 'active', region: 'Asia', country: 'JP' },
       { id: 'pmda_safety', name: 'PMDA Safety Information', url: 'https://www.pmda.go.jp/english/safety/info-services/0001.html', type: 'regulatory', status: 'active', region: 'Asia', country: 'JP' },
-      
+
       // Australien
       { id: 'tga', name: 'TGA Australia', url: 'https://www.tga.gov.au', type: 'regulatory', status: 'active', region: 'Oceania', country: 'AU' },
       { id: 'tga_alerts', name: 'TGA Safety Alerts', url: 'https://www.tga.gov.au/news/safety-alerts', type: 'regulatory', status: 'active', region: 'Oceania', country: 'AU' },
       { id: 'tga_artg', name: 'TGA ARTG Database', url: 'https://www.tga.gov.au/artg', type: 'regulatory', status: 'active', region: 'Oceania', country: 'AU' },
-      
+
       // China
       { id: 'nmpa', name: 'NMPA China', url: 'https://www.nmpa.gov.cn', type: 'regulatory', status: 'active', region: 'Asia', country: 'CN' },
       { id: 'nmpa_approvals', name: 'NMPA Medical Device Approvals', url: 'https://www.nmpa.gov.cn/yaowen/ypjgyw/', type: 'regulatory', status: 'active', region: 'Asia', country: 'CN' },
-      
+
       // Singapur
       { id: 'hsa', name: 'HSA Singapore', url: 'https://www.hsa.gov.sg', type: 'regulatory', status: 'active', region: 'Asia', country: 'SG' },
       { id: 'hsa_alerts', name: 'HSA Safety Alerts', url: 'https://www.hsa.gov.sg/announcements/safety-alerts', type: 'regulatory', status: 'active', region: 'Asia', country: 'SG' },
-      
+
       // Brasilien
       { id: 'anvisa', name: 'ANVISA Brazil', url: 'https://www.gov.br/anvisa', type: 'regulatory', status: 'active', region: 'Americas', country: 'BR' },
       { id: 'anvisa_news', name: 'ANVISA News', url: 'https://www.gov.br/anvisa/pt-br/assuntos/noticias-anvisa', type: 'regulatory', status: 'active', region: 'Americas', country: 'BR' },
-      
+
       // Indien
       { id: 'cdsco', name: 'CDSCO India', url: 'https://cdsco.gov.in', type: 'regulatory', status: 'active', region: 'Asia', country: 'IN' },
       { id: 'cdsco_alerts', name: 'CDSCO Safety Alerts', url: 'https://cdsco.gov.in/opencms/opencms/en/Safety-Alerts/', type: 'regulatory', status: 'active', region: 'Asia', country: 'IN' },
-      
+
       // Südkorea
       { id: 'mfds', name: 'MFDS South Korea', url: 'https://www.mfds.go.kr/eng/', type: 'regulatory', status: 'active', region: 'Asia', country: 'KR' },
       { id: 'mfds_news', name: 'MFDS News', url: 'https://www.mfds.go.kr/eng/brd/m_65/list.do', type: 'regulatory', status: 'active', region: 'Asia', country: 'KR' },
-      
+
       // WHO & Global
       { id: 'who', name: 'WHO Global', url: 'https://www.who.int', type: 'regulatory', status: 'active', region: 'Global', country: 'GLOBAL' },
       { id: 'who_alerts', name: 'WHO Medical Product Alerts', url: 'https://www.who.int/teams/regulation-prequalification/incidents-and-SF/medical-product-alerts', type: 'regulatory', status: 'active', region: 'Global', country: 'GLOBAL' },
       { id: 'who_guidance', name: 'WHO Guidance Documents', url: 'https://www.who.int/health-topics/medical-devices', type: 'regulatory', status: 'active', region: 'Global', country: 'GLOBAL' },
-      
+
       // Standards & Harmonisierung
       { id: 'imdrf', name: 'IMDRF International', url: 'https://www.imdrf.org', type: 'regulatory', status: 'active', region: 'Global', country: 'GLOBAL' },
       { id: 'iso_medical', name: 'ISO Medical Device Standards', url: 'https://www.iso.org/committee/54892.html', type: 'regulatory', status: 'active', region: 'Global', country: 'GLOBAL' },
       { id: 'iec_medical', name: 'IEC Medical Equipment Standards', url: 'https://www.iec.ch', type: 'regulatory', status: 'active', region: 'Global', country: 'GLOBAL' },
-      
+
       // Zusätzliche EU-Länder
       { id: 'ansm', name: 'ANSM France', url: 'https://ansm.sante.fr', type: 'regulatory', status: 'active', region: 'EU', country: 'FR' },
       { id: 'aifa', name: 'AIFA Italy', url: 'https://www.aifa.gov.it', type: 'regulatory', status: 'active', region: 'EU', country: 'IT' },
       { id: 'aemps', name: 'AEMPS Spain', url: 'https://www.aemps.gob.es', type: 'regulatory', status: 'active', region: 'EU', country: 'ES' },
       { id: 'lareb', name: 'Lareb Netherlands', url: 'https://www.lareb.nl', type: 'regulatory', status: 'active', region: 'EU', country: 'NL' },
       { id: 'infarmed', name: 'INFARMED Portugal', url: 'https://www.infarmed.pt', type: 'regulatory', status: 'active', region: 'EU', country: 'PT' },
-      
+
       // Nordische Länder
       { id: 'fimea', name: 'Fimea Finland', url: 'https://www.fimea.fi', type: 'regulatory', status: 'active', region: 'EU', country: 'FI' },
       { id: 'lakemedelsverket', name: 'Läkemedelsverket Sweden', url: 'https://www.lakemedelsverket.se', type: 'regulatory', status: 'active', region: 'EU', country: 'SE' },
       { id: 'dkma', name: 'DKMA Denmark', url: 'https://laegemiddelstyrelsen.dk', type: 'regulatory', status: 'active', region: 'EU', country: 'DK' },
       { id: 'noma', name: 'NOMA Norway', url: 'https://legemiddelverket.no', type: 'regulatory', status: 'active', region: 'EU', country: 'NO' },
-      
+
       // Naher Osten
       { id: 'sfda_sa', name: 'SFDA Saudi Arabia', url: 'https://www.sfda.gov.sa', type: 'regulatory', status: 'active', region: 'Middle East', country: 'SA' },
       { id: 'dha_uae', name: 'DHA UAE', url: 'https://www.dha.gov.ae', type: 'regulatory', status: 'active', region: 'Middle East', country: 'AE' },
-      
+
       // Südamerika
       { id: 'anmat', name: 'ANMAT Argentina', url: 'https://www.argentina.gob.ar/anmat', type: 'regulatory', status: 'active', region: 'Americas', country: 'AR' },
       { id: 'cofepris', name: 'COFEPRIS Mexico', url: 'https://www.gob.mx/cofepris', type: 'regulatory', status: 'active', region: 'Americas', country: 'MX' },
-      
+
       // Afrika
       { id: 'sahpra', name: 'SAHPRA South Africa', url: 'https://www.sahpra.org.za', type: 'regulatory', status: 'active', region: 'Africa', country: 'ZA' },
-      
+
       // Research & Clinical Trials
       { id: 'clinicaltrials', name: 'ClinicalTrials.gov', url: 'https://clinicaltrials.gov', type: 'research', status: 'active', region: 'Global', country: 'GLOBAL' },
       { id: 'eudract', name: 'EU Clinical Trials Register', url: 'https://www.clinicaltrialsregister.eu', type: 'research', status: 'active', region: 'EU', country: 'EU' },
       { id: 'pubmed', name: 'PubMed Medical Research', url: 'https://pubmed.ncbi.nlm.nih.gov', type: 'research', status: 'active', region: 'Global', country: 'GLOBAL' },
-      
+
       // PATENTS - Global Patent Databases
       { id: 'uspto', name: 'USPTO United States Patent Office', url: 'https://www.uspto.gov', type: 'patents', status: 'active', region: 'US', country: 'US' },
       { id: 'uspto_search', name: 'USPTO Patent Search', url: 'https://ppubs.uspto.gov/pubwebapp/', type: 'patents', status: 'active', region: 'US', country: 'US' },
@@ -249,7 +249,7 @@ setImmediate(async () => {
       { id: 'ukipo', name: 'UK Intellectual Property Office', url: 'https://www.gov.uk/government/organisations/intellectual-property-office', type: 'patents', status: 'active', region: 'UK', country: 'GB' },
       { id: 'google_patents', name: 'Google Patents', url: 'https://patents.google.com', type: 'patents', status: 'active', region: 'Global', country: 'GLOBAL' },
       { id: 'lens_patents', name: 'Lens.org Patent Database', url: 'https://www.lens.org/lens/search/patent/list', type: 'patents', status: 'active', region: 'Global', country: 'GLOBAL' },
-      
+
       // LEGAL CASES - Medical Device & Pharma Litigation
       { id: 'pacer', name: 'PACER Federal Court Cases', url: 'https://pacer.uscourts.gov', type: 'legal', status: 'active', region: 'US', country: 'US' },
       { id: 'justia', name: 'Justia Case Law', url: 'https://law.justia.com', type: 'legal', status: 'active', region: 'US', country: 'US' },
@@ -267,7 +267,7 @@ setImmediate(async () => {
       { id: 'legifrance', name: 'Légifrance French Legal Database', url: 'https://www.legifrance.gouv.fr', type: 'legal', status: 'active', region: 'EU', country: 'FR' },
       { id: 'supremecourt', name: 'US Supreme Court Decisions', url: 'https://www.supremecourt.gov', type: 'legal', status: 'active', region: 'US', country: 'US' },
       { id: 'findlaw', name: 'FindLaw Legal Resources', url: 'https://www.findlaw.com', type: 'legal', status: 'active', region: 'US', country: 'US' },
-      
+
       // PROJECT MANAGEMENT & STANDARDS
       { id: 'iso_standards', name: 'ISO International Standards', url: 'https://www.iso.org/standards.html', type: 'standards', status: 'active', region: 'Global', country: 'GLOBAL' },
       { id: 'iec_standards', name: 'IEC Electrotechnical Standards', url: 'https://www.iec.ch/homepage', type: 'standards', status: 'active', region: 'Global', country: 'GLOBAL' },
@@ -278,12 +278,12 @@ setImmediate(async () => {
       { id: 'cen_cenelec', name: 'CEN-CENELEC EU Standards', url: 'https://www.cencenelec.eu', type: 'standards', status: 'active', region: 'EU', country: 'EU' },
       { id: 'aami', name: 'AAMI Medical Device Standards', url: 'https://www.aami.org', type: 'standards', status: 'active', region: 'Global', country: 'GLOBAL' },
       { id: 'nist', name: 'NIST Standards & Technology', url: 'https://www.nist.gov', type: 'standards', status: 'active', region: 'US', country: 'US' },
-      
+
       // RECALL & SAFETY MONITORING
       { id: 'safecar', name: 'NHTSA SaferCar Recalls', url: 'https://www.nhtsa.gov/recalls', type: 'safety', status: 'active', region: 'US', country: 'US' },
       { id: 'cpsc', name: 'CPSC Consumer Product Safety', url: 'https://www.cpsc.gov', type: 'safety', status: 'active', region: 'US', country: 'US' },
       { id: 'rapex', name: 'EU RAPEX Safety Alerts', url: 'https://ec.europa.eu/safety-gate', type: 'safety', status: 'active', region: 'EU', country: 'EU' },
-      
+
       // INDUSTRY NEWS & INTELLIGENCE
       { id: 'meddeviceonline', name: 'Medical Device Online', url: 'https://www.meddeviceonline.com', type: 'news', status: 'active', region: 'Global', country: 'GLOBAL' },
       { id: 'massdevice', name: 'MassDevice News', url: 'https://www.massdevice.com', type: 'news', status: 'active', region: 'Global', country: 'GLOBAL' },
@@ -291,7 +291,7 @@ setImmediate(async () => {
       { id: 'devicetalk', name: 'DeviceTalks Industry News', url: 'https://www.devicetalks.com', type: 'news', status: 'active', region: 'Global', country: 'GLOBAL' },
       { id: 'regulatory_focus', name: 'RAPS Regulatory Focus', url: 'https://www.raps.org/news-and-articles/news-articles', type: 'news', status: 'active', region: 'Global', country: 'GLOBAL' },
     ];
-    
+
     let added = 0;
     for (const source of allRegulatorySources) {
       try {

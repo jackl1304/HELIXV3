@@ -73,7 +73,7 @@ const SCRAPER_CONFIGS: Record<string, ScraperStrategy> = {
       dataPath: 'results'
     }
   },
-  
+
   // EMA Sources
   'ema_epar': {
     type: 'rss',
@@ -84,7 +84,7 @@ const SCRAPER_CONFIGS: Record<string, ScraperStrategy> = {
       link: 'link'
     }
   },
-  
+
   // Patent Sources
   'uspto_search': {
     type: 'api',
@@ -104,7 +104,7 @@ const SCRAPER_CONFIGS: Record<string, ScraperStrategy> = {
       reference: 'span.patent-number'
     }
   },
-  
+
   // Legal Sources
   'pacer': {
     type: 'api',
@@ -122,7 +122,7 @@ const SCRAPER_CONFIGS: Record<string, ScraperStrategy> = {
       dataPath: 'results'
     }
   },
-  
+
   // Generic RSS for most news/update sources
   'generic_rss': {
     type: 'rss',
@@ -137,17 +137,17 @@ const SCRAPER_CONFIGS: Record<string, ScraperStrategy> = {
 
 export class UniversalScraper {
   private userAgent = 'Helix-Regulatory-Intelligence/3.0 (Medical Device Compliance Platform)';
-  
+
   /**
    * Fetch and parse updates from any configured data source
    */
   async scrapeSource(source: DataSource, maxResults: number = 50): Promise<ScrapedUpdate[]> {
     if (!source.url) return [];
-    
+
     const config = SCRAPER_CONFIGS[source.id] || this.detectStrategyFromUrl(source.url);
-    
+
     console.log(`[Scraper] Processing ${source.name} (${config.type})`);
-    
+
     try {
       switch (config.type) {
         case 'rss':
@@ -167,28 +167,28 @@ export class UniversalScraper {
       return [];
     }
   }
-  
+
   /**
    * RSS Feed Parser
    */
   private async scrapeRSS(source: DataSource, config: ScraperStrategy, maxResults: number): Promise<ScrapedUpdate[]> {
     if (!source.url) return [];
-    
+
     const response = await axios.get(source.url, {
       headers: { 'User-Agent': this.userAgent },
       timeout: 15000
     });
-    
+
     const $ = cheerio.load(response.data, { xmlMode: true });
     const updates: ScrapedUpdate[] = [];
-    
+
     $('item, entry').slice(0, maxResults).each((_, element) => {
       const $item = $(element);
       const title = $item.find('title').text().trim();
       const description = $item.find('description, summary, content').first().text().trim();
       const dateStr = $item.find('pubDate, published, updated').first().text();
       const url = $item.find('link').text() || $item.find('link').attr('href') || source.url;
-      
+
       if (title) {
         updates.push({
           title: this.cleanText(title),
@@ -203,38 +203,38 @@ export class UniversalScraper {
         });
       }
     });
-    
+
     return updates;
   }
-  
+
   /**
    * HTML Scraper with CSS selectors
    */
   private async scrapeHTML(source: DataSource, config: ScraperStrategy, maxResults: number): Promise<ScrapedUpdate[]> {
     if (!source.url) return [];
-    
+
     const response = await axios.get(source.url, {
       headers: { 'User-Agent': this.userAgent },
       timeout: 15000
     });
-    
+
     const $ = cheerio.load(response.data);
     const updates: ScrapedUpdate[] = [];
-    
+
     if (!config.selectors?.container) {
       return await this.scrapeGenericHTML(source, maxResults);
     }
-    
+
     $(config.selectors.container).slice(0, maxResults).each((_, element) => {
       const $el = $(element);
       const selectors = config.selectors!;
-      
+
       const title = selectors.title ? $el.find(selectors.title).text().trim() : '';
       const description = selectors.description ? $el.find(selectors.description).text().trim() : '';
       const dateStr = selectors.date ? $el.find(selectors.date).text().trim() : '';
       const link = selectors.link ? $el.find(selectors.link).attr('href') : '';
       const reference = selectors.reference ? $el.find(selectors.reference).text().trim() : undefined;
-      
+
       if (title) {
         const finalUrl = link && source.url ? new URL(link, source.url).href : (source.url || '');
         updates.push({
@@ -250,18 +250,18 @@ export class UniversalScraper {
         });
       }
     });
-    
+
     return updates;
   }
-  
+
   /**
    * REST API Parser
    */
   private async scrapeAPI(source: DataSource, config: ScraperStrategy, maxResults: number): Promise<ScrapedUpdate[]> {
     if (!source.url) return [];
-    
+
     const apiConfig = config.apiConfig!;
-    
+
     const response = await axios({
       method: apiConfig.method,
       url: source.url,
@@ -272,9 +272,9 @@ export class UniversalScraper {
       params: apiConfig.params,
       timeout: 20000
     });
-    
+
     let data = response.data;
-    
+
     // Navigate to actual data array using dataPath
     if (apiConfig.dataPath) {
       const path = apiConfig.dataPath.split('.');
@@ -282,14 +282,14 @@ export class UniversalScraper {
         data = data?.[key];
       }
     }
-    
+
     if (!Array.isArray(data)) {
       console.warn(`[Scraper] API response not an array for ${source.name}`);
       return [];
     }
-    
+
     const updates: ScrapedUpdate[] = [];
-    
+
     data.slice(0, maxResults).forEach((item: any) => {
       // Flexible field mapping for various API structures
       const title = item.title || item.name || item.subject || item.description || 'Untitled';
@@ -297,7 +297,7 @@ export class UniversalScraper {
       const dateStr = item.published_date || item.date || item.created_at || item.publication_date || new Date().toISOString();
       const url = item.url || item.link || item.href || source.url;
       const reference = item.reference_number || item.reference || item.id || item.case_number || item.patent_number;
-      
+
       updates.push({
         title: this.cleanText(title),
         description: this.cleanText(description),
@@ -312,10 +312,10 @@ export class UniversalScraper {
         hashedTitle: this.hashTitle(title)
       });
     });
-    
+
     return updates;
   }
-  
+
   /**
    * XML Feed Parser
    */
@@ -323,47 +323,47 @@ export class UniversalScraper {
     // XML is often similar to RSS, reuse RSS logic
     return await this.scrapeRSS(source, config, maxResults);
   }
-  
+
   /**
    * Generic HTML fallback - attempts intelligent extraction
    */
   private async scrapeGenericHTML(source: DataSource, maxResults: number): Promise<ScrapedUpdate[]> {
     if (!source.url) return [];
-    
+
     const response = await axios.get(source.url, {
       headers: { 'User-Agent': this.userAgent },
       timeout: 15000
     });
-    
+
     const $ = cheerio.load(response.data);
     const updates: ScrapedUpdate[] = [];
-    
+
     // Try common patterns: news articles, list items, table rows
     const candidates = $('article, .news-item, .update-item, li, tr').slice(0, maxResults * 2);
-    
+
     candidates.each((_, element) => {
       const $el = $(element);
-      
+
       // Find title candidates
       const titleEl = $el.find('h1, h2, h3, h4, .title, .heading').first();
       const title = titleEl.text().trim();
-      
+
       if (!title || title.length < 10) return;
-      
+
       // Find description
       const descEl = $el.find('p, .description, .summary, .abstract').first();
       const description = descEl.text().trim() || title;
-      
+
       // Find date
       const dateEl = $el.find('time, .date, .published').first();
       const dateStr = dateEl.attr('datetime') || dateEl.text().trim() || new Date().toISOString();
-      
+
       // Find link
       const linkEl = $el.find('a').first();
       const link = linkEl.attr('href') || source.url || '';
-      
+
       const finalUrl = source.url ? new URL(link, source.url).href : link;
-      
+
       updates.push({
         title: this.cleanText(title),
         description: this.cleanText(description),
@@ -375,20 +375,20 @@ export class UniversalScraper {
         hashedTitle: this.hashTitle(title)
       });
     });
-    
+
     return updates.slice(0, maxResults);
   }
-  
+
   /**
    * Detect strategy from URL patterns
    */
   private detectStrategyFromUrl(url: string): ScraperStrategy {
     const lower = url.toLowerCase();
-    
+
     if (lower.includes('/rss') || lower.includes('/feed') || lower.includes('.xml')) {
       return SCRAPER_CONFIGS.generic_rss;
     }
-    
+
     if (lower.includes('/api/') || lower.includes('.json')) {
       return {
         type: 'api',
@@ -398,10 +398,10 @@ export class UniversalScraper {
         }
       };
     }
-    
+
     return { type: 'html', selectors: { title: 'h1, h2, h3' } };
   }
-  
+
   /**
    * Utilities
    */
@@ -415,17 +415,17 @@ export class UniversalScraper {
       .replace(/&gt;/g, '>')
       .trim();
   }
-  
+
   private cleanHTML(html: string): string {
     const $ = cheerio.load(html);
     return $.text().trim();
   }
-  
+
   private parseDate(dateStr: string): Date {
     if (!dateStr) return new Date();
-    
+
     const parsed = new Date(dateStr);
-    
+
     // If invalid, try common EU formats: DD.MM.YYYY, DD/MM/YYYY
     if (isNaN(parsed.getTime())) {
       const euMatch = dateStr.match(/(\d{1,2})[./](\d{1,2})[./](\d{4})/);
@@ -434,14 +434,14 @@ export class UniversalScraper {
       }
       return new Date();
     }
-    
+
     return parsed;
   }
-  
+
   private hashTitle(title: string): string {
     return crypto.createHash('sha256').update(title.toLowerCase().trim()).digest('hex');
   }
-  
+
   private inferDocumentType(sourceType: string): string {
     const typeMap: Record<string, string> = {
       'regulatory': 'Regulatory Submission',
@@ -452,7 +452,7 @@ export class UniversalScraper {
       'news': 'Industry Update',
       'research': 'Clinical Study'
     };
-    
+
     return typeMap[sourceType] || 'General Update';
   }
 }
