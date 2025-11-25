@@ -1,25 +1,25 @@
 import type { Express } from "express";
 import { Logger } from "./services/logger.service";
-import { dataCollectionService } from './services/dataCollectionService';
-import { storage as dbStorage } from './storage';
-import { dataEnrichmentService } from './services/data-enrichment';
-import { dataOrchestrator } from './services/data-orchestrator';
-import embeddingsRoutes from './routes/embeddings';
-import patentsRoutes from './routes/patents.routes';
-import patentsFallbackRoutes from './routes/patents-fallback';
-import chatRoutes from './routes/chat';
-import regAutomationStatusRouter from './routes/regAutomationStatus';
-import adminTenantsRoutes from './routes/admin-tenants';
-import customerRoutes from './routes/customer';
+import { dataCollectionService } from './services/dataCollectionService.js';
+import { storage as dbStorage } from './storage.js';
+import { dataEnrichmentService } from './services/data-enrichment.js';
+import { dataOrchestrator } from './services/data-orchestrator.js';
+import embeddingsRoutes from './routes/embeddings.js';
+import patentsRoutes from './routes/patents.routes.js';
+import patentsFallbackRoutes from './routes/patents-fallback.js';
+import chatRoutes from './routes/chat.js';
+import regAutomationStatusRouter from './routes/regAutomationStatus.js';
+import adminTenantsRoutes from './routes/admin-tenants.js';
+import customerRoutes from './routes/customer.js';
 // ESM Imports statt require() für Node ESM Kompatibilität
-import debugRoutes from './routes/debug';
-import legalCasesDataRoutes from './routes/legal-cases-data';
-import notesRoutes from './routes/notes';
+import debugRoutes from './routes/debug.js';
+import legalCasesDataRoutes from './routes/legal-cases-data.js';
+import notesRoutes from './routes/notes.js';
 import {
   insertRegulatoryUpdateEvaluationSchema,
   insertCostItemSchema,
   insertNormativeActionSchema
-} from '../shared/schema';
+} from '../shared/schema.js';
 
 // Mock optimizedSyncService for demonstration
 const optimizedSyncService = {
@@ -79,6 +79,26 @@ export function registerRoutes(app: Express) {
     res.json({ message: 'API is working', timestamp: new Date().toISOString() });
   });
 
+  // Compliance Guide Download (Markdown)
+  app.get('/api/compliance-guide', async (req, res) => {
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      const guidePath = path.resolve(__dirname, '../COMPLIANCE_BOSS_GUIDE_MDR_IVDR_2025.md');
+
+      if (!fs.existsSync(guidePath)) {
+        return res.status(404).json({ error: 'Guide not found' });
+      }
+
+      const content = fs.readFileSync(guidePath, 'utf-8');
+      res.setHeader('Content-Type', 'text/markdown');
+      res.send(content);
+    } catch (error: any) {
+      console.error('Error serving compliance guide:', error);
+      res.status(500).json({ error: 'Failed to load guide', message: error.message });
+    }
+  });
+
   // Regulatory Automation Status
   app.use(regAutomationStatusRouter);
 
@@ -117,42 +137,28 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // Patents endpoint - REAL patent data (requires external API keys)
-  app.get('/api/patents', async (req, res) => {
-    try {
-      console.log('[API] Fetching patents...');
-      const { jurisdiction, status, limit } = req.query as any;
-      const lim = Math.min(parseInt(limit || '100', 10), 250);
-
-      let patents = [];
-      if (jurisdiction) {
-        patents = await dbStorage.getPatentsByJurisdiction(jurisdiction, lim);
-      } else {
-        patents = await dbStorage.getAllPatents(lim);
-      }
-
-      if (status) {
-        patents = patents.filter((p: any) => (p.status || '').toLowerCase() === String(status).toLowerCase());
-      }
-
-      console.log(`[API] Loaded ${patents.length} patents`);
-      res.json(patents);
-    } catch (error: any) {
-      console.error('[API] Error fetching patents:', error);
-      res.status(500).json({
-        error: 'Failed to fetch patents',
-        message: error.message
-      });
-    }
-  });
+  // Patents endpoint - Handled by patents.routes.ts (removed duplicate)
 
   // Regulatory Updates endpoint - WITH ACTION REQUIRED & IMPLEMENTATION GUIDANCE
   app.get('/api/regulatory-updates', async (req, res) => {
     try {
       console.log('[API] Fetching regulatory updates...');
-      const updates = await dbStorage.getAllRegulatoryUpdates();
-      console.log(`[API] Loaded ${updates.length} regulatory updates`);
-      res.json(updates);
+      const raw = await dbStorage.getAllRegulatoryUpdates();
+      const updates = Array.isArray(raw) ? raw : [];
+      const enriched = updates.map((u: any) => ({
+        ...u,
+        source: u.source
+          || u.source_name
+          || u.originSource
+          || u.dataSourceId
+          || u.data_source_id
+          || u.jurisdiction
+          || (Array.isArray(u.tags) ? u.tags[0] : null)
+          || 'unknown',
+        publishedAt: u.publishedAt || u.date || u.published_at || u.created_at || null
+      }));
+      console.log(`[API] Loaded ${enriched.length} regulatory updates`);
+      res.json(enriched);
     } catch (error: any) {
       console.error('[API] Error fetching regulatory updates:', error);
       res.status(500).json({
@@ -1051,9 +1057,7 @@ Diese Entscheidung betrifft tausende Software-Entwickler in der EU und erfordert
   app.use('/api/patents', patentsRoutes);
   console.log('✅ Patents routes loaded successfully');
 
-  // Patents fallback routes (for when APIs are blocked)
-  app.use('/api/patents', patentsFallbackRoutes);
-  console.log('✅ Patents fallback routes loaded successfully');
+  // Note: Patents fallback routes merged into patents.routes.ts to avoid conflicts
 
   // Admin tenant management routes
   app.use('/api/admin', adminTenantsRoutes);
