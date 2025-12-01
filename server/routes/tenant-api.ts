@@ -100,7 +100,7 @@ router.get('/regulatory-updates', async (req, res) => {
     let updates;
     try {
       const allUpdates = await sql`
-        SELECT id, title, description, source_id, source_url, region, update_type, published_at, categories
+        SELECT id, title, description, source_id, source_url, region, update_type, published_at, category, tags
         FROM regulatory_updates
         ORDER BY published_at DESC
         LIMIT 50
@@ -117,7 +117,8 @@ router.get('/regulatory-updates', async (req, res) => {
           type: update.update_type?.toLowerCase() || 'regulatory',
           summary: update.description || 'No summary available',
           impact: getImpactLevel(update.update_type),
-          category: update.update_type,
+          category: update.category || update.update_type,
+          tags: Array.isArray(update.tags) ? update.tags : [],
           url: update.source_url
         }));
 
@@ -194,7 +195,7 @@ router.get('/legal-cases', async (req, res) => {
 
       if (legalCases && legalCases.length > 0) {
         // Professional tier gets access to top 12 real cases
-        cases = legalCases.slice(0, 12).map(legalCase => ({
+        cases = legalCases.slice(0, 12).map((legalCase: any) => ({
           id: legalCase.id,
           title: legalCase.title,
           court: legalCase.court,
