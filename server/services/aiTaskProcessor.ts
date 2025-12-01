@@ -1,6 +1,6 @@
 import { storage } from "../storage";
 import { aiService } from "./aiService";
-import type { AiTask } from "@shared/schema";
+import type { AiTask } from "../../shared/schema.js";
 
 interface ProcessingStats {
   total: number;

@@ -1,4 +1,4 @@
-import { storage } from '../storage';
+import { storage } from '../storage.js';
 
 interface FDAPMA {
   pma_number?: string;
@@ -44,19 +44,19 @@ export class FDAPMAService {
 
   private async makeRequest(endpoint: string, retryAttempt: number = 0): Promise<any> {
     try {
-      const urlWithKey = this.apiKey ? 
-        `${endpoint}${endpoint.includes('?') ? '&' : '?'}api_key=${this.apiKey}` : 
+      const urlWithKey = this.apiKey ?
+        `${endpoint}${endpoint.includes('?') ? '&' : '?'}api_key=${this.apiKey}` :
         endpoint;
-      
+
       console.log(`🔄 [FDA PMA API] Requesting: ${urlWithKey.replace(this.apiKey, 'API_KEY_HIDDEN')} (attempt ${retryAttempt + 1})`);
-      
+
       const response = await fetch(urlWithKey, {
         headers: {
           'User-Agent': 'Helix-Regulatory-Intelligence/2.0 (MedTech Compliance Platform)',
           'Accept': 'application/json'
         }
       });
-      
+
       if (!response.ok) {
         if (response.status === 429 && retryAttempt < this.maxRetries) {
           console.log(`⏱️ [FDA PMA API] Rate limited, retrying after backoff...`);
@@ -65,11 +65,11 @@ export class FDAPMAService {
         }
         throw new Error(`FDA PMA API error: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
-      
+
       await this.delay(this.rateLimitDelay);
-      
+
       console.log(`✅ [FDA PMA API] Request successful - received ${data.results?.length || 0} items`);
       return data;
     } catch (error) {
@@ -78,7 +78,7 @@ export class FDAPMAService {
         await this.exponentialBackoff(retryAttempt);
         return this.makeRequest(endpoint, retryAttempt + 1);
       }
-      
+
       console.error(`❌ [FDA PMA API] Request failed after ${retryAttempt + 1} attempts:`, error);
       throw error;
     }
@@ -87,20 +87,20 @@ export class FDAPMAService {
   async collectPMAApprovals(limit: number = 100): Promise<FDAPMA[]> {
     try {
       console.log(`[FDA PMA API] Collecting PMA approvals (limit: ${limit})`);
-      
+
       const endpoint = `${this.baseUrl}/device/pma.json?limit=${limit}&sort=decision_date:desc`;
       const data = await this.makeRequest(endpoint);
-      
+
       if (!data.results || !Array.isArray(data.results)) {
         throw new Error('Invalid FDA PMA response format');
       }
-      
+
       console.log(`[FDA PMA API] Found ${data.results.length} PMA approvals`);
-      
+
       for (const pma of data.results as FDAPMA[]) {
         await this.processPMA(pma);
       }
-      
+
       console.log(`[FDA PMA API] PMA collection completed`);
       return data.results as FDAPMA[];
     } catch (error) {
@@ -114,7 +114,7 @@ export class FDAPMAService {
       const deviceName = pma.trade_name || pma.generic_name || pma.openfda?.device_name || 'Unknown Device';
       const pmaNumber = pma.pma_number || 'Unknown';
       const supplementNumber = pma.supplement_number ? `S${pma.supplement_number}` : '';
-      
+
       const regulatoryUpdate = {
         title: `FDA PMA: ${deviceName} (${pmaNumber}${supplementNumber})`,
         description: this.formatPMAContent(pma),
@@ -128,7 +128,7 @@ export class FDAPMAService {
         rawData: pma,
         publishedAt: this.parseDate(pma.decision_date) || new Date(),
       };
-      
+
       await storage.createRegulatoryUpdate(regulatoryUpdate);
       console.log(`[FDA PMA API] Successfully created regulatory update: ${regulatoryUpdate.title}`);
     } catch (error) {
@@ -168,7 +168,7 @@ export class FDAPMAService {
 
   private parseDate(dateString: string | undefined): Date | null {
     if (!dateString) return null;
-    
+
     try {
       const date = new Date(dateString);
       if (!isNaN(date.getTime())) {
@@ -185,40 +185,40 @@ export class FDAPMAService {
     if (pma.expedited_review_flag === 'Y') {
       return 'critical';
     }
-    
+
     // Class III devices are always high priority
     if (pma.openfda?.device_class === '3') {
       return 'high';
     }
-    
+
     // Cardiovascular, Neurology are critical
     const specialty = pma.advisory_committee_description?.toLowerCase() || '';
     if (specialty.includes('cardiovascular') || specialty.includes('neurology')) {
       return 'critical';
     }
-    
+
     return 'high';
   }
 
   private async categorizePMA(pma: FDAPMA): Promise<string[]> {
     const categories: string[] = ['FDA PMA', 'Premarket Approval', 'Class III Device', 'US Regulatory'];
-    
+
     if (pma.advisory_committee_description) {
       categories.push(pma.advisory_committee_description);
     }
-    
+
     if (pma.openfda?.medical_specialty_description) {
       categories.push(pma.openfda.medical_specialty_description);
     }
-    
+
     if (pma.expedited_review_flag === 'Y') {
       categories.push('Expedited Review');
     }
-    
+
     if (pma.supplement_number) {
       categories.push('PMA Supplement');
     }
-    
+
     return categories;
   }
 }

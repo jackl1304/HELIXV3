@@ -1,4 +1,4 @@
-import { Logger } from './logger.service';
+import { Logger } from './logger.service.js';
 
 const logger = new Logger('CachingService');
 
@@ -39,7 +39,7 @@ export class CachingService {
    */
   get<T>(key: string): T | null {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       return null;
     }
@@ -109,8 +109,8 @@ export class CachingService {
    * Cached wrapper for async functions
    */
   async cached<T>(
-    key: string, 
-    asyncFn: () => Promise<T>, 
+    key: string,
+    asyncFn: () => Promise<T>,
     ttlMs: number = 5 * 60 * 1000
   ): Promise<T> {
     // Try to get from cache first
@@ -142,9 +142,9 @@ export class CachingService {
     }
 
     if (removedCount > 0) {
-      logger.debug('Cleaned up expired cache entries', { 
-        removedCount, 
-        remainingSize: this.cache.size 
+      logger.debug('Cleaned up expired cache entries', {
+        removedCount,
+        remainingSize: this.cache.size
       });
     }
   }
@@ -158,9 +158,9 @@ export class CachingService {
       this.cache.delete(key);
     }
 
-    logger.debug('Evicted oldest cache entries', { 
-      evictedCount: count, 
-      remainingSize: this.cache.size 
+    logger.debug('Evicted oldest cache entries', {
+      evictedCount: count,
+      remainingSize: this.cache.size
     });
   }
 

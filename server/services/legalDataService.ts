@@ -1,4 +1,4 @@
-import { HistoricalDataRecord, ChangeDetection } from '@shared/schema';
+import { HistoricalDataRecord, ChangeDetection } from '../../shared/schema.js';
 
 // Legal and jurisprudence data sources for MedTech regulatory intelligence
 const legalDataSources = {
@@ -128,16 +128,16 @@ export class LegalDataService {
   // Generate comprehensive legal case data for each jurisdiction
   async initializeLegalData(): Promise<void> {
     console.log('Initializing comprehensive MedTech legal jurisprudence database...');
-    
+
     for (const [sourceId, source] of Object.entries(legalDataSources)) {
       console.log(`Loading legal cases for ${source.name}...`);
-      
+
       const cases = await this.generateLegalCases(sourceId, source);
       this.legalData.set(sourceId, cases);
-      
+
       console.log(`${source.name}: Loaded ${cases.length} legal cases`);
     }
-    
+
     console.log('Legal jurisprudence database initialization complete.');
   }
 
@@ -150,7 +150,7 @@ export class LegalDataService {
   private async generateLegalCase(sourceId: string, source: any, caseNumber: number, date: Date): Promise<HistoricalDataRecord> {
     const caseTypes = this.getCaseTypesBySource(sourceId);
     const selectedCaseType = caseTypes[Math.floor(Math.random() * caseTypes.length)];
-    
+
     // Generate device classes with specific device types for filtering
     const deviceClasses = this.getDeviceClassesByType();
     const selectedDeviceClasses = this.getRandomSelection(deviceClasses, 1, 3);
@@ -209,7 +209,7 @@ export class LegalDataService {
   private generateCaseTitle(source: any, caseType: string, caseNumber: number): string {
     const parties = this.generatePartyNames(source.country);
     const year = new Date().getFullYear() - Math.floor(Math.random() * 10);
-    
+
     if (source.country === 'USA') {
       return `${parties.plaintiff} v. ${parties.defendant} - ${caseType} (Case No. ${year}-${caseNumber})`;
     } else if (source.country === 'EU') {
@@ -240,9 +240,9 @@ export class LegalDataService {
 
     const isRegulatoryCase = Math.random() < 0.4;
     const company = this.getRandomElement(companies);
-    
+
     if (isRegulatoryCase && regulators[country]) {
-      return Math.random() < 0.5 
+      return Math.random() < 0.5
         ? { plaintiff: company, defendant: regulators[country] }
         : { plaintiff: regulators[country], defendant: company };
     } else {
@@ -265,7 +265,7 @@ export class LegalDataService {
   private generateCaseIntro(source: any, caseType: string): string {
     const court = source.authority;
     const date = new Date().toLocaleDateString();
-    
+
     return `# ${caseType} Decision\n\n**Court:** ${court}\n**Date:** ${date}\n**Jurisdiction:** ${source.country}\n\nThis case concerns ${caseType.toLowerCase()} in the medical device industry, addressing regulatory compliance, safety standards, and liability issues under applicable medical device regulations.`;
   }
 
@@ -372,26 +372,26 @@ The case highlights the ongoing evolution of medical device law and the need for
       // Mobile/Handheld devices
       'Mobile Health Monitor', 'Handheld Ultrasound', 'Portable ECG Device', 'Mobile Diagnostic Tool',
       'Wearable Glucose Monitor', 'Smartphone-based Analyzer', 'Portable Blood Pressure Monitor',
-      
-      // Desktop/Stationary devices  
+
+      // Desktop/Stationary devices
       'Desktop MRI System', 'Stationary CT Scanner', 'Console-based Ventilator', 'Desktop Lab Analyzer',
       'Workstation Imaging System', 'Server-based PACS', 'Desktop Surgical Navigation',
-      
+
       // Tablet/Touchscreen devices
       'Tablet-based Ultrasound', 'Touchscreen Patient Monitor', 'Slate-style EHR Terminal',
       'Pad-based Diagnostic Interface', 'Touchscreen Surgical Display',
-      
+
       // General classifications
       'Class I Device', 'Class II Device', 'Class III Device', 'IVD System', 'Software as Medical Device'
     ];
-    
+
     return deviceTypes;
   }
 
   // API methods for frontend integration
   async getLegalData(sourceId: string, startDate?: string, endDate?: string): Promise<HistoricalDataRecord[]> {
     let data = this.legalData.get(sourceId) || [];
-    
+
     if (startDate || endDate) {
       data = data.filter(record => {
         const recordDate = new Date(record.originalDate);
@@ -400,7 +400,7 @@ The case highlights the ongoing evolution of medical device law and the need for
         return true;
       });
     }
-    
+
     return data;
   }
 
@@ -412,16 +412,16 @@ The case highlights the ongoing evolution of medical device law and the need for
     // Simulate change detection for legal cases (appeals, reversals, etc.)
     const changes: ChangeDetection[] = [];
     const changeTypes = ['appeal_filed', 'decision_reversed', 'settlement_reached', 'precedent_overruled'];
-    
+
     for (let i = 0; i < (limit || 10000); i++) { // Entferne Limit für vollständige Anzeige
       const sourceIds = Object.keys(legalDataSources);
       const sourceId = this.getRandomElement(sourceIds);
       const sourceData = this.legalData.get(sourceId) || [];
-      
+
       if (sourceData.length > 0) {
         const randomCase = this.getRandomElement(sourceData);
         const changeType = this.getRandomElement(changeTypes);
-        
+
         changes.push({
           id: `legal_change_${Date.now()}_${i}`,
           documentId: randomCase.documentId,
@@ -437,28 +437,28 @@ The case highlights the ongoing evolution of medical device law and the need for
         });
       }
     }
-    
+
     return changes;
   }
 
   async generateLegalReport(sourceId: string): Promise<any> {
     const data = this.legalData.get(sourceId) || [];
     const source = legalDataSources[sourceId as keyof typeof legalDataSources];
-    
+
     if (!source) {
       throw new Error(`Legal source not found: ${sourceId}`);
     }
-    
+
     const caseTypes = data.reduce((acc, record) => {
       acc[record.category] = (acc[record.category] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    
+
     const languageDistribution = data.reduce((acc, record) => {
       acc[record.language] = (acc[record.language] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    
+
     return {
       totalCases: data.length,
       timeRange: {

@@ -3,10 +3,10 @@
  * Coordinates scraping across all 110+ sources with intelligent scheduling
  */
 
-import { storage } from '../storage';
-import { universalScraper } from './universal-scraper';
-import { professionalFormatter } from './professional-formatter';
-import { regulatoryUpdates } from '@shared/schema';
+import { storage } from '../storage.js';
+import { universalScraper } from './universal-scraper.js';
+import { professionalFormatter } from './professional-formatter.js';
+import { regulatoryUpdates } from '../../shared/schema.js';
 import { eq } from 'drizzle-orm';
 
 interface SyncResult {

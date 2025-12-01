@@ -1,5 +1,5 @@
-import { storage } from '../storage';
-import type { LegalCase } from '@shared/schema';
+import { storage } from '../storage.js';
+import type { LegalCase } from '../../shared/schema.js';
 
 interface LegalTheme {
   id: string;
@@ -182,8 +182,8 @@ export class EnhancedLegalAnalysisService {
   private findCasesForTheme(cases: LegalCase[], theme: LegalTheme): LegalCase[] {
     return cases.filter(case_ => {
       const searchText = `${case_.caseTitle} ${case_.summary} ${case_.keyIssues.join(' ')}`.toLowerCase();
-      
-      return theme.keywords.some(keyword => 
+
+      return theme.keywords.some(keyword =>
         searchText.includes(keyword.toLowerCase())
       );
     });
@@ -213,9 +213,9 @@ export class EnhancedLegalAnalysisService {
     let explanation = '';
 
     // Prüfe auf gemeinsame Themen
-    const commonIssues = case1.keyIssues.filter(issue => 
-      case2.keyIssues.some(issue2 => 
-        issue.toLowerCase().includes(issue2.toLowerCase()) || 
+    const commonIssues = case1.keyIssues.filter(issue =>
+      case2.keyIssues.some(issue2 =>
+        issue.toLowerCase().includes(issue2.toLowerCase()) ||
         issue2.toLowerCase().includes(issue.toLowerCase())
       )
     );
@@ -234,7 +234,7 @@ export class EnhancedLegalAnalysisService {
     if (case1.legalBasis && case2.legalBasis) {
       const basis1 = case1.legalBasis.toLowerCase();
       const basis2 = case2.legalBasis.toLowerCase();
-      
+
       if (basis1.includes(basis2) || basis2.includes(basis1)) {
         strength += 0.3;
         explanation = explanation || 'Cases share similar legal basis';
@@ -252,7 +252,7 @@ export class EnhancedLegalAnalysisService {
     const date1 = new Date(case1.decisionDate || case1.filingDate);
     const date2 = new Date(case2.decisionDate || case2.filingDate);
     const daysDiff = Math.abs(date1.getTime() - date2.getTime()) / (1000 * 60 * 60 * 24);
-    
+
     if (daysDiff < 365) {
       strength += 0.1;
     }
@@ -271,12 +271,12 @@ export class EnhancedLegalAnalysisService {
 
     // Gruppiere nach Themen
     const themeGroups = new Map<string, LegalCase[]>();
-    
+
     for (const theme of this.themes) {
       const themeCases = this.findCasesForTheme(cases, theme);
       if (themeCases.length > 1) {
-        themeGroups.set(theme.name, themeCases.sort((a, b) => 
-          new Date(a.decisionDate || a.filingDate).getTime() - 
+        themeGroups.set(theme.name, themeCases.sort((a, b) =>
+          new Date(a.decisionDate || a.filingDate).getTime() -
           new Date(b.decisionDate || b.filingDate).getTime()
         ));
       }
@@ -304,7 +304,7 @@ export class EnhancedLegalAnalysisService {
 
     for (const theme of themes) {
       const themeCases = this.findCasesForTheme(cases, theme);
-      
+
       // Gruppiere nach Outcome
       const outcomeGroups = new Map<string, LegalCase[]>();
       for (const case_ of themeCases) {
@@ -318,7 +318,7 @@ export class EnhancedLegalAnalysisService {
       // Identifiziere Konflikte
       if (outcomeGroups.size > 1) {
         const conflictCases: Array<{ caseId: string; position: string; jurisdiction: string }> = [];
-        
+
         for (const [outcome, casesWithOutcome] of outcomeGroups) {
           for (const case_ of casesWithOutcome) {
             conflictCases.push({
@@ -352,7 +352,7 @@ export class EnhancedLegalAnalysisService {
 
     for (const case_ of cases) {
       const caseText = `${case_.caseTitle} ${case_.summary} ${case_.keyIssues.join(' ')}`.toLowerCase();
-      
+
       for (const keyword of trendKeywords) {
         if (caseText.includes(keyword.toLowerCase())) {
           trends.set(keyword, (trends.get(keyword) || 0) + 1);
@@ -388,7 +388,7 @@ export class EnhancedLegalAnalysisService {
 
     for (const case_ of cases) {
       const caseText = `${case_.caseTitle} ${case_.summary}`.toLowerCase();
-      
+
       for (const indicator of riskIndicators) {
         if (caseText.includes(indicator.toLowerCase())) {
           patterns.set(indicator, (patterns.get(indicator) || 0) + 1);
@@ -415,10 +415,10 @@ export class EnhancedLegalAnalysisService {
 
   private generatePreventiveRecommendations(cases: LegalCase[]): string[] {
     const recommendations: string[] = [];
-    
+
     // Basierend auf häufigen Problemen
     const commonIssues = new Map<string, number>();
-    
+
     for (const case_ of cases) {
       for (const issue of case_.keyIssues) {
         commonIssues.set(issue, (commonIssues.get(issue) || 0) + 1);
@@ -459,7 +459,7 @@ export class EnhancedLegalAnalysisService {
     }
 
     // Weitere Entwicklungsanalyse...
-    
+
     return developments.join('. ') || 'Konsistente Rechtsprechung über den Zeitraum';
   }
 }

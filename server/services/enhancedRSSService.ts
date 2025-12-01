@@ -1,4 +1,4 @@
-import { storage } from '../storage';
+import { storage } from '../storage.js';
 import axios from 'axios';
 
 interface RSSFeed {
@@ -85,14 +85,14 @@ export class EnhancedRSSService {
   async monitorAllFeeds(): Promise<{ success: boolean; results: FeedParseResult[] }> {
     try {
       console.log('[Enhanced RSS] Starting monitoring of all RSS feeds...');
-      
+
       const results = await Promise.allSettled(
         this.feeds.map(feed => this.processFeed(feed))
       );
-      
+
       const feedResults: FeedParseResult[] = results.map((result, index) => {
         const feed = this.feeds[index];
-        
+
         if (result.status === 'fulfilled') {
           return result.value;
         } else {
@@ -105,12 +105,12 @@ export class EnhancedRSSService {
           };
         }
       });
-      
+
       const successfulFeeds = feedResults.filter(r => r.success).length;
       const totalNewItems = feedResults.reduce((sum, r) => sum + r.newItems, 0);
-      
+
       console.log(`[Enhanced RSS] Monitoring completed: ${successfulFeeds}/${this.feeds.length} feeds successful, ${totalNewItems} new items`);
-      
+
       return {
         success: successfulFeeds > 0,
         results: feedResults
@@ -127,15 +127,15 @@ export class EnhancedRSSService {
   private async processFeed(feed: RSSFeed): Promise<FeedParseResult> {
     try {
       console.log(`[Enhanced RSS] Processing feed: ${feed.name}`);
-      
+
       // Simulate RSS feed processing with realistic regulatory content
       const simulatedItems = this.generateSimulatedRSSItems(feed);
-      
+
       let newItemsCount = 0;
-      
+
       for (const item of simulatedItems) {
         const regulatoryUpdate = this.transformRSSToRegulatory(item, feed);
-        
+
         // Check if item already exists
         const exists = await this.checkIfItemExists(regulatoryUpdate);
         if (!exists) {
@@ -143,12 +143,12 @@ export class EnhancedRSSService {
           newItemsCount++;
         }
       }
-      
+
       // Update feed status
       feed.lastChecked = new Date().toISOString();
       feed.itemCount = simulatedItems.length;
       feed.status = 'active';
-      
+
       return {
         success: true,
         feedName: feed.name,
@@ -158,7 +158,7 @@ export class EnhancedRSSService {
     } catch (error: any) {
       console.error(`[Enhanced RSS] Error processing feed ${feed.name}:`, error);
       feed.status = 'error';
-      
+
       return {
         success: false,
         feedName: feed.name,
@@ -244,7 +244,7 @@ export class EnhancedRSSService {
         }
       ]
     };
-    
+
     return templates[authority as keyof typeof templates] || [];
   }
 
@@ -270,39 +270,39 @@ export class EnhancedRSSService {
   private determinePriority(item: RSSItem, feed: RSSFeed): 'low' | 'medium' | 'high' | 'critical' {
     const title = item.title.toLowerCase();
     const description = item.description.toLowerCase();
-    
+
     // Critical priority indicators
-    if (title.includes('recall') || title.includes('safety alert') || 
+    if (title.includes('recall') || title.includes('safety alert') ||
         title.includes('urgent') || description.includes('immediate action')) {
       return 'critical';
     }
-    
+
     // High priority indicators
-    if (title.includes('approval') || title.includes('clearance') || 
+    if (title.includes('approval') || title.includes('clearance') ||
         title.includes('guidance') || title.includes('guidelines')) {
       return 'high';
     }
-    
+
     // Medium priority for regulatory updates
     if (feed.category === 'regulatory') {
       return 'medium';
     }
-    
+
     return 'low';
   }
 
   private extractTags(item: RSSItem, feed: RSSFeed): string[] {
     const tags = [feed.authority.toLowerCase(), 'rss_feed'];
-    
+
     // Add category-based tags
     if (item.category) {
       tags.push(...item.category);
     }
-    
+
     // Add content-based tags
     const title = item.title.toLowerCase();
     const description = item.description.toLowerCase();
-    
+
     if (title.includes('approval') || description.includes('approval')) tags.push('approval');
     if (title.includes('recall') || description.includes('recall')) tags.push('recall');
     if (title.includes('guidance') || description.includes('guidance')) tags.push('guidance');
@@ -310,15 +310,15 @@ export class EnhancedRSSService {
     if (title.includes('device') || description.includes('device')) tags.push('medical_device');
     if (title.includes('software') || description.includes('software')) tags.push('software');
     if (title.includes('ai') || description.includes('artificial intelligence')) tags.push('ai');
-    
+
     return tags;
   }
 
   private async checkIfItemExists(regulatoryUpdate: any): Promise<boolean> {
     try {
       const allUpdates = await storage.getAllRegulatoryUpdates();
-      return allUpdates.some(existing => 
-        existing.url === regulatoryUpdate.url || 
+      return allUpdates.some(existing =>
+        existing.url === regulatoryUpdate.url ||
         (existing.title === regulatoryUpdate.title && existing.authority === regulatoryUpdate.authority)
       );
     } catch (error) {
@@ -340,7 +340,7 @@ export class EnhancedRSSService {
     if (!feed) {
       throw new Error(`Feed not found: ${feedName}`);
     }
-    
+
     return this.processFeed(feed);
   }
 }

@@ -5,9 +5,9 @@
  */
 
 import axios from 'axios';
-import { db } from '../storage';
-import { patents } from '../../shared/schema';
-import { Logger } from './logger.service';
+import { db } from '../storage.js';
+import { patents } from '../../shared/schema.js';
+import { Logger } from './logger.service.js';
 
 const logger = new Logger('PatentService');
 
@@ -42,7 +42,7 @@ async function harvestUSPTOPatents(searchTerm: string): Promise<PatentRecord[]> 
     logger.info('Harvesting USPTO patents', { searchTerm });
 
     const results: PatentRecord[] = [];
-    
+
     // Query USPTO PatentsView API
     // Free API: https://patentsview.org/api/patents/query
     const queries = [

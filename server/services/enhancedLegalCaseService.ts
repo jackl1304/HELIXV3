@@ -1,6 +1,6 @@
 /**
  * Enhanced Legal Case Service - Comprehensive Case Reconstruction
- * 
+ *
  * This service provides detailed legal case information with:
  * - Full case documentation and court records
  * - Settlement amounts and damages details
@@ -10,7 +10,7 @@
  */
 
 import { db } from '../db';
-import { legalCases } from '@shared/schema';
+import { legalCases } from '../../shared/schema.js';
 import { eq } from 'drizzle-orm';
 
 interface ComprehensiveLegalCase {
@@ -21,7 +21,7 @@ interface ComprehensiveLegalCase {
   jurisdiction: string;
   decisionDate: Date;
   summary: string;
-  
+
   // Enhanced fields for better case reconstruction
   detailedDescription: string;
   plaintiffDetails: {
@@ -36,7 +36,7 @@ interface ComprehensiveLegalCase {
       totalAwarded: number;
     };
   };
-  
+
   defendantDetails: {
     company: string;
     deviceName: string;
@@ -49,7 +49,7 @@ interface ComprehensiveLegalCase {
     defenseStrategy: string[];
     settlementOffer?: number;
   };
-  
+
   medicalDevice: {
     name: string;
     manufacturer: string;
@@ -67,7 +67,7 @@ interface ComprehensiveLegalCase {
       fdaDatabase: string; // MAUDE ID
     };
   };
-  
+
   litigationTimeline: {
     filingDate: Date;
     discoveryPhase: {
@@ -95,14 +95,14 @@ interface ComprehensiveLegalCase {
       details: string;
     };
   };
-  
+
   legalPrecedent: {
     significance: 'high' | 'medium' | 'low';
     keyRulings: string[];
     impactOnIndustry: string;
     relatedCases: string[];
   };
-  
+
   documentation: {
     courtDocuments: string[];
     expertTestimony: string[];
@@ -110,7 +110,7 @@ interface ComprehensiveLegalCase {
     fdaCorrespondence: string[];
     internalMemos: string[];
   };
-  
+
   keywords: string[];
   documentUrl?: string;
   impactLevel: 'high' | 'medium' | 'low';
@@ -119,13 +119,13 @@ interface ComprehensiveLegalCase {
 }
 
 export class EnhancedLegalCaseService {
-  
+
   /**
    * Generate comprehensive legal cases with detailed reconstruction capability
    */
   async generateComprehensiveLegalCases(): Promise<ComprehensiveLegalCase[]> {
     const comprehensiveCases: ComprehensiveLegalCase[] = [
-      
+
       // 1. BioZorb Breast Tissue Marker Litigation - Current 2024-2025 Case
       {
         id: 'biozorb-2024-001',
@@ -135,13 +135,13 @@ export class EnhancedLegalCaseService {
         jurisdiction: 'US Federal',
         decisionDate: new Date('2025-09-08'), // Upcoming bellwether trial
         summary: 'Class action litigation against Hologic Inc. for defective BioZorb breast tissue markers causing patient injuries and deaths',
-        
+
         detailedDescription: `This multidistrict litigation involves over 122 consolidated lawsuits against Hologic Inc. regarding their BioZorb breast tissue marker devices. The BioZorb marker is designed to be implanted in breast tissue following lumpectomy procedures to mark the surgical site and aid in radiation therapy planning. The device is supposed to be bioabsorbable, meaning it should naturally dissolve in the body over time.
 
 However, plaintiffs allege that the devices have severe design defects causing them to migrate from the intended location, erode through breast tissue, fail to absorb as advertised, and break apart within the body. These complications have resulted in severe pain, infections, seromas (fluid collections), additional surgeries, and in some cases, bilateral mastectomies.
 
 The FDA issued a Class I recall (the most serious type) in March 2024 following reports of 129 serious injuries and 49 deaths associated with the device. This recall classification indicates that use of the device may cause serious injury or death.`,
-        
+
         plaintiffDetails: {
           injuries: [
             'Device migration and displacement',
@@ -163,7 +163,7 @@ The FDA issued a Class I recall (the most serious type) in March 2024 following 
             totalAwarded: 0 // Settlement pending
           }
         },
-        
+
         defendantDetails: {
           company: 'Hologic Inc.',
           deviceName: 'BioZorb Tissue Marker',
@@ -180,7 +180,7 @@ The FDA issued a Class I recall (the most serious type) in March 2024 following 
             'Motion for summary judgment (denied by court)'
           ]
         },
-        
+
         medicalDevice: {
           name: 'BioZorb Tissue Marker',
           manufacturer: 'Hologic Inc.',
@@ -198,7 +198,7 @@ The FDA issued a Class I recall (the most serious type) in March 2024 following 
             fdaDatabase: 'MAUDE Database - BioZorb reports'
           }
         },
-        
+
         litigationTimeline: {
           filingDate: new Date('2023-01-15'),
           discoveryPhase: {
@@ -230,7 +230,7 @@ The FDA issued a Class I recall (the most serious type) in March 2024 following 
             confidential: false
           }
         },
-        
+
         legalPrecedent: {
           significance: 'high',
           keyRulings: [
@@ -240,7 +240,7 @@ The FDA issued a Class I recall (the most serious type) in March 2024 following 
           impactOnIndustry: 'May lead to stricter FDA oversight of bioabsorbable medical devices and enhanced post-market surveillance requirements',
           relatedCases: ['Philips CPAP MDL', 'Hernia Mesh MDL']
         },
-        
+
         documentation: {
           courtDocuments: [
             'Master Complaint filed January 2023',
@@ -265,14 +265,14 @@ The FDA issued a Class I recall (the most serious type) in March 2024 following 
             'Customer complaint files'
           ]
         },
-        
+
         keywords: ['BioZorb', 'breast tissue marker', 'Hologic', 'device migration', 'Class I recall', 'MDL 3032'],
         documentUrl: 'https://www.masd.uscourts.gov/biozorb-mdl',
         impactLevel: 'high',
         createdAt: new Date(),
         updatedAt: new Date()
       },
-      
+
       // 2. Philips CPAP Settlement - $1.1 Billion Case
       {
         id: 'philips-cpap-2024-001',
@@ -282,13 +282,13 @@ The FDA issued a Class I recall (the most serious type) in March 2024 following 
         jurisdiction: 'US Federal',
         decisionDate: new Date('2024-04-29'),
         summary: '$1.1 billion settlement for personal injury claims related to defective Philips CPAP machines',
-        
+
         detailedDescription: `This landmark settlement resolves claims against Philips North America LLC regarding defective continuous positive airway pressure (CPAP) and bi-level positive airway pressure (BiPAP) machines. The devices contained polyester-based polyurethane (PE-PUR) foam that degraded and released harmful particles and chemicals into patients' airways.
 
 The settlement covers patients who used recalled Philips devices and developed cancer, respiratory injuries, or other health conditions. The foam degradation was linked to heat, humidity, and UV light exposure, causing the material to break down and potentially be inhaled by users during sleep therapy.
 
 This case represents one of the largest medical device settlements in recent history, with $1.075 billion allocated for personal injury claims and an additional $25 million for medical monitoring. The FDA also imposed a separate $400 million settlement requiring Philips to cease CPAP sales in the United States.`,
-        
+
         plaintiffDetails: {
           injuries: [
             'Lung cancer and respiratory cancers',
@@ -309,7 +309,7 @@ This case represents one of the largest medical device settlements in recent his
             totalAwarded: 1100000000 // $1.1 billion total settlement pool
           }
         },
-        
+
         defendantDetails: {
           company: 'Philips North America LLC',
           deviceName: 'DreamStation CPAP/BiPAP Machines',
@@ -327,7 +327,7 @@ This case represents one of the largest medical device settlements in recent his
           ],
           settlementOffer: 1100000000
         },
-        
+
         medicalDevice: {
           name: 'DreamStation CPAP/BiPAP Machines',
           manufacturer: 'Philips North America LLC',
@@ -345,7 +345,7 @@ This case represents one of the largest medical device settlements in recent his
             fdaDatabase: 'MAUDE Database - Philips CPAP reports'
           }
         },
-        
+
         litigationTimeline: {
           filingDate: new Date('2021-08-01'),
           discoveryPhase: {
@@ -374,7 +374,7 @@ This case represents one of the largest medical device settlements in recent his
             confidential: false
           }
         },
-        
+
         legalPrecedent: {
           significance: 'high',
           keyRulings: [
@@ -384,7 +384,7 @@ This case represents one of the largest medical device settlements in recent his
           impactOnIndustry: 'Led to enhanced FDA oversight of CPAP devices and stricter foam material requirements',
           relatedCases: ['ResMed CPAP investigations', 'Other sleep therapy device recalls']
         },
-        
+
         documentation: {
           courtDocuments: [
             'Settlement Agreement - April 29, 2024',
@@ -409,14 +409,14 @@ This case represents one of the largest medical device settlements in recent his
             'Executive correspondence regarding safety issues'
           ]
         },
-        
+
         keywords: ['Philips', 'CPAP', 'BiPAP', 'foam degradation', 'settlement', '$1.1 billion', 'MDL 3014'],
         documentUrl: 'https://www.pawd.uscourts.gov/philips-cpap-mdl',
         impactLevel: 'high',
         createdAt: new Date(),
         updatedAt: new Date()
       },
-      
+
       // 3. Hernia Mesh Litigation - Multi-Billion Dollar Cases
       {
         id: 'hernia-mesh-2024-001',
@@ -426,13 +426,13 @@ This case represents one of the largest medical device settlements in recent his
         jurisdiction: 'US Federal',
         decisionDate: new Date('2024-06-15'),
         summary: 'Multibillion-dollar litigation involving defective hernia mesh implants causing severe complications',
-        
+
         detailedDescription: `This extensive litigation involves thousands of lawsuits against multiple manufacturers of hernia mesh products, including Ethicon (Johnson & Johnson), C.R. Bard, and Atrium Medical. The cases center on defective mesh implants used in hernia repair surgeries that allegedly cause severe complications including mesh shrinkage, erosion, migration, and adhesion to internal organs.
 
 The Physiomesh product was voluntarily recalled by Ethicon in 2016 due to higher than expected revision surgery rates. Studies showed that patients receiving Physiomesh had significantly higher rates of hernia recurrence and need for additional surgeries compared to other mesh products.
 
 The litigation has resulted in several major settlements, with C.R. Bard announcing settlements exceeding $1 billion for approximately 38,000 lawsuits. Individual settlements have varied widely based on the severity of complications, with some patients requiring multiple revision surgeries and experiencing chronic pain and disability.`,
-        
+
         plaintiffDetails: {
           injuries: [
             'Mesh shrinkage and contraction',
@@ -453,7 +453,7 @@ The litigation has resulted in several major settlements, with C.R. Bard announc
             totalAwarded: 1000000000 // $1B+ in total settlements
           }
         },
-        
+
         defendantDetails: {
           company: 'Ethicon Inc. (Johnson & Johnson)',
           deviceName: 'Physiomesh Flexible Composite Mesh',
@@ -470,7 +470,7 @@ The litigation has resulted in several major settlements, with C.R. Bard announc
             'Negotiate structured settlements to resolve claims'
           ]
         },
-        
+
         medicalDevice: {
           name: 'Physiomesh Flexible Composite Mesh',
           manufacturer: 'Ethicon Inc.',
@@ -488,7 +488,7 @@ The litigation has resulted in several major settlements, with C.R. Bard announc
             fdaDatabase: 'MAUDE Database - Hernia Mesh reports'
           }
         },
-        
+
         litigationTimeline: {
           filingDate: new Date('2016-08-01'),
           discoveryPhase: {
@@ -517,7 +517,7 @@ The litigation has resulted in several major settlements, with C.R. Bard announc
             confidential: false
           }
         },
-        
+
         legalPrecedent: {
           significance: 'high',
           keyRulings: [
@@ -527,7 +527,7 @@ The litigation has resulted in several major settlements, with C.R. Bard announc
           impactOnIndustry: 'Led to increased FDA scrutiny of surgical mesh devices and enhanced clinical trial requirements',
           relatedCases: ['Bard hernia mesh MDL', 'Atrium mesh litigation', 'Transvaginal mesh cases']
         },
-        
+
         documentation: {
           courtDocuments: [
             'Master Settlement Agreement',
@@ -552,7 +552,7 @@ The litigation has resulted in several major settlements, with C.R. Bard announc
             'Sales and marketing communications'
           ]
         },
-        
+
         keywords: ['hernia mesh', 'Physiomesh', 'Ethicon', 'Johnson & Johnson', 'mesh erosion', 'revision surgery'],
         documentUrl: 'https://www.gand.uscourts.gov/physiomesh-mdl',
         impactLevel: 'high',
@@ -560,10 +560,10 @@ The litigation has resulted in several major settlements, with C.R. Bard announc
         updatedAt: new Date()
       }
     ];
-    
+
     return comprehensiveCases;
   }
-  
+
   /**
    * Store comprehensive legal cases in database
    */
@@ -571,7 +571,7 @@ The litigation has resulted in several major settlements, with C.R. Bard announc
     try {
       const comprehensiveCases = await this.generateComprehensiveLegalCases();
       let casesStored = 0;
-      
+
       for (const comprehensiveCase of comprehensiveCases) {
         // Check if case already exists
         const existingCase = await db
@@ -579,7 +579,7 @@ The litigation has resulted in several major settlements, with C.R. Bard announc
           .from(legalCases)
           .where(eq(legalCases.id, comprehensiveCase.id))
           .limit(1);
-        
+
         if (existingCase.length === 0) {
           // Convert comprehensive case to database format
           const legalCase = {
@@ -595,20 +595,20 @@ The litigation has resulted in several major settlements, with C.R. Bard announc
             impactLevel: comprehensiveCase.impactLevel,
             keywords: comprehensiveCase.keywords,
           };
-          
+
           await db.insert(legalCases).values(legalCase);
           casesStored++;
           console.log(`[Enhanced Legal Service] Stored comprehensive case: ${comprehensiveCase.title}`);
         }
       }
-      
+
       return { success: true, casesStored };
     } catch (error) {
       console.error('[Enhanced Legal Service] Error storing comprehensive cases:', error);
       return { success: false, casesStored: 0 };
     }
   }
-  
+
   /**
    * Format comprehensive case data into detailed content for database storage
    */
@@ -669,19 +669,19 @@ ${comprehensiveCase.medicalDevice.recallStatus.isRecalled ? `
 ${comprehensiveCase.litigationTimeline.discoveryPhase.keyFindings.map(finding => `• ${finding}`).join('\n')}
 
 **Court Motions:**
-${comprehensiveCase.litigationTimeline.motions.map(motion => 
+${comprehensiveCase.litigationTimeline.motions.map(motion =>
   `• ${motion.type} (${motion.date.toLocaleDateString()}): ${motion.outcome.toUpperCase()} - ${motion.details}`
 ).join('\n')}
 
 **Settlement Status:**
-${comprehensiveCase.litigationTimeline.settlement.isSettled ? 
+${comprehensiveCase.litigationTimeline.settlement.isSettled ?
   `• SETTLED on ${comprehensiveCase.litigationTimeline.settlement.settlementDate?.toLocaleDateString()}
 • Amount: $${comprehensiveCase.litigationTimeline.settlement.amount?.toLocaleString()}
 • Terms: ${comprehensiveCase.litigationTimeline.settlement.terms}
 • Confidential: ${comprehensiveCase.litigationTimeline.settlement.confidential ? 'YES' : 'NO'}` :
   '• Case ongoing - no settlement reached'}
 
-${comprehensiveCase.litigationTimeline.verdict ? 
+${comprehensiveCase.litigationTimeline.verdict ?
   `**Verdict:**
 • Date: ${comprehensiveCase.litigationTimeline.verdict.date.toLocaleDateString()}
 • Outcome: ${comprehensiveCase.litigationTimeline.verdict.outcome.toUpperCase()}

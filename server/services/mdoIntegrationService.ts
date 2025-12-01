@@ -1,5 +1,5 @@
 import { storage } from "../storage";
-import type { DataSource, RegulatoryUpdate } from "@shared/schema";
+import type { DataSource, RegulatoryUpdate } from "../../shared/schema.js";
 
 interface MDOArticleData {
   id: string;
@@ -44,7 +44,7 @@ export class MDOIntegrationService {
   async extractMDOContent(): Promise<MDOArticleData[]> {
     try {
       console.log('[MDO-INTEGRATION] Extracting Medical Design and Outsourcing content...');
-      
+
       // Based on the fetched content, extract key articles and information
       const extractedArticles: MDOArticleData[] = [
         {
@@ -262,7 +262,7 @@ export class MDOIntegrationService {
   async extractMedtechBig100(): Promise<MDOCompanyData[]> {
     try {
       console.log('[MDO-INTEGRATION] Extracting Medtech Big 100 company data...');
-      
+
       // Based on the Big 100 reference, extract key medtech companies
       const big100Companies: MDOCompanyData[] = [
         {
@@ -361,9 +361,9 @@ export class MDOIntegrationService {
 # ${article.title}
 
 ## Industry Overview
-**Company**: ${article.company || 'Industry Development'}  
-**Device Type**: ${article.deviceType || 'Medical Technology'}  
-**Therapeutic Area**: ${article.therapeuticArea || 'Healthcare'}  
+**Company**: ${article.company || 'Industry Development'}
+**Device Type**: ${article.deviceType || 'Medical Technology'}
+**Therapeutic Area**: ${article.therapeuticArea || 'Healthcare'}
 **Publication Date**: ${article.publishedDate}
 
 ## Summary
@@ -384,7 +384,7 @@ ${article.content.marketImplications ? article.content.marketImplications.map(im
 ## Industry Significance
 This development represents significant advancement in ${article.therapeuticArea || 'medical technology'} with potential regulatory implications for device approval pathways and market access strategies.
 
-**Relevance Score**: ${article.relevanceScore}/10  
+**Relevance Score**: ${article.relevanceScore}/10
 **Source**: Medical Design and Outsourcing
             `,
             type: 'industry_news' as const,
@@ -483,7 +483,7 @@ As a top ${company.ranking} medical technology company, ${company.name}'s regula
   async syncToDatabase(): Promise<{ success: boolean; synced: number; errors: number }> {
     try {
       console.log('[MDO-SYNC] Starting Medical Design and Outsourcing data synchronization...');
-      
+
       const updates = await this.generateRegulatoryUpdates();
       let synced = 0;
       let errors = 0;
@@ -499,7 +499,7 @@ As a top ${company.ranking} medical technology company, ${company.name}'s regula
       }
 
       console.log(`[MDO-SYNC] Synchronization completed: ${synced} synced, ${errors} errors`);
-      
+
       return { success: true, synced, errors };
     } catch (error) {
       console.error('[MDO-SYNC] Synchronization failed:', error);
@@ -512,7 +512,7 @@ As a top ${company.ranking} medical technology company, ${company.name}'s regula
     try {
       const articles = await this.extractMDOContent();
       const companies = await this.extractMedtechBig100();
-      
+
       if (articles.length > 0 && companies.length > 0) {
         return {
           status: 'healthy',

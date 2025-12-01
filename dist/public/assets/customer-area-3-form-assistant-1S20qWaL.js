@@ -1,0 +1,1 @@
+import{j as s}from"./index-CB4l6FHQ.js";function t(){return s.jsxs("div",{className:"p-8",children:[s.jsx("h1",{className:"text-2xl font-bold mb-4",children:"Formular-Assistent"}),s.jsx("p",{className:"text-gray-600",children:"Hier entsteht der Formular-Assistent für Projekte in Bereich 3."})]})}export{t as default};

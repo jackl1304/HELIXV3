@@ -1,3 +1,12 @@
+// Hilfsfunktion: Prüft, ob ein Update als "Neu" gilt (z.B. innerhalb der letzten 7 Tage)
+function isNewUpdate(dateString?: string) {
+  if (!dateString) return false;
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return false;
+  const now = new Date();
+  const diffDays = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24);
+  return diffDays <= 7;
+}
 import React, { useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -244,25 +253,34 @@ export default function RegulatoryUpdates() {
                         <CardDescription className="text-base mb-3">
                           {update.fda_applicant && (
                             <div className="text-sm text-gray-600 mb-1">
-                              K-Nummer: {update.fda_k_number} Antragsteller: {update.fda_applicant} Produktcode: {update.fda_product_code} Geräteklasse: {update.fda_device_class} Regulierungsnummer: {update.fda_regulation_number} Entscheidungsdatum: {update.fda_decision_date ? new Date(update.fda_decision_date).toLocaleDateString('de-DE', {year: 'numeric', month: '2-digit', day: '2-digit'}) : 'N/A'} Zusammenfassung: {update.description}
+                              K-Nummer: {update.fda_k_number} Antragsteller: {update.fda_applicant} Produktcode: {update.fda_product_code} Geräteklasse: {update.fda_device_class} Regulierungsnummer: {update.fda_regulation_number} Entscheidungsdatum: {(() => {
+                                const dateString = update.fda_decision_date || update.published_date || update.created_at || update.effective_date;
+                                const date = dateString ? new Date(dateString) : null;
+                                if (!date || isNaN(date.getTime())) return 'Kein Datum';
+                                return date.toLocaleDateString('de-DE', {year: 'numeric', month: '2-digit', day: '2-digit'});
+                              })()} Zusammenfassung: {update.description}
                             </div>
                           )}
                           {!update.fda_applicant && update.description}
                         </CardDescription>
                       </div>
                       <div className="flex items-center gap-2">
-                        {update.published_date && (
-                          <div className="text-right text-sm text-gray-600">
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              {new Date(update.published_date).toLocaleDateString('de-DE', {
+                        <div className="text-right text-sm text-gray-600">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            {(() => {
+                              // Nutze published_date, dann created_at, dann effective_date
+                              const dateString = update.published_date || update.created_at || update.effective_date;
+                              const date = dateString ? new Date(dateString) : null;
+                              if (!date || isNaN(date.getTime())) return 'Kein Datum';
+                              return date.toLocaleDateString('de-DE', {
                                 year: 'numeric',
                                 month: '2-digit',
                                 day: '2-digit'
-                              })}
-                            </div>
+                              });
+                            })()}
                           </div>
-                        )}
+                        </div>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -368,12 +386,16 @@ export default function RegulatoryUpdates() {
                                 <div>
                                   <p className="text-xs text-gray-600 mb-1">Veröffentlicht</p>
                                   <p className="text-sm">
-                                    {update.published_date ?
-                                      new Date(update.published_date).toLocaleDateString('de-DE', {
+                                    {(() => {
+                                      const dateString = update.published_date || update.created_at || update.effective_date;
+                                      const date = dateString ? new Date(dateString) : null;
+                                      if (!date || isNaN(date.getTime())) return 'Kein Datum';
+                                      return date.toLocaleDateString('de-DE', {
                                         year: 'numeric',
                                         month: 'long',
                                         day: 'numeric'
-                                      }) : 'N/A'}
+                                      });
+                                    })()}
                                   </p>
                                 </div>
 

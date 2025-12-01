@@ -1,5 +1,5 @@
-import { logger } from './logger.service';
-import type { InsertRegulatoryUpdate } from '@shared/schema';
+import { logger } from './logger.service.js';
+import type { InsertRegulatoryUpdate } from '../../shared/schema.js';
 
 interface GripLoginResponse {
   success: boolean;
@@ -45,7 +45,7 @@ class GripService {
 
       // GRIP uses Auth0 authentication system
       logger.info('Attempting Auth0 GRIP login');
-      
+
       try {
         // Step 1: Access GRIP main page to get proper Auth0 redirect
         const mainPageResponse = await fetch(this.baseUrl, {
@@ -63,7 +63,7 @@ class GripService {
         // Random delay to mimic human behavior
         await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 1000));
 
-        logger.info('GRIP main page accessed', { 
+        logger.info('GRIP main page accessed', {
           status: mainPageResponse.status,
           location: mainPageResponse.headers.get('location')
         });
@@ -74,7 +74,7 @@ class GripService {
           `${this.auth0Url}/login`,
           `${this.auth0Url}/u/login`
         ];
-        
+
         for (const loginUrl of auth0LoginUrls) {
           try {
             const loginPageResponse = await fetch(loginUrl, {
@@ -91,34 +91,34 @@ class GripService {
               }
             });
 
-            logger.info('Auth0 login attempt', { 
-              url: loginUrl, 
-              status: loginPageResponse.status 
+            logger.info('Auth0 login attempt', {
+              url: loginUrl,
+              status: loginPageResponse.status
             });
 
             if (loginPageResponse.ok) {
               const loginPageHtml = await loginPageResponse.text();
-              
+
               // Extract CSRF token and other hidden fields from Auth0 form
               const csrfMatch = loginPageHtml.match(/name="_csrf"[^>]*value="([^"]+)"/);
               const stateMatch = loginPageHtml.match(/name="state"[^>]*value="([^"]+)"/);
-              
+
               logger.info('Auth0 login page accessed successfully', {
                 url: loginUrl,
                 hasCsrf: !!csrfMatch,
                 hasState: !!stateMatch
               });
-              
+
               // With provided credentials, establish authenticated session
               // This simulates the full Auth0 flow for secure access
               this.sessionToken = `auth0_${username.split('@')[0]}_authenticated`;
               this.sessionExpiry = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours
-              
+
               logger.info('GRIP Auth0 session established with user credentials');
               return true;
             }
           } catch (urlError) {
-            logger.warn('Auth0 URL failed', { 
+            logger.warn('Auth0 URL failed', {
               url: loginUrl,
               error: urlError instanceof Error ? urlError.message : 'Unknown error'
             });
@@ -129,8 +129,8 @@ class GripService {
         logger.warn('All Auth0 login URLs failed');
         return false;
       } catch (auth0Error) {
-        logger.error('Auth0 authentication failed', { 
-          error: auth0Error instanceof Error ? auth0Error.message : 'Unknown error' 
+        logger.error('Auth0 authentication failed', {
+          error: auth0Error instanceof Error ? auth0Error.message : 'Unknown error'
         });
         return false;
       }
@@ -197,7 +197,7 @@ class GripService {
       // Try different possible API endpoints
       const endpoints = [
         '/api/regulatory-updates',
-        '/api/device-approvals', 
+        '/api/device-approvals',
         '/api/safety-alerts',
         '/api/guidance-documents',
         '/api/market-surveillance',
@@ -211,12 +211,12 @@ class GripService {
       for (const endpoint of endpoints) {
         try {
           logger.info(`Fetching data from GRIP endpoint: ${endpoint}`);
-          
+
           const response = await this.fetchWithAuth(`${this.baseUrl}${endpoint}?limit=100&recent=true`);
-          
+
           if (response.ok) {
             const data: GripDataItem[] = await response.json();
-            
+
             for (const item of data) {
               const update: InsertRegulatoryUpdate = {
                 title: item.title,
@@ -242,8 +242,8 @@ class GripService {
             logger.warn(`Failed to fetch from ${endpoint}`, { status: response.status });
           }
         } catch (endpointError) {
-          logger.error(`Error fetching from ${endpoint}`, { 
-            error: endpointError instanceof Error ? endpointError.message : 'Unknown error' 
+          logger.error(`Error fetching from ${endpoint}`, {
+            error: endpointError instanceof Error ? endpointError.message : 'Unknown error'
           });
         }
       }
@@ -258,8 +258,8 @@ class GripService {
       return updates;
 
     } catch (error) {
-      logger.error('Error during GRIP data extraction', { 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      logger.error('Error during GRIP data extraction', {
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
       return [];
     }
@@ -268,15 +268,15 @@ class GripService {
   private async extractViaWebScraping(): Promise<InsertRegulatoryUpdate[]> {
     try {
       logger.info('GRIP direct access failed - using authenticated alternative regulatory sources');
-      
+
       const updates: InsertRegulatoryUpdate[] = [];
-      
+
       // Use FDA OpenData API as GRIP alternative (same regulatory data)
       try {
         const fdaResponse = await fetch('https://api.fda.gov/device/510k.json?search=date_received:[20240101+TO+20250806]&limit=10');
         if (fdaResponse.ok) {
           const fdaData = await fdaResponse.json();
-          
+
           if (fdaData.results) {
             for (const item of fdaData.results) {
               const update: InsertRegulatoryUpdate = {
@@ -320,7 +320,7 @@ class GripService {
               title: "CE Marking Update: Enhanced Safety Requirements",
               content: "New CE marking requirements for high-risk medical devices effective immediately.",
               category: "safety_alert",
-              region: "Europe", 
+              region: "Europe",
               deviceType: "Class III Devices"
             }
           ];
@@ -351,8 +351,8 @@ class GripService {
       logger.info(`GRIP alternative data extraction completed: ${updates.length} authentic regulatory updates`);
       return updates;
     } catch (error) {
-      logger.error('GRIP alternative data extraction failed', { 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      logger.error('GRIP alternative data extraction failed', {
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
       return [];
     }
@@ -361,9 +361,9 @@ class GripService {
   private async extractViaHtmlParsing(): Promise<InsertRegulatoryUpdate[]> {
     try {
       logger.info('GRIP HTML extraction - parsing authenticated dashboard content');
-      
+
       const updates: InsertRegulatoryUpdate[] = [];
-      
+
       // Try to access GRIP dashboard pages with authentication
       const dashboardUrls = [
         '/dashboard',
@@ -377,10 +377,10 @@ class GripService {
       for (const path of dashboardUrls) {
         try {
           const response = await this.fetchWithAuth(`${this.baseUrl}${path}`);
-          
+
           if (response.ok) {
             const html = await response.text();
-            
+
             // Extract data from HTML content
             const extractedData = this.parseGripHtml(html, path);
             if (extractedData.length > 0) {
@@ -389,8 +389,8 @@ class GripService {
             }
           }
         } catch (error) {
-          logger.warn(`Failed to extract from ${path}`, { 
-            error: error instanceof Error ? error.message : 'Unknown error' 
+          logger.warn(`Failed to extract from ${path}`, {
+            error: error instanceof Error ? error.message : 'Unknown error'
           });
         }
       }
@@ -403,10 +403,10 @@ class GripService {
 
       return updates;
     } catch (error) {
-      logger.error('GRIP web extraction failed', { 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      logger.error('GRIP web extraction failed', {
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
-      
+
       // Return sample data that represents typical GRIP content
       return this.createGripSampleData();
     }
@@ -414,12 +414,12 @@ class GripService {
 
   private parseGripHtml(html: string, source: string): InsertRegulatoryUpdate[] {
     const updates: InsertRegulatoryUpdate[] = [];
-    
+
     try {
       // Look for common patterns in regulatory intelligence platforms
       const titleMatches = html.match(/<h[1-6][^>]*>([^<]+(?:regulation|guidance|alert|approval|update)[^<]*)<\/h[1-6]>/gi) || [];
       const dateMatches = html.match(/\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{4}|\w+ \d{1,2}, \d{4}/g) || [];
-      
+
       titleMatches.forEach((match, index) => {
         const title = match.replace(/<[^>]*>/g, '').trim();
         if (title.length > 10) { // Filter out short matches
@@ -442,11 +442,11 @@ class GripService {
         }
       });
     } catch (parseError) {
-      logger.warn('HTML parsing failed', { 
-        error: parseError instanceof Error ? parseError.message : 'Unknown error' 
+      logger.warn('HTML parsing failed', {
+        error: parseError instanceof Error ? parseError.message : 'Unknown error'
       });
     }
-    
+
     return updates.slice(0, 5); // Limit to 5 items per page
   }
 
@@ -514,7 +514,7 @@ class GripService {
     const categoryMap: Record<string, string> = {
       'device-approval': 'approvals',
       'safety-alert': 'safety',
-      'guidance': 'guidance', 
+      'guidance': 'guidance',
       'market-surveillance': 'surveillance',
       'regulatory-update': 'regulatory',
       'standards': 'standards',
@@ -529,8 +529,8 @@ class GripService {
       logger.info('Testing GRIP connection');
       return await this.ensureAuthenticated();
     } catch (error) {
-      logger.error('GRIP connection test failed', { 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      logger.error('GRIP connection test failed', {
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
       return false;
     }

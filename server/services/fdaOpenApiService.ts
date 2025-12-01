@@ -1,4 +1,4 @@
-import { storage } from '../storage';
+import { storage } from '../storage.js';
 
 interface FDADevice {
   k_number?: string;
@@ -76,19 +76,19 @@ export class FDAOpenAPIService {
   private async makeRequest(endpoint: string, retryAttempt: number = 0): Promise<any> {
     try {
       // Add API key as URL parameter if available
-      const urlWithKey = this.apiKey ? 
-        `${endpoint}${endpoint.includes('?') ? '&' : '?'}api_key=${this.apiKey}` : 
+      const urlWithKey = this.apiKey ?
+        `${endpoint}${endpoint.includes('?') ? '&' : '?'}api_key=${this.apiKey}` :
         endpoint;
-      
+
       console.log(`🔄 [FDA API] Requesting: ${urlWithKey.replace(this.apiKey, 'API_KEY_HIDDEN')} (attempt ${retryAttempt + 1})`);
-      
+
       const response = await fetch(urlWithKey, {
         headers: {
           'User-Agent': 'Helix-Regulatory-Intelligence/1.0',
           'Accept': 'application/json'
         }
       });
-      
+
       if (!response.ok) {
         if (response.status === 429 && retryAttempt < this.maxRetries) {
           console.log(`⏱️ [FDA API] Rate limited, retrying after backoff...`);
@@ -97,17 +97,17 @@ export class FDAOpenAPIService {
         }
         throw new Error(`FDA API error: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
-      
+
       // Validate response structure
       if (!data || typeof data !== 'object') {
         throw new Error('Invalid FDA API response format');
       }
-      
+
       // Rate limiting
       await this.delay(this.rateLimitDelay);
-      
+
       console.log(`✅ [FDA API] Request successful - received ${data.results?.length || 0} items`);
       return data;
     } catch (error) {
@@ -116,7 +116,7 @@ export class FDAOpenAPIService {
         await this.exponentialBackoff(retryAttempt);
         return this.makeRequest(endpoint, retryAttempt + 1);
       }
-      
+
       console.error(`❌ [FDA API] Request failed after ${retryAttempt + 1} attempts:`, error);
       throw error;
     }
@@ -125,20 +125,20 @@ export class FDAOpenAPIService {
   async collect510kDevices(limit: number = 100): Promise<FDADevice[]> {
     try {
       console.log(`[FDA API] Collecting 510(k) devices (limit: ${limit})`);
-      
+
       const endpoint = `${this.baseUrl}/device/510k.json?limit=${limit}&sort=date_received:desc`;
       const data = await this.makeRequest(endpoint);
-      
+
       if (!data.results || !Array.isArray(data.results)) {
         throw new Error('Invalid FDA 510k response format');
       }
-      
+
       console.log(`[FDA API] Found ${data.results.length} 510(k) devices`);
-      
+
       for (const device of data.results as FDADevice[]) {
         await this.process510kDevice(device);
       }
-      
+
       console.log(`[FDA API] 510(k) collection completed`);
       return data.results as FDADevice[];
     } catch (error) {
@@ -162,7 +162,7 @@ export class FDAOpenAPIService {
         rawData: device,
         publishedAt: this.parseDate(device.decision_date) || new Date(),
       };
-      
+
       await storage.createRegulatoryUpdate(regulatoryUpdate);
       console.log(`[FDA API] Successfully created regulatory update: ${regulatoryUpdate.title}`);
     } catch (error) {
@@ -173,20 +173,20 @@ export class FDAOpenAPIService {
   async collectRecalls(limit: number = 100): Promise<FDARecall[]> {
     try {
       console.log(`[FDA API] Collecting device recalls (limit: ${limit})`);
-      
+
       const endpoint = `${this.baseUrl}/device/recall.json?limit=${limit}&sort=recall_initiation_date:desc`;
       const data = await this.makeRequest(endpoint);
-      
+
       if (!data.results || !Array.isArray(data.results)) {
         throw new Error('Invalid FDA recall response format');
       }
-      
+
       console.log(`[FDA API] Found ${data.results.length} recalls`);
-      
+
       for (const recall of data.results as FDARecall[]) {
         await this.processRecall(recall);
       }
-      
+
       console.log(`[FDA API] Recall collection completed`);
       return data.results as FDARecall[];
     } catch (error) {
@@ -201,7 +201,7 @@ export class FDAOpenAPIService {
         title: `FDA Recall: ${recall.product_description || 'Medical Device Recall'}`,
         description: this.formatRecallContent(recall),
         sourceId: 'fda_recalls',
-        sourceUrl: recall.event_id 
+        sourceUrl: recall.event_id
           ? `https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=${recall.event_id}`
           : `https://www.fda.gov/medical-devices/medical-device-recalls`,
         region: 'US',
@@ -212,7 +212,7 @@ export class FDAOpenAPIService {
         rawData: recall,
         publishedAt: this.parseDate(recall.recall_initiation_date) || new Date(),
       };
-      
+
       await storage.createRegulatoryUpdate(regulatoryUpdate);
       console.log(`[FDA API] Successfully created recall update: ${regulatoryUpdate.title}`);
     } catch (error) {
@@ -263,7 +263,7 @@ export class FDAOpenAPIService {
 
   private parseDate(dateString: string | undefined): Date | null {
     if (!dateString) return null;
-    
+
     try {
       return new Date(dateString);
     } catch {
@@ -274,51 +274,51 @@ export class FDAOpenAPIService {
   private determinePriority(device: FDADevice): 'critical' | 'high' | 'medium' | 'low' {
     const deviceClass = device.openfda?.device_class;
     const deviceName = device.device_name?.toLowerCase() || '';
-    
+
     // High-risk devices
-    if (deviceClass === 'Class III' || 
-        deviceName.includes('implant') || 
+    if (deviceClass === 'Class III' ||
+        deviceName.includes('implant') ||
         deviceName.includes('pacemaker') ||
         deviceName.includes('defibrillator')) {
       return 'critical';
     }
-    
+
     // AI/ML devices
-    if (deviceName.includes('ai') || 
+    if (deviceName.includes('ai') ||
         deviceName.includes('artificial intelligence') ||
         deviceName.includes('machine learning')) {
       return 'high';
     }
-    
+
     // Class II devices
     if (deviceClass === 'Class II') {
       return 'medium';
     }
-    
+
     return 'low';
   }
 
   private determineRecallPriority(recall: FDARecall): 'critical' | 'high' | 'medium' | 'low' {
     const classification = recall.classification?.toLowerCase() || '';
     const reason = recall.reason_for_recall?.toLowerCase() || '';
-    
+
     // Class I recalls (most serious)
-    if (classification.includes('class i') || 
-        reason.includes('death') || 
+    if (classification.includes('class i') ||
+        reason.includes('death') ||
         reason.includes('serious injury')) {
       return 'critical';
     }
-    
+
     // Class II recalls
     if (classification.includes('class ii')) {
       return 'high';
     }
-    
+
     // Class III recalls
     if (classification.includes('class iii')) {
       return 'medium';
     }
-    
+
     return 'medium'; // Default for recalls
   }
 
@@ -326,13 +326,13 @@ export class FDAOpenAPIService {
     const categories: string[] = [];
     const deviceName = device.device_name?.toLowerCase() || '';
     const specialty = device.openfda?.medical_specialty_description?.toLowerCase() || '';
-    
+
     // Medical specialties
     if (specialty.includes('cardio')) categories.push('Kardiologie');
     if (specialty.includes('neuro')) categories.push('Neurologie');
     if (specialty.includes('ortho')) categories.push('Orthopädie');
     if (specialty.includes('radio')) categories.push('Radiologie');
-    
+
     // Device types
     if (deviceName.includes('software') || deviceName.includes('ai')) {
       categories.push('Software-Medizinprodukt');
@@ -340,12 +340,12 @@ export class FDAOpenAPIService {
     if (deviceName.includes('implant')) categories.push('Implantat');
     if (deviceName.includes('monitor')) categories.push('Monitoring');
     if (deviceName.includes('diagnostic')) categories.push('Diagnostik');
-    
+
     // Default category
     if (categories.length === 0) {
       categories.push('Medizinprodukt');
     }
-    
+
     return categories;
   }
 }

@@ -1,23 +1,16 @@
-
-// Load environment variables first
-import { config } from "dotenv";
-config();
+import 'dotenv/config';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
 import express, { type Request, type Response, type NextFunction } from "express";
 import { createServer } from "http";
 import cors from "cors";
-import path from "path";
-import { fileURLToPath } from "url";
-import { registerRoutes } from "./routes";
-import { db, dbDriver } from './db';
-import { setupVite, serveStatic } from "./vite";
-import { dailySyncScheduler } from './services/dailySyncScheduler';
-import { startSourceImportScheduler, getSchedulerStatus, runImmediateImportCycle } from './services/sourceImportScheduler';
-import { sanitizeObjectDeep } from '../client/src/lib/neutralTerms';
-
-// Windows-kompatible __dirname für ES-Module
-// const __filename = fileURLToPath(import.meta.url);
-// const __dirname = path.dirname(__filename);
+import { registerRoutes } from "./routes.js";
+import { db, dbDriver, pool } from './db.js';
+import { setupVite, serveStatic } from "./vite.js";
+import { dailySyncScheduler } from './services/dailySyncScheduler.js';
+import { startSourceImportScheduler, getSchedulerStatus, runImmediateImportCycle } from './services/sourceImportScheduler.js';
+import { sanitizeObjectDeep } from '../client/src/lib/neutralTerms.js';
 
 const app = express();
 const server = createServer(app);
@@ -107,6 +100,36 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Readiness endpoint (prüft DB Erreichbarkeit mit Timeout)
+app.get('/ready', async (req, res) => {
+  const start = Date.now();
+  const timeoutMs = 1500;
+  let dbOk = false;
+  let error: string | null = null;
+  try {
+    if (pool) {
+      await Promise.race([
+        (pool as any).query('SELECT 1'),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), timeoutMs))
+      ]);
+      dbOk = true;
+    } else {
+      error = 'no_pool';
+    }
+  } catch (e: any) {
+    error = e?.message || 'unknown';
+  }
+  res.json({
+    status: dbOk ? 'ready' : 'degraded',
+    ready: dbOk,
+    db: dbOk ? 'ok' : 'error',
+    driver: dbDriver,
+    error,
+    durationMs: Date.now() - start,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // API routes setup with enhanced error handling
 app.use('/api', (req, res, next) => {
   res.setHeader('Content-Type', 'application/json');
@@ -120,6 +143,9 @@ app.use('/api', (req, res, next) => {
 // Manueller Trigger über: POST /api/data-collection/sync-all
 console.log('ℹ️  Auto-sync disabled for fast startup. Use /api/data-collection/sync-all');
 
+// Data Source Initialisierung DISABLED - blockiert Server-Start beim Import
+console.log('ℹ️  Data source init disabled. Sources created via API or manual import');
+/*
 // Ensure ALL regulatory data sources exist on startup - comprehensive global coverage
 setImmediate(async () => {
   try {
@@ -303,19 +329,25 @@ setImmediate(async () => {
     console.warn('⚠️ Could not verify data sources:', error);
   }
 });
+*/
 
-// Start 30-Minuten Quellen-Import Scheduler
+// Import Scheduler DISABLED - blockiert Server
+console.log('ℹ️  Source import scheduler disabled. Use POST /api/source-import/trigger');
+/*
 setImmediate(() => {
   startSourceImportScheduler();
 });
+*/
 
-// Auto-Seeding Guard: Wenn Kern-Tabellen leer sind und AUTO_SEED=1, führe Import-Skripte aus
+// Auto-Seeding DISABLED
+/*
 setImmediate(async () => {
   if (process.env.AUTO_SEED === '1') {
     console.log('[SEED] AUTO_SEED aktiv – starte direkten Import-Zyklus');
     runImmediateImportCycle().catch(e => console.warn('[SEED] Fehler beim Import-Zyklus:', (e as any)?.message));
   }
 });
+*/
 
 // ❌ ALL MOCK/DEMO DATA SEEDING REMOVED
 // Only real data from external sources (FDA, EMA, Health Canada, MHRA, etc.)

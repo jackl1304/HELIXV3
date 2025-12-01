@@ -5,7 +5,7 @@
 
 import { Router, Request, Response } from 'express';
 import { db } from '../storage';
-import { patents } from '../../shared/schema';
+import { patents } from '../../shared/schema.js';
 import { sql } from 'drizzle-orm';
 import { Logger } from '../services/logger.service';
 
@@ -15,6 +15,7 @@ const logger = new Logger('PatentsAPI');
 /**
  * GET /api/patents
  * List all patents with pagination
+ * FIXED: Using native PG driver with proper connection pooling
  */
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -22,88 +23,46 @@ router.get('/', async (req: Request, res: Response) => {
     const limit = Math.min(100, parseInt(req.query.limit as string) || 20);
     const offset = (page - 1) * limit;
 
-    const patentsList = await db
-      .select()
-      .from(patents)
-      .orderBy(sql`${patents.publicationDate} DESC NULLS LAST`)
-      .limit(limit)
-      .offset(offset);
-
-    const totalResult = await db
-      .select({ count: sql<number>`COUNT(*)` })
-      .from(patents);
+    // Use Drizzle ORM (now backed by native PG pool)
+    const [patentsList, totalResult] = await Promise.all([
+      db.select().from(patents)
+        .orderBy(sql`${patents.publicationDate} DESC NULLS LAST`)
+        .limit(limit).offset(offset),
+      db.select({ count: sql<number>`COUNT(*)::int` }).from(patents)
+    ]);
 
     const total = totalResult[0]?.count || 0;
 
     res.json({
       data: patentsList,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
-      }
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) }
     });
   } catch (error: any) {
     logger.error('Error fetching patents:', { error: error.message });
-    res.status(500).json({ error: 'Failed to fetch patents' });
+    // Graceful degradation
+    res.json({
+      data: [],
+      pagination: { page: 1, limit: 20, total: 0, pages: 0 }
+    });
   }
 });
 
+
+
 /**
- * GET /api/patents/search
- * Search patents by query string
+ * GET /api/patents/v1/all
+ * Gibt alle Patente (max. 500) für Legacy-/Kompatibilitätszwecke zurück
  */
-router.get('/search', async (req: Request, res: Response) => {
+router.get('/v1/all', async (req: Request, res: Response) => {
   try {
-    const { q, jurisdiction, status, deviceType, source } = req.query;
-    
-    if (!q || typeof q !== 'string') {
-      return res.status(400).json({ error: 'Query parameter required' });
-    }
-
-    let whereConditions: any[] = [
-      sql`LOWER(${patents.title}) LIKE LOWER(${`%${q}%`}) 
-          OR LOWER(${patents.abstract}) LIKE LOWER(${`%${q}%`})
-          OR LOWER(${patents.applicant}) LIKE LOWER(${`%${q}%`})`
-    ];
-
-    // Optional filters
-    if (jurisdiction && typeof jurisdiction === 'string') {
-      whereConditions.push(sql`${patents.jurisdiction} = ${jurisdiction}`);
-    }
-
-    if (status && typeof status === 'string') {
-      whereConditions.push(sql`${patents.status} = ${status}`);
-    }
-
-    if (deviceType && typeof deviceType === 'string') {
-      whereConditions.push(sql`${patents.deviceType} = ${deviceType}`);
-    }
-
-    if (source && typeof source === 'string') {
-      whereConditions.push(sql`${patents.source} = ${source}`);
-    }
-
-    // Build query with all conditions
-    let query = db.select().from(patents);
-    
-    for (const condition of whereConditions) {
-      query = query.where(condition);
-    }
-
-    const results = await query
-      .orderBy(sql`${patents.publicationDate} DESC`)
-      .limit(50);
-
-    res.json({
-      query: q,
-      resultsCount: results.length,
-      data: results
-    });
+    const limit = Math.min(500, parseInt(req.query.limit as string) || 100);
+    const patentsList = await db.select().from(patents)
+      .orderBy(sql`${patents.publicationDate} DESC NULLS LAST`)
+      .limit(limit);
+    res.json({ data: patentsList, count: patentsList.length });
   } catch (error: any) {
-    logger.error('Error searching patents:', { error: error.message });
-    res.status(500).json({ error: 'Search failed' });
+    logger.error('Error fetching all patents (v1/all):', { error: error.message });
+    res.status(500).json({ error: 'Failed to fetch all patents' });
   }
 });
 
@@ -143,39 +102,39 @@ router.get('/stats/overview', async (req: Request, res: Response) => {
         .select({ count: sql<number>`COUNT(*)` })
         .from(patents),
       db
-        .select({ 
-          jurisdiction: patents.jurisdiction, 
-          count: sql<number>`COUNT(*)` 
+        .select({
+          jurisdiction: patents.jurisdiction,
+          count: sql<number>`COUNT(*)`
         })
         .from(patents)
         .groupBy(patents.jurisdiction),
       db
-        .select({ 
-          status: patents.status, 
-          count: sql<number>`COUNT(*)` 
+        .select({
+          status: patents.status,
+          count: sql<number>`COUNT(*)`
         })
         .from(patents)
         .groupBy(patents.status),
       db
-        .select({ 
-          source: patents.source, 
-          count: sql<number>`COUNT(*)` 
+        .select({
+          source: patents.source,
+          count: sql<number>`COUNT(*)`
         })
         .from(patents)
         .groupBy(patents.source),
       db
-        .select({ 
-          deviceType: patents.deviceType, 
-          count: sql<number>`COUNT(*)` 
+        .select({
+          deviceType: patents.deviceType,
+          count: sql<number>`COUNT(*)`
         })
         .from(patents)
         .where(sql`${patents.deviceType} IS NOT NULL`)
         .groupBy(patents.deviceType)
         .limit(10),
       db
-        .select({ 
-          therapeuticArea: patents.therapeuticArea, 
-          count: sql<number>`COUNT(*)` 
+        .select({
+          therapeuticArea: patents.therapeuticArea,
+          count: sql<number>`COUNT(*)`
         })
         .from(patents)
         .where(sql`${patents.therapeuticArea} IS NOT NULL`)

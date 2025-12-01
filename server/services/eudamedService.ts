@@ -1,4 +1,4 @@
-import { storage } from '../storage';
+import { storage } from '../storage.js';
 
 interface EUDAMEDDevice {
   basicUdiDi?: string;
@@ -40,7 +40,7 @@ interface EUDAMEDIncident {
 export class EUDAMEDService {
   private baseUrl = 'https://ec.europa.eu/tools/eudamed/api'; // Placeholder - real API pending
   private rateLimitDelay = 2000; // 2 seconds between requests
-  
+
   private async delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
@@ -48,7 +48,7 @@ export class EUDAMEDService {
   private async makeRequest(endpoint: string): Promise<any> {
     try {
       console.log(`[EUDAMED] Requesting: ${endpoint}`);
-      
+
       // Note: EUDAMED API is still in development
       // This is a placeholder implementation for future integration
       const response = await fetch(endpoint, {
@@ -57,14 +57,14 @@ export class EUDAMEDService {
           'Accept': 'application/json'
         }
       });
-      
+
       if (!response.ok) {
         throw new Error(`EUDAMED API error: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       await this.delay(this.rateLimitDelay);
-      
+
       return data;
     } catch (error) {
       console.error(`[EUDAMED] Request failed:`, error);
@@ -120,7 +120,7 @@ export class EUDAMEDService {
         ]
       };
     }
-    
+
     if (endpoint.includes('/incidents')) {
       return {
         incidents: [
@@ -142,28 +142,28 @@ export class EUDAMEDService {
         ]
       };
     }
-    
+
     return { data: [], message: 'EUDAMED API not yet available - using mock data' };
   }
 
   async collectDeviceRegistrations(limit: number = 50): Promise<void> {
     try {
       console.log(`[EUDAMED] Collecting device registrations (limit: ${limit})`);
-      
+
       const endpoint = `${this.baseUrl}/devices?limit=${limit}&status=active`;
       const data = await this.makeRequest(endpoint);
-      
+
       if (!data.devices || !Array.isArray(data.devices)) {
         console.log('[EUDAMED] Using mock data for development');
         data.devices = this.getMockEUDAMEDData('/devices').devices;
       }
-      
+
       console.log(`[EUDAMED] Found ${data.devices.length} device registrations`);
-      
+
       for (const device of data.devices as EUDAMEDDevice[]) {
         await this.processDeviceRegistration(device);
       }
-      
+
       console.log(`[EUDAMED] Device registration collection completed`);
     } catch (error) {
       console.error('[EUDAMED] Error collecting device registrations:', error);
@@ -199,7 +199,7 @@ export class EUDAMEDService {
           authorisedRepresentative: device.authorisedRepresentative
         }
       };
-      
+
       await storage.createRegulatoryUpdate(regulatoryUpdate);
       console.log(`[EUDAMED] Successfully created device registration: ${regulatoryUpdate.title}`);
     } catch (error) {
@@ -210,21 +210,21 @@ export class EUDAMEDService {
   async collectIncidentReports(limit: number = 25): Promise<void> {
     try {
       console.log(`[EUDAMED] Collecting incident reports (limit: ${limit})`);
-      
+
       const endpoint = `${this.baseUrl}/incidents?limit=${limit}&sort=reportingDate:desc`;
       const data = await this.makeRequest(endpoint);
-      
+
       if (!data.incidents || !Array.isArray(data.incidents)) {
         console.log('[EUDAMED] Using mock data for development');
         data.incidents = this.getMockEUDAMEDData('/incidents').incidents;
       }
-      
+
       console.log(`[EUDAMED] Found ${data.incidents.length} incident reports`);
-      
+
       for (const incident of data.incidents as EUDAMEDIncident[]) {
         await this.processIncidentReport(incident);
       }
-      
+
       console.log(`[EUDAMED] Incident report collection completed`);
     } catch (error) {
       console.error('[EUDAMED] Error collecting incident reports:', error);
@@ -258,7 +258,7 @@ export class EUDAMEDService {
           followUpRequired: incident.followUpRequired
         }
       };
-      
+
       await storage.createRegulatoryUpdate(regulatoryUpdate);
       console.log(`[EUDAMED] Successfully created incident report: ${regulatoryUpdate.title}`);
     } catch (error) {
@@ -268,7 +268,7 @@ export class EUDAMEDService {
 
   private formatDeviceContent(device: EUDAMEDDevice): string {
     const parts = [];
-    
+
     if (device.deviceDescription) parts.push(`**Device:** ${device.deviceDescription}`);
     if (device.brandName) parts.push(`**Brand:** ${device.brandName}`);
     if (device.modelName) parts.push(`**Model:** ${device.modelName}`);
@@ -279,21 +279,21 @@ export class EUDAMEDService {
     if (device.notifiedBody) parts.push(`**Notified Body:** ${device.notifiedBody}`);
     if (device.authorisedRepresentative) parts.push(`**EU Representative:** ${device.authorisedRepresentative}`);
     if (device.regulatoryPathway) parts.push(`**Regulatory Pathway:** ${device.regulatoryPathway}`);
-    
+
     if (device.clinicalEvidence) {
       parts.push(`**Clinical Evidence:** ${device.clinicalEvidence}`);
     }
-    
+
     if (device.postMarketStudies && device.postMarketStudies.length > 0) {
       parts.push(`**Post-Market Studies:** ${device.postMarketStudies.join(', ')}`);
     }
-    
+
     return parts.join('\n\n');
   }
 
   private formatIncidentContent(incident: EUDAMEDIncident): string {
     const parts = [];
-    
+
     if (incident.incidentType) parts.push(`**Incident Type:** ${incident.incidentType}`);
     if (incident.incidentDescription) parts.push(`**Description:** ${incident.incidentDescription}`);
     if (incident.deviceBasicUdiDi) parts.push(`**Device UDI-DI:** ${incident.deviceBasicUdiDi}`);
@@ -303,7 +303,7 @@ export class EUDAMEDService {
     if (incident.correctiveActions) parts.push(`**Corrective Actions:** ${incident.correctiveActions}`);
     if (incident.riskAssessment) parts.push(`**Risk Assessment:** ${incident.riskAssessment}`);
     if (incident.regulatoryAction) parts.push(`**Regulatory Action:** ${incident.regulatoryAction}`);
-    
+
     return parts.join('\n\n');
   }
 
@@ -315,7 +315,7 @@ export class EUDAMEDService {
   }
 
   private determineIncidentPriority(incident: EUDAMEDIncident): 'low' | 'medium' | 'high' | 'critical' {
-    if (incident.riskAssessment?.toLowerCase().includes('high') || 
+    if (incident.riskAssessment?.toLowerCase().includes('high') ||
         incident.patientOutcome?.toLowerCase().includes('death')) return 'critical';
     if (incident.riskAssessment?.toLowerCase().includes('medium') ||
         incident.followUpRequired) return 'high';
@@ -332,13 +332,13 @@ export class EUDAMEDService {
   async syncEUDAMEDData(): Promise<void> {
     try {
       console.log('[EUDAMED] Starting comprehensive EUDAMED data sync');
-      
+
       // Collect device registrations
       await this.collectDeviceRegistrations(30);
-      
+
       // Collect incident reports
       await this.collectIncidentReports(15);
-      
+
       console.log('[EUDAMED] EUDAMED data sync completed successfully');
     } catch (error) {
       console.error('[EUDAMED] EUDAMED data sync failed:', error);

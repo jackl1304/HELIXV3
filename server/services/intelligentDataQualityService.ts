@@ -1,6 +1,6 @@
-import { storage } from '../storage';
-import { nlpService } from './nlpService';
-import type { RegulatoryUpdate, LegalCase } from '@shared/schema';
+import { storage } from '../storage.js';
+import { nlpService } from './nlpService.js';
+import type { RegulatoryUpdate, LegalCase } from '../../shared/schema.js';
 
 interface QualityMetrics {
   completeness: number; // 0-1
@@ -35,7 +35,7 @@ interface QualityReport {
 }
 
 export class IntelligentDataQualityService {
-  
+
   async assessDataQuality(): Promise<QualityReport> {
     console.log('[Data Quality] Starting comprehensive data quality assessment...');
 
@@ -45,7 +45,7 @@ export class IntelligentDataQualityService {
     ]);
 
     const issues: DataQualityIssue[] = [];
-    
+
     // Analyze regulatory updates
     const regulatoryIssues = await this.analyzeRegulatoryUpdates(regulatoryUpdates);
     issues.push(...regulatoryIssues);
@@ -84,7 +84,7 @@ export class IntelligentDataQualityService {
 
     const qualityReport = await this.assessDataQuality();
     const autoFixableIssues = qualityReport.issues.filter(issue => issue.autoFixable);
-    
+
     let fixedCount = 0;
     let skippedCount = 0;
     const details: string[] = [];
@@ -127,10 +127,10 @@ export class IntelligentDataQualityService {
     }
 
     // Check for missing essential fields
-    const missingFields = updates.filter(u => 
+    const missingFields = updates.filter(u =>
       !u.title || !u.content || !u.sourceId || !u.publishedAt
     );
-    
+
     if (missingFields.length > 0) {
       issues.push({
         id: 'regulatory_missing_fields',
@@ -146,8 +146,8 @@ export class IntelligentDataQualityService {
     // Check for outdated content
     const cutoffDate = new Date();
     cutoffDate.setFullYear(cutoffDate.getFullYear() - 2);
-    
-    const outdatedUpdates = updates.filter(u => 
+
+    const outdatedUpdates = updates.filter(u =>
       u.publishedAt && new Date(u.publishedAt) < cutoffDate
     );
 
@@ -164,7 +164,7 @@ export class IntelligentDataQualityService {
     }
 
     // Check for content quality
-    const poorContentUpdates = updates.filter(u => 
+    const poorContentUpdates = updates.filter(u =>
       u.content && u.content.length < 50
     );
 
@@ -201,7 +201,7 @@ export class IntelligentDataQualityService {
     }
 
     // Check for missing key information
-    const incompleteCases = cases.filter(c => 
+    const incompleteCases = cases.filter(c =>
       !c.caseTitle || !c.summary || !c.jurisdiction || c.keyIssues.length === 0
     );
 
@@ -219,12 +219,12 @@ export class IntelligentDataQualityService {
 
     // Check for inconsistent jurisdiction formatting
     const jurisdictionFormats = new Set(cases.map(c => c.jurisdiction).filter(Boolean));
-    const inconsistentJurisdictions = Array.from(jurisdictionFormats).filter(j => 
+    const inconsistentJurisdictions = Array.from(jurisdictionFormats).filter(j =>
       j && (j.length > 10 || j.includes(',') || j.includes(';'))
     );
 
     if (inconsistentJurisdictions.length > 0) {
-      const affectedCases = cases.filter(c => 
+      const affectedCases = cases.filter(c =>
         inconsistentJurisdictions.includes(c.jurisdiction)
       );
 
@@ -275,8 +275,8 @@ export class IntelligentDataQualityService {
   }
 
   private calculateQualityMetrics(
-    updates: RegulatoryUpdate[], 
-    cases: LegalCase[], 
+    updates: RegulatoryUpdate[],
+    cases: LegalCase[],
     issues: DataQualityIssue[]
   ): QualityMetrics {
     const totalRecords = updates.length + cases.length;
@@ -285,10 +285,10 @@ export class IntelligentDataQualityService {
     const lowSeverityIssues = issues.filter(i => i.severity === 'low').length;
 
     // Completeness: percentage of records with all required fields
-    const completeUpdates = updates.filter(u => 
+    const completeUpdates = updates.filter(u =>
       u.title && u.content && u.sourceId && u.publishedAt
     ).length;
-    const completeCases = cases.filter(c => 
+    const completeCases = cases.filter(c =>
       c.caseTitle && c.summary && c.jurisdiction && c.keyIssues.length > 0
     ).length;
     const completeness = totalRecords > 0 ? (completeUpdates + completeCases) / totalRecords : 1;
@@ -299,25 +299,25 @@ export class IntelligentDataQualityService {
     // Timeliness: percentage of recent content
     const recentCutoff = new Date();
     recentCutoff.setFullYear(recentCutoff.getFullYear() - 1);
-    const recentUpdates = updates.filter(u => 
+    const recentUpdates = updates.filter(u =>
       u.publishedAt && new Date(u.publishedAt) >= recentCutoff
     ).length;
-    const recentCases = cases.filter(c => 
+    const recentCases = cases.filter(c =>
       c.decisionDate && new Date(c.decisionDate) >= recentCutoff
     ).length;
     const timeliness = totalRecords > 0 ? (recentUpdates + recentCases) / totalRecords : 1;
 
     // Relevance: based on medical device keywords
-    const relevantUpdates = updates.filter(u => 
+    const relevantUpdates = updates.filter(u =>
       this.isRelevantContent(u.content || '')
     ).length;
-    const relevantCases = cases.filter(c => 
+    const relevantCases = cases.filter(c =>
       this.isRelevantContent(c.summary || '')
     ).length;
     const relevance = totalRecords > 0 ? (relevantUpdates + relevantCases) / totalRecords : 1;
 
     // Consistency: inverse of formatting and duplicate issues
-    const consistencyIssues = issues.filter(i => 
+    const consistencyIssues = issues.filter(i =>
       i.type === 'duplicate' || i.type === 'formatting' || i.type === 'inconsistent'
     ).length;
     const consistency = Math.max(0, 1 - (consistencyIssues / Math.max(totalRecords, 1)));
@@ -441,11 +441,11 @@ export class IntelligentDataQualityService {
       case 'outdated':
         // Archive very old content
         return await this.archiveOldContent(issue.affectedRecords);
-        
+
       case 'formatting':
         // Fix common formatting issues
         return await this.fixFormattingIssues(issue.affectedRecords);
-        
+
       default:
         return false; // Cannot auto-fix this type
     }

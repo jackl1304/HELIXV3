@@ -1,6 +1,6 @@
-# Helix Regulatory Intelligence Platform
+https://github.com/jackl1304/HELIXV3# Helix Regulatory Intelligence Platform
 
-Eine umfassende automatisierte MedTech-Regulatory-Intelligence-Plattform, die komplexe rechtliche und regulatorische Landschaften durch intelligente Datenanalyse und Echtzeit-Insights vereinfacht.
+Eine umfassende AI-gestützte MedTech-Regulatory-Intelligence-Plattform, die komplexe rechtliche und regulatorische Landschaften durch intelligente Datenanalyse und Echtzeit-Insights vereinfacht.
 
 ## 🎯 Überblick
 
@@ -9,9 +9,9 @@ Die Plattform bietet umfassendes Legal Case Management, tiefgreifende Wissensext
 ## 🚀 Features
 
 - **Regulatory Intelligence**: Automatisierte Sammlung von FDA, EMA, BfArM, Swissmedic und MHRA Updates
-- **Legal Case Management**: Umfassende Gerichtsentscheidungsdatenbank mit automatisierter Analyse
+- **Legal Case Management**: Umfassende Gerichtsentscheidungsdatenbank mit AI-gestützter Analyse
 - **Real-time Monitoring**: Live-Überwachung von regulatorischen Änderungen
-- **Automated Analysis**: Intelligente Inhaltsanalyse und Bewertung
+- **AI-Powered Analysis**: Intelligente Inhaltsanalyse und Bewertung
 - **Multi-Language Support**: Deutsche Benutzeroberfläche mit internationalen Datenquellen
 - **Historical Data**: Archivierte Dokumente mit effizienter Suchfunktion
 
@@ -32,7 +32,7 @@ Die Plattform bietet umfassendes Legal Case Management, tiefgreifende Wissensext
 - **Winston** für strukturiertes Logging
 - **Zod** für Input-Validierung
 
-### Analytics & Services
+### AI & Services
 - **Anthropic Claude** für Content-Analyse
 - **SendGrid** für E-Mail-Versand
 - **RSS Monitoring** für Echtzeit-Updates
@@ -162,7 +162,7 @@ const { data, isLoading } = useQuery({
 
 ### Datenfluss
 1. **Sammlung**: Automatisierte APIs sammeln regulatorische Updates
-2. **Verarbeitung**: Analytics-Services analysieren und kategorisieren Inhalte
+2. **Verarbeitung**: AI-Services analysieren und kategorisieren Inhalte
 3. **Speicherung**: PostgreSQL mit optimierten Indizes
 4. **Distribution**: REST APIs für Frontend-Zugriff
 5. **Monitoring**: Winston Logging + Performance Tracking
@@ -218,83 +218,6 @@ npm run test:e2e
 npm run build
 npm run start
 ```
-
-## 🩺 Lokaler Start & Health Check
-
-Die Entwicklungsumgebung kombiniert Backend (Express + Scheduler) und Vite-Frontend auf **Port 5000**.
-
-### Stabiler Entwicklungsstart
-```bash
-cd l:/HELIXV3/HELIXV3
-npm run dev
-```
-Das Terminal offen lassen (kein `timeout`, nicht mit `Ctrl+C` abbrechen solange Du testen möchtest).
-
-### Health Endpoint prüfen
-```bash
-curl -i http://localhost:5000/health
-```
-Erwartet: `200 OK` + JSON (`status: healthy`).
-
-### Häufige Ursachen für ERR_CONNECTION_REFUSED
-- Prozess vorher mit `Ctrl+C` beendet
-- Falscher Port (Frontend & Backend laufen beide hinter Port 5000)
-- Firewall/Endpoint-Schutz blockiert lokalen Zugriff
-- Port durch anderen Prozess belegt (`netstat -ano | grep 5000`)
-
-### Migrationen anwenden
-Fehlende Spalte `source` in `legal_cases` wurde durch Migration `003_add_source_to_legal_cases.sql` ergänzt. Anwenden:
-```bash
-npm run db:push   # oder eigenes Migration-Script / psql ausführen
-```
-
-### Saubere Log-Darstellung
-Beim Start erzeugen Scraper anfänglich viele Einträge. Nach erfolgreichem Abschluss der ersten Sync-Runde sollte die Logfrequenz sinken. Für Analyse kannst Du greppen:
-```bash
-npm run dev 2>&1 | grep -E "(DailySync|ERROR|legal case|regulatory update)"
-```
-
-### Nächste Verbesserungen (optional)
-- Websocket/SSE für Live-Status statt Polling
-- Deduplizierter Insert-Guard für Legal Cases vor erster Migration
-- Erweiterte Fehleraggregation für externe Quellen (Patents, Recalls)
-
-## 🔗 Datenquellen & Vollständige Sichtbarkeit
-
-Jedes in HELIX angezeigte Objekt (Regulatory Update, Rechtsfall, Patent) referenziert jetzt seine originale Quelle über ein direkt klickbares Link-Element:
-
-- `documentUrl`: Direkter Link zum Primärdokument (PDF/Detailseite soweit verfügbar)
-- `sourceUrl`: Kanonische Landing Page der Quelle (bei Bedarf Fallback auf `documentUrl`)
-
-Frontend-Komponenten wurden erweitert, damit die Links überall sichtbar sind:
-- Tenant Dashboard Update-Liste (Quelle-Button pro Eintrag)
-- Kunden-Updates (`customer-regulatory-updates`) Kartenansicht mit Quelle
-- Allgemeine Listen (`regulatory-updates.tsx`) und Detailansicht (`regulatory-update-detail.tsx`)
-- Dashboard "Recent Updates" Komponente
-- Voll-Export Endpoint: `GET /api/tenant/export/full` liefert `documentUrl` und `sourceUrl`
-
-Backend-Erweiterungen:
-- Migration `004_add_source_url_columns.sql` fügt `source_url` Spalten hinzu (regulatory_updates, legal_cases, patents, newsletters optional)
-- Collector (`regulatoryUpdateCollector.ts`) setzt `sourceUrl` bei FDA, MDCG und MHRA Quellen
-- Schema aktualisiert (`shared/schema.ts`) zur einheitlichen Verwendung in zukünftigen ORM-Operationen
-
-Integritäts-Garantie:
-1. Falls `source_url` nicht befüllt ist, zeigt das Frontend automatisch `documentUrl`.
-2. Alle Export- und Listen-Endpunkte normalisieren `sourceUrl` → NIE ein leerer Link.
-3. Fallback-Stubs enthalten immer eine mindestens kanonische Basis-URL.
-
-Prüfung nach Deployment:
-```bash
-curl -s http://localhost:5000/api/tenant/export/full | jq '.regulatoryUpdates[0] | {id,title,documentUrl,sourceUrl}'
-```
-Erwartet: Beide Felder gesetzt oder `sourceUrl == documentUrl`.
-
-Geplante nächste Schritte (Erweiterung):
-- Deep-Link Normalisierung für FDA 510(k)/PMA Detailseiten (Parameter-basierte Muster)
-- EU Curia & Courtlistener Direktlinks für Rechtsfälle
-- Patent-spezifische Direktlinks (USPTO, WIPO, EPO) statt generischer Portalseiten
-
-
 
 ### Environment Setup
 - Setzen Sie `NODE_ENV=production`

@@ -7,7 +7,7 @@ import fetch from 'node-fetch';
 import * as cheerio from 'cheerio';
 import crypto from 'node:crypto';
 import { regulatoryUpdates } from '../shared/schema.js';
-import { getScriptDb } from './script-db';
+import { getScriptDb } from './script-db.js';
 
 const URL = 'https://www.pmda.go.jp/english/';
 

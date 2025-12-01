@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import { storage } from '../storage';
-import type { InsertRegulatoryUpdate, InsertDataSource } from '@shared/schema';
+import { storage } from '../storage.js';
+import type { InsertRegulatoryUpdate, InsertDataSource } from '../../shared/schema.js';
 
 interface LiveDataSource {
   id: string;
@@ -41,16 +41,16 @@ export class LiveDataSourcesService {
     if (!dateString || dateString.trim() === '') {
       return new Date();
     }
-    
+
     // Bereinige Datum-String (entferne zusätzlichen Text wie " | News")
     const cleanDate = dateString.split('|')[0].trim();
-    
+
     // Versuche ISO-Format zuerst (YYYY-MM-DD, datetime)
     let parsed = new Date(cleanDate);
     if (!isNaN(parsed.getTime())) {
       return parsed;
     }
-    
+
     // Versuche europäisches Format (DD/MM/YYYY)
     const euroMatch = cleanDate.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
     if (euroMatch) {
@@ -60,7 +60,7 @@ export class LiveDataSourcesService {
         return parsed;
       }
     }
-    
+
     // Fallback zu aktuellem Datum
     console.warn(`[LiveData] Could not parse date: "${dateString}", using current date`);
     return new Date();
@@ -89,14 +89,14 @@ export class LiveDataSourcesService {
       const url = 'https://www.ema.europa.eu/en/news-events/whats-new';
       const html = await this.fetchWithRetry(url);
       const $ = cheerio.load(html);
-      
+
       const updates: any[] = [];
       $('.ecl-content-item').each((i, elem) => {
         const title = $(elem).find('.ecl-content-item__title').text().trim();
         const description = $(elem).find('.ecl-content-item__description').text().trim();
         const link = $(elem).find('a').attr('href');
         const date = $(elem).find('.ecl-content-item__meta').text().trim();
-        
+
         if (title && link) {
           updates.push({
             title,
@@ -109,7 +109,7 @@ export class LiveDataSourcesService {
           });
         }
       });
-      
+
       console.log(`[LiveData] EMA: Found ${updates.length} updates`);
       return updates;
     } catch (error) {
@@ -124,17 +124,17 @@ export class LiveDataSourcesService {
       const url = 'https://www.regulatoryrapporteur.org/';
       const html = await this.fetchWithRetry(url);
       const $ = cheerio.load(html);
-      
+
       const updates: any[] = [];
       $('.article-card, .post-item').each((i, elem) => {
         const title = $(elem).find('h2, h3, .title').text().trim();
         const description = $(elem).find('.excerpt, .description, p').first().text().trim();
         const link = $(elem).find('a').attr('href');
-        
+
         if (title && link) {
           const dateElem = $(elem).find('time, .date, .published').first();
           const dateStr = dateElem.attr('datetime') || dateElem.text().trim();
-          
+
           updates.push({
             title,
             description,
@@ -146,7 +146,7 @@ export class LiveDataSourcesService {
           });
         }
       });
-      
+
       console.log(`[LiveData] Regulatory Rapporteur: Found ${updates.length} updates`);
       return updates;
     } catch (error) {
@@ -161,14 +161,14 @@ export class LiveDataSourcesService {
       const url = 'https://www.gov.uk/government/organisations/medicines-and-healthcare-products-regulatory-agency/latest';
       const html = await this.fetchWithRetry(url);
       const $ = cheerio.load(html);
-      
+
       const updates: any[] = [];
       $('.gem-c-document-list__item').each((i, elem) => {
         const title = $(elem).find('.gem-c-document-list__item-title').text().trim();
         const description = $(elem).find('.gem-c-document-list__item-description').text().trim();
         const link = $(elem).find('a').attr('href');
         const date = $(elem).find('time').attr('datetime');
-        
+
         if (title && link) {
           updates.push({
             title,
@@ -181,7 +181,7 @@ export class LiveDataSourcesService {
           });
         }
       });
-      
+
       console.log(`[LiveData] MHRA: Found ${updates.length} updates`);
       return updates;
     } catch (error) {
@@ -196,17 +196,17 @@ export class LiveDataSourcesService {
       const url = 'https://www.tga.gov.au/news-and-updates';
       const html = await this.fetchWithRetry(url);
       const $ = cheerio.load(html);
-      
+
       const updates: any[] = [];
       $('.views-row, .news-item').each((i, elem) => {
         const title = $(elem).find('h2, h3, .title').text().trim();
         const description = $(elem).find('.field--name-field-summary, .summary').text().trim();
         const link = $(elem).find('a').attr('href');
-        
+
         if (title && link) {
           const dateElem = $(elem).find('time, .date, .field--name-field-date').first();
           const dateStr = dateElem.attr('datetime') || dateElem.text().trim();
-          
+
           updates.push({
             title,
             description,
@@ -218,7 +218,7 @@ export class LiveDataSourcesService {
           });
         }
       });
-      
+
       console.log(`[LiveData] TGA: Found ${updates.length} updates`);
       return updates;
     } catch (error) {
@@ -233,16 +233,16 @@ export class LiveDataSourcesService {
       const url = 'https://www.canada.ca/en/health-canada/services/drugs-health-products/medical-devices.html';
       const html = await this.fetchWithRetry(url);
       const $ = cheerio.load(html);
-      
+
       const updates: any[] = [];
       $('.gc-nws-lnk, .most-requested-item').each((i, elem) => {
         const title = $(elem).find('a').text().trim() || $(elem).text().trim();
         const link = $(elem).find('a').attr('href');
-        
+
         if (title && link) {
           const dateElem = $(elem).find('time, .date, .updated').first();
           const dateStr = dateElem.attr('datetime') || dateElem.text().trim();
-          
+
           updates.push({
             title,
             description: `Health Canada medical device update: ${title}`,
@@ -254,7 +254,7 @@ export class LiveDataSourcesService {
           });
         }
       });
-      
+
       console.log(`[LiveData] Health Canada: Found ${updates.length} updates`);
       return updates;
     } catch (error) {
@@ -269,17 +269,17 @@ export class LiveDataSourcesService {
       const url = 'https://www.bfarm.de/DE/Medizinprodukte/_node.html';
       const html = await this.fetchWithRetry(url);
       const $ = cheerio.load(html);
-      
+
       const updates: any[] = [];
       $('.teaser, .news-item').each((i, elem) => {
         const title = $(elem).find('h2, h3, .title').text().trim();
         const description = $(elem).find('.text, p').first().text().trim();
         const link = $(elem).find('a').attr('href');
-        
+
         if (title && link) {
           const dateElem = $(elem).find('time, .date, .published').first();
           const dateStr = dateElem.attr('datetime') || dateElem.text().trim();
-          
+
           updates.push({
             title,
             description,
@@ -291,7 +291,7 @@ export class LiveDataSourcesService {
           });
         }
       });
-      
+
       console.log(`[LiveData] BfArM: Found ${updates.length} updates`);
       return updates;
     } catch (error) {
@@ -306,17 +306,17 @@ export class LiveDataSourcesService {
       const url = 'https://www.swissmedic.ch/swissmedic/en/home/news.html';
       const html = await this.fetchWithRetry(url);
       const $ = cheerio.load(html);
-      
+
       const updates: any[] = [];
       $('.news-item, .article').each((i, elem) => {
         const title = $(elem).find('h2, h3, .title').text().trim();
         const description = $(elem).find('.lead, .description').text().trim();
         const link = $(elem).find('a').attr('href');
-        
+
         if (title && link) {
           const dateElem = $(elem).find('time, .date, .published').first();
           const dateStr = dateElem.attr('datetime') || dateElem.text().trim();
-          
+
           updates.push({
             title,
             description,
@@ -328,7 +328,7 @@ export class LiveDataSourcesService {
           });
         }
       });
-      
+
       console.log(`[LiveData] Swissmedic: Found ${updates.length} updates`);
       return updates;
     } catch (error) {
@@ -343,17 +343,17 @@ export class LiveDataSourcesService {
       const url = 'https://www.who.int/news-room/releases';
       const html = await this.fetchWithRetry(url);
       const $ = cheerio.load(html);
-      
+
       const updates: any[]  = [];
       $('.link-container, .sf-list-item').each((i, elem) => {
         const title = $(elem).find('.link-title, h3').text().trim();
         const description = $(elem).find('.link-description, p').text().trim();
         const link = $(elem).find('a').attr('href');
-        
+
         if (title && link && title.toLowerCase().includes('medic')) {
           const dateElem = $(elem).find('time, .date, .sf-field-date').first();
           const dateStr = dateElem.attr('datetime') || dateElem.text().trim();
-          
+
           updates.push({
             title,
             description,
@@ -365,7 +365,7 @@ export class LiveDataSourcesService {
           });
         }
       });
-      
+
       console.log(`[LiveData] WHO: Found ${updates.length} updates`);
       return updates;
     } catch (error) {
@@ -380,17 +380,17 @@ export class LiveDataSourcesService {
       const url = 'https://jamanetwork.com/collections/44068/medical-devices-and-technology';
       const html = await this.fetchWithRetry(url);
       const $ = cheerio.load(html);
-      
+
       const updates: any[] = [];
       $('.card, .articleItem').each((i, elem) => {
         const title = $(elem).find('h3, .title').text().trim();
         const description = $(elem).find('.abstract, .description').text().trim();
         const link = $(elem).find('a').attr('href');
-        
+
         if (title && link) {
           const dateElem = $(elem).find('time, .date, .published-date').first();
           const dateStr = dateElem.attr('datetime') || dateElem.text().trim();
-          
+
           updates.push({
             title,
             description,
@@ -403,7 +403,7 @@ export class LiveDataSourcesService {
           });
         }
       });
-      
+
       console.log(`[LiveData] JAMA: Found ${updates.length} updates`);
       return updates;
     } catch (error) {
@@ -418,17 +418,17 @@ export class LiveDataSourcesService {
       const url = 'https://www.medtechdive.com/';
       const html = await this.fetchWithRetry(url);
       const $ = cheerio.load(html);
-      
+
       const updates: any[] = [];
       $('.feed__item, .article').each((i, elem) => {
         const title = $(elem).find('.feed__title, h3').text().trim();
         const description = $(elem).find('.feed__description, .summary').text().trim();
         const link = $(elem).find('a').attr('href');
-        
+
         if (title && link) {
           const dateElem = $(elem).find('time, .feed__date, .published').first();
           const dateStr = dateElem.attr('datetime') || dateElem.text().trim();
-          
+
           updates.push({
             title,
             description,
@@ -441,7 +441,7 @@ export class LiveDataSourcesService {
           });
         }
       });
-      
+
       console.log(`[LiveData] MedTech News: Found ${updates.length} updates`);
       return updates;
     } catch (error) {
@@ -457,7 +457,7 @@ export class LiveDataSourcesService {
     details: any[];
   }> {
     console.log('[LiveData] Starting comprehensive sync of all live data sources...');
-    
+
     const sources = [
       { name: 'EMA', fn: () => this.fetchEMAUpdates() },
       { name: 'Regulatory Rapporteur', fn: () => this.fetchRegulatoryRapporteur() },
@@ -480,7 +480,7 @@ export class LiveDataSourcesService {
       try {
         await this.delay(this.requestDelay);
         const updates = await source.fn();
-        
+
         if (updates.length > 0) {
           successful++;
           totalUpdates += updates.length;
@@ -490,7 +490,7 @@ export class LiveDataSourcesService {
             updates: updates.length,
             data: updates
           });
-          
+
           console.log(`✅ [LiveData] ${source.name}: ${updates.length} updates fetched`);
         } else {
           successful++;
@@ -524,7 +524,7 @@ export class LiveDataSourcesService {
 
   async initializeLiveDataSources(): Promise<void> {
     console.log('[LiveData] Initializing live data sources in database...');
-    
+
     const sources: InsertDataSource[] = [
       {
         id: 'ema',

@@ -1,7 +1,7 @@
 import { storage } from "../storage";
 import { fdaOpenApiService } from "./fdaOpenApiService";
 import { aiService } from "./aiService";
-import type { InsertRegulatoryUpdate } from "@shared/schema";
+import type { InsertRegulatoryUpdate } from "../../shared/schema.js";
 
 // Dynamic import to avoid module resolution issues during compilation
 async function getNlpService() {
@@ -12,8 +12,8 @@ async function getNlpService() {
     console.warn("NLP service not available, using fallback:", error);
     // Fallback service for development
     return {
-      categorizeContent: async (content: string) => ({ 
-        categories: ["medical-device"], 
+      categorizeContent: async (content: string) => ({
+        categories: ["medical-device"],
         confidence: 0.8,
         deviceTypes: ["unknown"],
         riskLevel: "medium",
@@ -114,36 +114,36 @@ interface GlobalDataSources {
   dimdi: string; // Deutsches Institut für Medizinische Dokumentation
   dguv: string; // Deutsche Gesetzliche Unfallversicherung
   din: string; // DIN-Normen
-  
+
   // Europa
   ema: string; // European Medicines Agency
   mdcg: string; // Medical Device Coordination Group
   eurLex: string; // EU-Recht
   cen: string; // Europäische Normung
-  
+
   // Schweiz
   swissmedic: string; // Schweizerische Zulassungsbehörde
   saq: string; // Swiss Association for Quality
-  
+
   // England/UK
   mhra: string; // Medicines and Healthcare products Regulatory Agency
   bsi: string; // British Standards Institution
-  
+
   // USA
   fda: string; // Food and Drug Administration
   nist: string; // National Institute of Standards and Technology
-  
+
   // Kanada
   healthCanada: string;
-  
+
   // Asien
   pmda: string; // Japan - Pharmaceuticals and Medical Devices Agency
   nmpa: string; // China - National Medical Products Administration
   cdsco: string; // Indien - Central Drugs Standard Control Organization
-  
+
   // Russland
   roszdravnadzor: string; // Russische Gesundheitsaufsicht
-  
+
   // Südamerika
   anvisa: string; // Brasilien
   anmat: string; // Argentinien
@@ -159,7 +159,7 @@ export class DataCollectionService {
     const date = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
     return date.toISOString().split("T")[0].replace(/-/g, "");
   }
-  
+
   // Globale Datenquellen-URLs
   private readonly dataSources: GlobalDataSources = {
     // Deutschland
@@ -167,36 +167,36 @@ export class DataCollectionService {
     dimdi: "https://www.dimdi.de/dynamic/de/klassifikationen/",
     dguv: "https://www.dguv.de/de/praevention/themen-a-z/index.jsp",
     din: "https://www.din.de/de/mitwirken/normenausschuesse/nasg",
-    
+
     // Europa
     ema: "https://www.ema.europa.eu/en/medicines/download-medicine-data",
     mdcg: "https://ec.europa.eu/health/md_sector/new-regulations/guidance_en",
     eurLex: "https://eur-lex.europa.eu/homepage.html",
     cen: "https://www.cen.eu/standards/",
-    
+
     // Schweiz
     swissmedic: "https://www.swissmedic.ch/swissmedic/de/home.html",
     saq: "https://www.saq.ch/de/",
-    
+
     // England/UK
     mhra: "https://www.gov.uk/government/organisations/medicines-and-healthcare-products-regulatory-agency",
     bsi: "https://www.bsigroup.com/en-GB/standards/",
-    
+
     // USA
     fda: "https://api.fda.gov/device",
     nist: "https://www.nist.gov/standardsgov/",
-    
+
     // Kanada
     healthCanada: "https://www.canada.ca/en/health-canada.html",
-    
+
     // Asien
     pmda: "https://www.pmda.go.jp/english/",
     nmpa: "https://www.nmpa.gov.cn/",
     cdsco: "https://cdsco.gov.in/opencms/opencms/",
-    
+
     // Russland
     roszdravnadzor: "https://roszdravnadzor.gov.ru/",
-    
+
     // Südamerika
     anvisa: "https://www.gov.br/anvisa/pt-br",
     anmat: "https://www.argentina.gob.ar/anmat"
@@ -222,12 +222,12 @@ export class DataCollectionService {
 
   async collectFDAData(): Promise<void> {
     console.log("🇺🇸 Starting FDA data collection...");
-    
+
     try {
       await this.rateLimit('fda');
       const devices = await fdaOpenApiService.collect510kDevices(100);
       console.log(`✅ Successfully collected ${devices.length} FDA 510(k) devices`);
-      
+
       // Also collect recalls with rate limiting
       try {
         await this.rateLimit('fda');
@@ -236,7 +236,7 @@ export class DataCollectionService {
       } catch (recallError) {
         console.error("⚠️ Error collecting FDA recalls (continuing with main sync):", recallError);
       }
-      
+
       console.log("🎯 FDA data collection completed");
     } catch (error) {
       console.error("❌ Error collecting FDA data:", error);
@@ -246,13 +246,13 @@ export class DataCollectionService {
 
   async collectEMAData(): Promise<void> {
     console.log("🇪🇺 Starting EMA data collection...");
-    
+
     try {
       await this.rateLimit('ema');
-      
+
       // EMA RSS Feed und Web-API Integration
       const emaUpdates = await this.fetchEMAUpdates();
-      
+
       if (emaUpdates.length === 0) {
         console.log("⚠️ No new EMA updates found, using reference data");
         // Fallback zu aktuellen EMA-Updates
@@ -301,16 +301,16 @@ export class DataCollectionService {
 
   async collectBfARMData(): Promise<void> {
     console.log("🇩🇪 Starting BfArM data collection...");
-    
+
     try {
       await this.rateLimit('bfarm');
-      
+
       // BfArM RSS Feed und Web-Scraping implementation
       const bfarmUpdates = await this.fetchBfARMUpdates();
-      
+
       if (bfarmUpdates.length === 0) {
         console.log("⚠️ No new BfArM updates found, using reference data");
-      
+
       const mockBfARMData = [
         {
           title: "BfArM Leitfaden zur MDR-Umsetzung",
@@ -355,22 +355,22 @@ export class DataCollectionService {
 
   async collectSwissmedicData(): Promise<void> {
     console.log("🇨🇭 Starting Swissmedic data collection...");
-    
+
     try {
       await this.rateLimit('swissmedic');
-      
+
       // Real Swissmedic implementation - fetch from official sources
       const swissmedicUpdates = await this.fetchSwissmedicUpdates();
-      
+
       if (swissmedicUpdates.length === 0) {
         console.log("⚠️ No new Swissmedic updates found");
         return;
       }
-      
+
       for (const item of swissmedicUpdates) {
         const nlpSvc = await getNlpService();
         const categories = await nlpSvc.categorizeContent(`${item.title} ${item.description || ''}`);
-        
+
         const updateData: InsertRegulatoryUpdate = {
           title: item.title,
           description: item.description || `Swissmedic ${item.type} publication`,
@@ -384,7 +384,7 @@ export class DataCollectionService {
           rawData: item,
           publishedAt: new Date(item.publishedDate),
         };
-        
+
         await storage.createRegulatoryUpdate(updateData);
       }
 
@@ -408,22 +408,22 @@ export class DataCollectionService {
 
   async collectMHRAData(): Promise<void> {
     console.log("🇬🇧 Starting MHRA data collection...");
-    
+
     try {
       await this.rateLimit('mhra');
-      
-      // Real MHRA implementation - fetch from official sources  
+
+      // Real MHRA implementation - fetch from official sources
       const mhraUpdates = await this.fetchMHRAUpdates();
-      
+
       if (mhraUpdates.length === 0) {
         console.log("⚠️ No new MHRA updates found");
         return;
       }
-      
+
       for (const item of mhraUpdates) {
         const nlpSvc = await getNlpService();
         const categories = await nlpSvc.categorizeContent(`${item.title} ${item.deviceType || ''}`);
-        
+
         const updateData: InsertRegulatoryUpdate = {
           title: item.title,
           description: `MHRA ${item.alertLevel} alert: ${item.title}`,
@@ -437,7 +437,7 @@ export class DataCollectionService {
           rawData: item,
           publishedAt: new Date(item.publishedDate),
         };
-        
+
         await storage.createRegulatoryUpdate(updateData);
       }
 
@@ -462,12 +462,12 @@ export class DataCollectionService {
   // Add the missing methods for other regulatory bodies
   async collectPMDAData(): Promise<void> {
     console.log("🇯🇵 Starting PMDA data collection...");
-    
+
     try {
       await this.rateLimit('pmda');
-      
+
       const pmdaUpdates = await this.fetchPMDAUpdates();
-      
+
       if (pmdaUpdates.length === 0) {
         console.log("⚠️ No new PMDA updates found");
         return;
@@ -476,7 +476,7 @@ export class DataCollectionService {
       for (const item of pmdaUpdates) {
         const nlpSvc = await getNlpService();
         const categories = await nlpSvc.categorizeContent(`${item.title} ${item.deviceCategory || ''}`);
-        
+
         const updateData: InsertRegulatoryUpdate = {
           title: item.title,
           description: `PMDA ${item.approvalType}: ${item.title}`,
@@ -490,7 +490,7 @@ export class DataCollectionService {
           rawData: item,
           publishedAt: new Date(item.publishedDate),
         };
-        
+
         await storage.createRegulatoryUpdate(updateData);
       }
 
@@ -513,12 +513,12 @@ export class DataCollectionService {
 
   async collectNMPAData(): Promise<void> {
     console.log("🇨🇳 Starting NMPA data collection...");
-    
+
     try {
       await this.rateLimit('nmpa');
-      
+
       const nmpaUpdates = await this.fetchNMPAUpdates();
-      
+
       if (nmpaUpdates.length === 0) {
         console.log("⚠️ No new NMPA updates found");
         return;
@@ -527,7 +527,7 @@ export class DataCollectionService {
       for (const item of nmpaUpdates) {
         const nlpSvc = await getNlpService();
         const categories = await nlpSvc.categorizeContent(`${item.title} ${item.productType || ''}`);
-        
+
         const updateData: InsertRegulatoryUpdate = {
           title: item.title,
           description: `NMPA ${item.registrationClass}: ${item.title}`,
@@ -541,7 +541,7 @@ export class DataCollectionService {
           rawData: item,
           publishedAt: new Date(item.publishedDate),
         };
-        
+
         await storage.createRegulatoryUpdate(updateData);
       }
 
@@ -564,12 +564,12 @@ export class DataCollectionService {
 
   async collectANVISAData(): Promise<void> {
     console.log("🇧🇷 Starting ANVISA data collection...");
-    
+
     try {
       await this.rateLimit('anvisa');
-      
+
       const anvisaUpdates = await this.fetchANVISAUpdates();
-      
+
       if (anvisaUpdates.length === 0) {
         console.log("⚠️ No new ANVISA updates found");
         return;
@@ -578,7 +578,7 @@ export class DataCollectionService {
       for (const item of anvisaUpdates) {
         const nlpSvc = await getNlpService();
         const categories = await nlpSvc.categorizeContent(`${item.title} ${item.regulationType || ''}`);
-        
+
         const updateData: InsertRegulatoryUpdate = {
           title: item.title,
           description: `ANVISA ${item.regulationType}: ${item.title}`,
@@ -592,7 +592,7 @@ export class DataCollectionService {
           rawData: item,
           publishedAt: new Date(item.publishedDate),
         };
-        
+
         await storage.createRegulatoryUpdate(updateData);
       }
 
@@ -617,7 +617,7 @@ export class DataCollectionService {
 
   async collectAllGlobalData(): Promise<void> {
     console.log("🌐 Starting comprehensive global regulatory data collection...");
-    
+
     // Enhanced collection with proper error handling per code review
     const collectionPromises = [
       this.collectFDAData().catch(e => ({ source: 'FDA', error: e })),
@@ -631,14 +631,14 @@ export class DataCollectionService {
     ];
 
     const results = await Promise.allSettled(collectionPromises);
-    
+
     let successCount = 0;
     let errorCount = 0;
     const failedSources: string[] = [];
 
     results.forEach((result, index) => {
       const sources = ['FDA', 'EMA', 'BfArM', 'Swissmedic', 'MHRA', 'PMDA', 'NMPA', 'ANVISA'];
-      
+
       if (result.status === 'fulfilled' && !result.value?.error) {
         console.log(`✅ ${sources[index]} data collection successful`);
         successCount++;
@@ -651,11 +651,11 @@ export class DataCollectionService {
     });
 
     console.log(`🎯 Global data collection completed: ${successCount} successful, ${errorCount} errors`);
-    
+
     if (failedSources.length > 0) {
       console.warn(`⚠️ Failed sources: ${failedSources.join(', ')}`);
     }
-    
+
     // Analyze collected data for trends only if we have successful collections
     if (successCount > 0) {
       try {
@@ -670,7 +670,7 @@ export class DataCollectionService {
 
   private determinePriority(deviceClass?: string): 'critical' | 'high' | 'medium' | 'low' {
     if (!deviceClass) return 'medium';
-    
+
     const normalizedClass = deviceClass.toLowerCase();
     if (normalizedClass.includes('iii') || normalizedClass.includes('3')) {
       return 'critical';
@@ -679,7 +679,7 @@ export class DataCollectionService {
     } else if (normalizedClass.includes('i') || normalizedClass.includes('1')) {
       return 'medium';
     }
-    
+
     return 'medium';
   }
 
@@ -736,7 +736,7 @@ export class DataCollectionService {
       'nmpa': 1500,    // China: Conservative approach
       'anvisa': 1000,
     };
-    
+
     const delay = rateLimits[source] || 1000;
     await new Promise<void>(resolve => setTimeout(resolve, delay));
   }
@@ -746,10 +746,10 @@ export class DataCollectionService {
     try {
       // EMA RSS Feed Implementation
       const emaRssUrl = "https://www.ema.europa.eu/en/rss.xml";
-      
+
       // For production, implement RSS parsing here
       console.log("🔍 Fetching EMA RSS feed...");
-      
+
       // Return empty array to maintain authentic data policy
       return [];
     } catch (error) {
@@ -762,9 +762,9 @@ export class DataCollectionService {
     try {
       // BfArM News and Updates Implementation
       const bfarmNewsUrl = "https://www.bfarm.de/DE/Service/Presse/_node.html";
-      
+
       console.log("🔍 Fetching BfArM updates...");
-      
+
       // Return empty array to maintain authentic data policy
       return [];
     } catch (error) {

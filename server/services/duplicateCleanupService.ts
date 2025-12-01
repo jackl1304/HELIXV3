@@ -1,5 +1,5 @@
-import { Logger } from './logger.service';
-import { storage } from '../storage';
+import { Logger } from './logger.service.js';
+import { storage } from '../storage.js';
 import { sql } from '../db-connection';
 
 interface DuplicateCleanupStats {
@@ -28,7 +28,7 @@ export class DuplicateCleanupService {
 
       // 2. Duplikate in Regulatory Updates bereinigen
       const regulatoryCleanup = await this.cleanupRegulatoryUpdateDuplicates();
-      
+
       // 3. Duplikate in Legal Cases bereinigen
       const legalCleanup = await this.cleanupLegalCaseDuplicates();
 
@@ -66,12 +66,12 @@ export class DuplicateCleanupService {
     // Strategie: Behalte das neueste Update pro eindeutigem Titel
     const duplicateQuery = `
       WITH duplicate_groups AS (
-        SELECT 
+        SELECT
           id,
           title,
           published_at,
           ROW_NUMBER() OVER (
-            PARTITION BY LOWER(TRIM(title)) 
+            PARTITION BY LOWER(TRIM(title))
             ORDER BY published_at DESC, created_at DESC
           ) as row_num
         FROM regulatory_updates
@@ -80,7 +80,7 @@ export class DuplicateCleanupService {
       duplicates_to_delete AS (
         SELECT id FROM duplicate_groups WHERE row_num > 1
       )
-      DELETE FROM regulatory_updates 
+      DELETE FROM regulatory_updates
       WHERE id IN (SELECT id FROM duplicates_to_delete)
     `;
 
@@ -104,12 +104,12 @@ export class DuplicateCleanupService {
     // Strategie: Behalte den neuesten Case pro eindeutigem Titel
     const duplicateQuery = `
       WITH duplicate_groups AS (
-        SELECT 
+        SELECT
           id,
           title,
           decision_date,
           ROW_NUMBER() OVER (
-            PARTITION BY LOWER(TRIM(title)) 
+            PARTITION BY LOWER(TRIM(title))
             ORDER BY decision_date DESC, created_at DESC
           ) as row_num
         FROM legal_cases
@@ -118,7 +118,7 @@ export class DuplicateCleanupService {
       duplicates_to_delete AS (
         SELECT id FROM duplicate_groups WHERE row_num > 1
       )
-      DELETE FROM legal_cases 
+      DELETE FROM legal_cases
       WHERE id IN (SELECT id FROM duplicates_to_delete)
     `;
 
@@ -144,12 +144,12 @@ export class DuplicateCleanupService {
     uniquenessRatio: number;
   }> {
     const [regulatoryStats, legalStats] = await Promise.all([
-      sql`SELECT 
+      sql`SELECT
         COUNT(*) as total_count,
         COUNT(DISTINCT LOWER(TRIM(title))) as unique_count
       FROM regulatory_updates
       WHERE title IS NOT NULL AND TRIM(title) != ''`,
-      sql`SELECT 
+      sql`SELECT
         COUNT(*) as total_count,
         COUNT(DISTINCT LOWER(TRIM(title))) as unique_count
       FROM legal_cases
@@ -179,7 +179,7 @@ export class DuplicateCleanupService {
    */
   async generateCleanupReport(): Promise<any> {
     const stats = await this.getDuplicateStats();
-    const duplicateRatio = stats.totalRegulatory > 0 ? 
+    const duplicateRatio = stats.totalRegulatory > 0 ?
       ((stats.totalRegulatory - stats.uniqueRegulatory) / stats.totalRegulatory * 100) : 0;
 
     return {

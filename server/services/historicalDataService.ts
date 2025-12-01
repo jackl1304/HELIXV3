@@ -1,5 +1,5 @@
 import { storage } from "../storage";
-import type { RegulatoryUpdate, LegalCase } from "@shared/schema";
+import type { RegulatoryUpdate, LegalCase } from "../../shared/schema.js";
 
 interface HistoricalTrend {
   period: string;
@@ -43,7 +43,7 @@ interface DataRetentionPolicy {
 }
 
 export class HistoricalDataService {
-  
+
   // Add missing methods that are called in server/index.ts
   async initializeHistoricalDownload(): Promise<void> {
     console.log('Historical data service initialized successfully');
@@ -52,7 +52,7 @@ export class HistoricalDataService {
   async setupContinuousMonitoring(): Promise<void> {
     console.log('Continuous monitoring setup completed');
   }
-  
+
   private readonly retentionPolicy: DataRetentionPolicy = {
     regulatoryUpdates: {
       activeRetention: '7 Jahre',
@@ -77,7 +77,7 @@ export class HistoricalDataService {
   ): Promise<HistoricalAnalysis> {
     try {
       console.log(`Analyzing historical trends for ${dataType} data with ${timeframe} intervals`);
-      
+
       const timeframeTrends: HistoricalTrend[] = [];
       const comparisons: ComparisonResult[] = [];
       const seasonalPatterns: string[] = [];
@@ -91,7 +91,7 @@ export class HistoricalDataService {
       if (dataType === 'regulatory' || dataType === 'all') {
         regulatoryData = await storage.getAllRegulatoryUpdates();
       }
-      
+
       if (dataType === 'legal' || dataType === 'all') {
         legalData = await storage.getAllLegalCases();
       }
@@ -130,7 +130,7 @@ export class HistoricalDataService {
           currentValue: currentPeriodRegulatory.length,
           previousValue: previousPeriodRegulatory.length,
           changePercentage: this.calculatePercentageChange(
-            previousPeriodRegulatory.length, 
+            previousPeriodRegulatory.length,
             currentPeriodRegulatory.length
           ),
           trend: this.determineTrend(previousPeriodRegulatory.length, currentPeriodRegulatory.length)
@@ -174,7 +174,7 @@ export class HistoricalDataService {
           currentValue: currentPeriodLegal.length,
           previousValue: previousPeriodLegal.length,
           changePercentage: this.calculatePercentageChange(
-            previousPeriodLegal.length, 
+            previousPeriodLegal.length,
             currentPeriodLegal.length
           ),
           trend: this.determineTrend(previousPeriodLegal.length, currentPeriodLegal.length)
@@ -219,7 +219,7 @@ export class HistoricalDataService {
     for (const [period, items] of Object.entries(groupedData)) {
       const count = items.length;
       const avgPriority = items.reduce((sum, item) => sum + item.priority, 0) / items.length;
-      
+
       // Get main categories for this period
       const categoryCount: { [key: string]: number } = {};
       items.forEach(item => {
@@ -252,7 +252,7 @@ export class HistoricalDataService {
 
     data.forEach(item => {
       let key: string;
-      
+
       switch (timeframe) {
         case 'monthly':
           key = `${item.date.getFullYear()}-${String(item.date.getMonth() + 1).padStart(2, '0')}`;
@@ -296,7 +296,7 @@ export class HistoricalDataService {
         'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
         'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
       ];
-      
+
       patterns.push(`Höchste Aktivität in ${monthNames[peakMonth]}`);
     }
 
@@ -316,7 +316,7 @@ export class HistoricalDataService {
 
   private identifyLongTermTrends(data: Array<{ publishedAt: Date | string }>): string[] {
     const trends: string[] = [];
-    
+
     if (data.length < 10) {
       trends.push('Unzureichende Daten für Langzeittrend-Analyse');
       return trends;
@@ -335,7 +335,7 @@ export class HistoricalDataService {
       const lastYear = years[years.length - 1];
       const firstYearCount = yearlyCount[firstYear];
       const lastYearCount = yearlyCount[lastYear];
-      
+
       if (lastYearCount > firstYearCount * 1.2) {
         trends.push('Langfristig steigende Tendenz bei regulatorischen Aktivitäten');
       } else if (lastYearCount < firstYearCount * 0.8) {
@@ -386,7 +386,7 @@ export class HistoricalDataService {
   }> {
     try {
       console.log('Starting automated data archival process...');
-      
+
       const report: string[] = [];
       let archivedRegulatory = 0;
       let archivedLegal = 0;
@@ -404,7 +404,7 @@ export class HistoricalDataService {
 
       // Archive regulatory updates
       const oldRegulatoryUpdates = await storage.getAllRegulatoryUpdates();
-      const toArchiveRegulatory = oldRegulatoryUpdates.filter(update => 
+      const toArchiveRegulatory = oldRegulatoryUpdates.filter(update =>
         new Date(update.publishedAt) < regulatoryCutoff && !this.isExceptionCase(update)
       );
 
@@ -415,7 +415,7 @@ export class HistoricalDataService {
 
       // Archive legal cases
       const oldLegalCases = await storage.getAllLegalCases();
-      const toArchiveLegal = oldLegalCases.filter(legalCase => 
+      const toArchiveLegal = oldLegalCases.filter(legalCase =>
         new Date(legalCase.publishedAt) < legalCutoff && !this.isLegalExceptionCase(legalCase)
       );
 
@@ -449,7 +449,7 @@ export class HistoricalDataService {
 
   private isExceptionCase(update: RegulatoryUpdate): boolean {
     // Keep high-priority items and precedent cases longer
-    return update.priority === 'critical' || 
+    return update.priority === 'critical' ||
            update.categories?.includes('Präzedenzfall') ||
            update.updateType === 'recall';
   }
@@ -465,7 +465,7 @@ export class HistoricalDataService {
     // In a real implementation, this would move data to an archive storage
     // For now, we'll just log the action
     console.log(`Archiving ${type} data: ${data.id || data.title}`);
-    
+
     // In production, implement actual archival logic here:
     // - Move to archive database/storage
     // - Update access permissions
@@ -514,7 +514,7 @@ export class HistoricalDataService {
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
     const recentUpdates = await storage.getAllRegulatoryUpdates();
-    const recentData = recentUpdates.filter(update => 
+    const recentData = recentUpdates.filter(update =>
       new Date(update.publishedAt) > oneMonthAgo
     );
 

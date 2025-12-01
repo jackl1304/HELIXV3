@@ -1,4 +1,4 @@
-import { Logger } from './logger.service';
+import { Logger } from './logger.service.js';
 import * as cheerio from 'cheerio';
 import axios from 'axios';
 
@@ -278,7 +278,7 @@ export class RealNewsletterScraper {
         logger.info(`Scraping source: ${source.name} (Auth required: ${source.requiresAuth})`);
         const sourceArticles = await this.scrapeSource(source);
         articles.push(...sourceArticles);
-        
+
         // Rate limiting - wait between sources
         await new Promise(resolve => setTimeout(resolve, 2000));
       } catch (error: any) {
@@ -299,7 +299,7 @@ export class RealNewsletterScraper {
         logger.info(`Scraping public source: ${source.name}`);
         const sourceArticles = await this.scrapeSource(source);
         articles.push(...sourceArticles);
-        
+
         // Rate limiting
         await new Promise(resolve => setTimeout(resolve, 1500));
       } catch (error: any) {
@@ -334,7 +334,7 @@ export class RealNewsletterScraper {
 
   private async scrapeMedTechDive(source: NewsletterSource): Promise<ScrapedArticle[]> {
     const articles: ScrapedArticle[] = [];
-    
+
     try {
       // Headers to appear as a regular browser
       const headers = {
@@ -345,14 +345,14 @@ export class RealNewsletterScraper {
         'Connection': 'keep-alive',
       };
 
-      const response = await axios.get(source.url, { 
+      const response = await axios.get(source.url, {
         headers,
         timeout: 30000,
         maxRedirects: 5
       });
 
       const $ = cheerio.load(response.data);
-      
+
       // MedTech Dive article selectors (these would need to be refined based on actual site structure)
       const articleSelectors = [
         '.feed__item',
@@ -365,7 +365,7 @@ export class RealNewsletterScraper {
 
       for (const selector of articleSelectors) {
         const articleElements = $(selector);
-        
+
         if (articleElements.length > 0) {
           foundArticles = true;
           logger.info(`Found ${articleElements.length} articles using selector: ${selector}`);
@@ -374,7 +374,7 @@ export class RealNewsletterScraper {
             if (index >= 10) return false; // Limit to 10 articles per source
 
             const $article = $(element);
-            
+
             // Extract article data
             const title = $article.find('h1, h2, h3, .title, .headline').first().text().trim();
             const url = $article.find('a').first().attr('href');
@@ -433,7 +433,7 @@ export class RealNewsletterScraper {
 
   private async scrapeMedTechEurope(source: NewsletterSource): Promise<ScrapedArticle[]> {
     const articles: ScrapedArticle[] = [];
-    
+
     try {
       const headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -445,14 +445,14 @@ export class RealNewsletterScraper {
         'Upgrade-Insecure-Requests': '1',
       };
 
-      const response = await axios.get(source.url, { 
+      const response = await axios.get(source.url, {
         headers,
         timeout: 30000,
         maxRedirects: 5
       });
 
       const $ = cheerio.load(response.data);
-      
+
       // MedTech Europe newsletter selectors
       const articleSelectors = [
         '.newsletter-item',
@@ -466,7 +466,7 @@ export class RealNewsletterScraper {
 
       for (const selector of articleSelectors) {
         const articleElements = $(selector);
-        
+
         if (articleElements.length > 0) {
           foundArticles = true;
           logger.info(`Found ${articleElements.length} articles from MedTech Europe using selector: ${selector}`);
@@ -475,7 +475,7 @@ export class RealNewsletterScraper {
             if (index >= 8) return false;
 
             const $article = $(element);
-            
+
             const title = $article.find('h1, h2, h3, .title, .headline').first().text().trim();
             const url = $article.find('a').first().attr('href');
             const dateText = $article.find('.date, .published, time').first().text().trim();
@@ -527,7 +527,7 @@ export class RealNewsletterScraper {
 
   private async scrapeMedicalDeviceNetwork(source: NewsletterSource): Promise<ScrapedArticle[]> {
     const articles: ScrapedArticle[] = [];
-    
+
     try {
       const headers = {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -537,14 +537,14 @@ export class RealNewsletterScraper {
         'Pragma': 'no-cache'
       };
 
-      const response = await axios.get(source.url, { 
+      const response = await axios.get(source.url, {
         headers,
         timeout: 25000,
         maxRedirects: 3
       });
 
       const $ = cheerio.load(response.data);
-      
+
       // Medical Device Network selectors
       const articleSelectors = [
         '.newsletter-archive-item',
@@ -558,7 +558,7 @@ export class RealNewsletterScraper {
 
       for (const selector of articleSelectors) {
         const articleElements = $(selector);
-        
+
         if (articleElements.length > 0) {
           foundArticles = true;
           logger.info(`Found ${articleElements.length} articles from Medical Device Network`);
@@ -567,7 +567,7 @@ export class RealNewsletterScraper {
             if (index >= 6) return false;
 
             const $article = $(element);
-            
+
             const title = $article.find('h1, h2, h3, .title').first().text().trim();
             const url = $article.find('a').first().attr('href');
             const dateText = $article.find('.date, time, .published').first().text().trim();
@@ -610,21 +610,21 @@ export class RealNewsletterScraper {
 
   private async scrapeMedTechInsights(source: NewsletterSource): Promise<ScrapedArticle[]> {
     const articles: ScrapedArticle[] = [];
-    
+
     try {
       const headers = {
         'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
       };
 
-      const response = await axios.get(source.url, { 
+      const response = await axios.get(source.url, {
         headers,
         timeout: 20000,
         maxRedirects: 5
       });
 
       const $ = cheerio.load(response.data);
-      
+
       const articleSelectors = [
         '.post',
         '.blog-post',
@@ -637,7 +637,7 @@ export class RealNewsletterScraper {
 
       for (const selector of articleSelectors) {
         const articleElements = $(selector);
-        
+
         if (articleElements.length > 0) {
           foundArticles = true;
           logger.info(`Found ${articleElements.length} articles from Med-Tech Insights`);
@@ -646,7 +646,7 @@ export class RealNewsletterScraper {
             if (index >= 7) return false;
 
             const $article = $(element);
-            
+
             const title = $article.find('h1, h2, h3, .post-title, .title').first().text().trim();
             const url = $article.find('a').first().attr('href');
             const dateText = $article.find('.date, .post-date, time').first().text().trim();
@@ -691,7 +691,7 @@ export class RealNewsletterScraper {
 
   private async scrapeCitelineMedtech(source: NewsletterSource): Promise<ScrapedArticle[]> {
     const articles: ScrapedArticle[] = [];
-    
+
     try {
       const headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/120.0',
@@ -700,13 +700,13 @@ export class RealNewsletterScraper {
         'Accept-Encoding': 'gzip, deflate, br'
       };
 
-      const response = await axios.get(source.url, { 
+      const response = await axios.get(source.url, {
         headers,
         timeout: 30000
       });
 
       const $ = cheerio.load(response.data);
-      
+
       const articleSelectors = [
         '.insight-article',
         '.medtech-article',
@@ -719,7 +719,7 @@ export class RealNewsletterScraper {
 
       for (const selector of articleSelectors) {
         const articleElements = $(selector);
-        
+
         if (articleElements.length > 0) {
           foundArticles = true;
           logger.info(`Found ${articleElements.length} articles from Citeline Medtech`);
@@ -728,7 +728,7 @@ export class RealNewsletterScraper {
             if (index >= 5) return false;
 
             const $article = $(element);
-            
+
             const title = $article.find('h1, h2, h3, .article-title').first().text().trim();
             const url = $article.find('a').first().attr('href');
             const dateText = $article.find('.published-date, .date, time').first().text().trim();
@@ -771,20 +771,20 @@ export class RealNewsletterScraper {
 
   private async scrapeMedTechStrategist(source: NewsletterSource): Promise<ScrapedArticle[]> {
     const articles: ScrapedArticle[] = [];
-    
+
     try {
       const headers = {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
       };
 
-      const response = await axios.get(source.url, { 
+      const response = await axios.get(source.url, {
         headers,
         timeout: 25000
       });
 
       const $ = cheerio.load(response.data);
-      
+
       const articleSelectors = [
         '.newsletter-item',
         '.strategy-article',
@@ -797,7 +797,7 @@ export class RealNewsletterScraper {
 
       for (const selector of articleSelectors) {
         const articleElements = $(selector);
-        
+
         if (articleElements.length > 0) {
           foundArticles = true;
           logger.info(`Found ${articleElements.length} articles from MedTech Strategist`);
@@ -806,7 +806,7 @@ export class RealNewsletterScraper {
             if (index >= 4) return false;
 
             const $article = $(element);
-            
+
             const title = $article.find('h1, h2, h3, .title').first().text().trim();
             const url = $article.find('a').first().attr('href');
             const dateText = $article.find('.date, time').first().text().trim();
@@ -849,20 +849,20 @@ export class RealNewsletterScraper {
 
   private async scrapeBioWorld(source: NewsletterSource): Promise<ScrapedArticle[]> {
     const articles: ScrapedArticle[] = [];
-    
+
     try {
       const headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'
       };
 
-      const response = await axios.get(source.url, { 
+      const response = await axios.get(source.url, {
         headers,
         timeout: 30000
       });
 
       const $ = cheerio.load(response.data);
-      
+
       const articleSelectors = [
         '.bioworld-article',
         '.medtech-news',
@@ -875,7 +875,7 @@ export class RealNewsletterScraper {
 
       for (const selector of articleSelectors) {
         const articleElements = $(selector);
-        
+
         if (articleElements.length > 0) {
           foundArticles = true;
           logger.info(`Found ${articleElements.length} articles from BioWorld`);
@@ -884,7 +884,7 @@ export class RealNewsletterScraper {
             if (index >= 6) return false;
 
             const $article = $(element);
-            
+
             const title = $article.find('h1, h2, h3, .headline').first().text().trim();
             const url = $article.find('a').first().attr('href');
             const dateText = $article.find('.publish-date, .date, time').first().text().trim();
@@ -934,7 +934,7 @@ export class RealNewsletterScraper {
 
     const cleanedDate = dateText.replace(/Published:|Posted:|Date:/gi, '').trim();
     const parsedDate = new Date(cleanedDate);
-    
+
     if (!isNaN(parsedDate.getTime())) {
       return parsedDate.toISOString();
     }
@@ -1001,17 +1001,17 @@ export class RealNewsletterScraper {
   }
 
   private generateArticleContent(title: string, source: NewsletterSource): string {
-    const premiumContent = source.requiresAuth ? 
-      "Premium-Inhalt basierend auf Branchenexpertise und verifizierten Quellen. " : 
+    const premiumContent = source.requiresAuth ?
+      "Premium-Inhalt basierend auf Branchenexpertise und verifizierten Quellen. " :
       "Öffentlich verfügbare Informationen aus vertrauenswürdigen Industriequellen. ";
-      
+
     return `${premiumContent}${title}
 
-Dieser Artikel stammt aus ${source.name} und behandelt wichtige Entwicklungen im MedTech-Bereich. 
+Dieser Artikel stammt aus ${source.name} und behandelt wichtige Entwicklungen im MedTech-Bereich.
 
 Die Inhalte basieren auf authentischen Newsletter-Quellen und bieten Einblicke in:
 - Aktuelle Markttrends und Entwicklungen
-- Regulatorische Änderungen und Compliance-Anforderungen  
+- Regulatorische Änderungen und Compliance-Anforderungen
 - Technologische Innovationen und deren Auswirkungen
 - Strategische Geschäftsentscheidungen der Branche
 
@@ -1028,16 +1028,16 @@ Für vollständige Details und weitere Analysen besuchen Sie die ursprüngliche 
       regulatory_newsletter: ['Regulatorik', 'Compliance', 'FDA', 'EU MDR', 'Zulassung'],
       market_analysis: ['Marktanalyse', 'Investment', 'Trends', 'Prognosen', 'M&A']
     };
-    
+
     const baseKeywords = keywordMap[category as keyof typeof keywordMap] || ['MedTech'];
-    
+
     // Extract additional keywords from title
     const additionalKeywords = text.toLowerCase()
       .split(/\s+/)
       .filter(word => word.length > 4)
       .filter(word => ['medtech', 'medical', 'device', 'health', 'digital', 'innovation'].includes(word))
       .slice(0, 3);
-    
+
     return [...baseKeywords, ...additionalKeywords].slice(0, 5);
   }
 
@@ -1050,7 +1050,7 @@ Für vollständige Details und weitere Analysen besuchen Sie die ursprüngliche 
     const activeSources = allSources.filter(s => s.status === 'active').length;
     const configuredSources = allSources.filter(s => s.status === 'configured').length;
     const authRequired = allSources.filter(s => s.requiresAuth).length;
-    
+
     const categories = allSources.reduce((acc, source) => {
       acc[source.category] = (acc[source.category] || 0) + 1;
       return acc;

@@ -1,4 +1,4 @@
-import { storage } from '../storage';
+import { storage } from '../storage.js';
 
 interface HealthCanadaDevice {
   device_id?: number;
@@ -26,14 +26,14 @@ export class HealthCanadaMDALLService {
   private async makeRequest(url: string, retryAttempt: number = 0): Promise<any> {
     try {
       console.log(`🔄 [Health Canada API] Requesting: ${url} (attempt ${retryAttempt + 1})`);
-      
+
       const response = await fetch(url, {
         headers: {
           'User-Agent': 'Helix-Regulatory-Intelligence/2.0 (MedTech Compliance Platform)',
           'Accept': 'application/json'
         }
       });
-      
+
       if (!response.ok) {
         if (response.status === 429 && retryAttempt < this.maxRetries) {
           console.log(`⏱️ [Health Canada API] Rate limited, retrying after backoff...`);
@@ -42,11 +42,11 @@ export class HealthCanadaMDALLService {
         }
         throw new Error(`Health Canada API error: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
-      
+
       await this.delay(this.rateLimitDelay);
-      
+
       console.log(`✅ [Health Canada API] Request successful - received ${Array.isArray(data) ? data.length : 'object'} items`);
       return data;
     } catch (error) {
@@ -55,7 +55,7 @@ export class HealthCanadaMDALLService {
         await this.exponentialBackoff(retryAttempt);
         return this.makeRequest(url, retryAttempt + 1);
       }
-      
+
       console.error(`❌ [Health Canada API] Request failed after ${retryAttempt + 1} attempts:`, error);
       throw error;
     }
@@ -64,14 +64,14 @@ export class HealthCanadaMDALLService {
   async collectActiveDevices(limit: number = 100): Promise<HealthCanadaDevice[]> {
     try {
       console.log(`[Health Canada API] Collecting active devices (limit: ${limit})`);
-      
+
       const endpoint = `${this.baseUrl}/api/medical-devices/device/?type=json&state=active`;
       const data = await this.makeRequest(endpoint);
-      
+
       if (!Array.isArray(data)) {
         throw new Error('Invalid Health Canada response format - expected array');
       }
-      
+
       const recentDevices = data
         .filter((d: any) => d.trade_name && d.first_licence_dt)
         .sort((a: any, b: any) => {
@@ -80,13 +80,13 @@ export class HealthCanadaMDALLService {
           return dateB.getTime() - dateA.getTime();
         })
         .slice(0, limit);
-      
+
       console.log(`[Health Canada API] Found ${recentDevices.length} recent active devices`);
-      
+
       for (const device of recentDevices as HealthCanadaDevice[]) {
         await this.processDevice(device);
       }
-      
+
       console.log(`[Health Canada API] Device collection completed`);
       return recentDevices as HealthCanadaDevice[];
     } catch (error) {
@@ -101,7 +101,7 @@ export class HealthCanadaMDALLService {
         title: `Health Canada: ${device.trade_name || 'Medical Device'}${device.original_licence_no ? ` (Licence ${device.original_licence_no})` : ''}`,
         description: this.formatDeviceContent(device),
         sourceId: 'health_canada',
-        sourceUrl: device.original_licence_no 
+        sourceUrl: device.original_licence_no
           ? `https://health-products.canada.ca/api/medical-devices/licence/?id=${device.original_licence_no}&type=json`
           : `https://health-products.canada.ca/mdall-limh/`,
         region: 'CA',
@@ -112,7 +112,7 @@ export class HealthCanadaMDALLService {
         rawData: device,
         publishedAt: this.parseDate(device.first_licence_dt) || new Date(),
       };
-      
+
       await storage.createRegulatoryUpdate(regulatoryUpdate);
       console.log(`[Health Canada API] Successfully created regulatory update: ${regulatoryUpdate.title}`);
     } catch (error) {
@@ -134,7 +134,7 @@ export class HealthCanadaMDALLService {
 
   private parseDate(dateString: string | undefined): Date | null {
     if (!dateString) return null;
-    
+
     try {
       return new Date(dateString);
     } catch {
@@ -145,7 +145,7 @@ export class HealthCanadaMDALLService {
   private async categorizeDevice(device: HealthCanadaDevice): Promise<string[]> {
     const categories: string[] = ['Health Canada MDALL', 'Canadian Regulatory'];
     const deviceName = device.trade_name?.toLowerCase() || '';
-    
+
     if (deviceName.includes('cardio') || deviceName.includes('heart')) categories.push('Cardiovascular');
     if (deviceName.includes('neuro') || deviceName.includes('brain')) categories.push('Neurology');
     if (deviceName.includes('ortho') || deviceName.includes('joint')) categories.push('Orthopedics');
@@ -154,7 +154,7 @@ export class HealthCanadaMDALLService {
     if (deviceName.includes('implant')) categories.push('Implantable Device');
     if (deviceName.includes('glove')) categories.push('Protective Equipment');
     if (deviceName.includes('surgical') || deviceName.includes('instrument')) categories.push('Surgical Instruments');
-    
+
     return categories;
   }
 }

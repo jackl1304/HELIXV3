@@ -7,7 +7,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import crypto from 'crypto';
-import type { DataSource } from '@shared/schema';
+import type { DataSource } from '../../shared/schema.js';
 
 export interface ScrapedUpdate {
   title: string;

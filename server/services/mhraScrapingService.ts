@@ -1,6 +1,6 @@
-import { storage } from '../storage';
-import { nlpService } from './nlpService';
-import type { InsertRegulatoryUpdate } from '@shared/schema';
+import { storage } from '../storage.js';
+import { nlpService } from './nlpService.js';
+import type { InsertRegulatoryUpdate } from '../../shared/schema.js';
 
 interface MHRADevice {
   registrationNumber: string;
@@ -28,7 +28,7 @@ interface MHRASafetyAlert {
 export class MHRAScrapingService {
   private baseUrl = 'https://www.gov.uk';
   private deviceRegistrationUrl = 'https://mhrabpm.appiancloud.com';
-  
+
   constructor() {
     // Initialize with rate limiting
     this.rateLimitDelay = 2000; // 2 seconds between requests for web scraping
@@ -43,16 +43,16 @@ export class MHRAScrapingService {
   async collectMHRADeviceRegistrations(): Promise<void> {
     try {
       console.log('[MHRA Scraper] Starting device registration collection...');
-      
+
       // Note: This is a demonstration implementation
       // Real implementation would require authentication and proper scraping
       const mockDevices = this.generateMockMHRADevices();
-      
+
       for (const device of mockDevices) {
         await this.processMHRADevice(device);
         await this.delay(this.rateLimitDelay);
       }
-      
+
       console.log(`[MHRA Scraper] Device registration collection completed: ${mockDevices.length} devices`);
     } catch (error) {
       console.error('[MHRA Scraper] Error collecting device registrations:', error);
@@ -63,17 +63,17 @@ export class MHRAScrapingService {
   async collectMHRASafetyAlerts(): Promise<void> {
     try {
       console.log('[MHRA Scraper] Starting safety alerts collection...');
-      
+
       const alertsUrl = `${this.baseUrl}/drug-device-alerts`;
-      
+
       // Note: This would require actual web scraping implementation
       const mockAlerts = this.generateMockSafetyAlerts();
-      
+
       for (const alert of mockAlerts) {
         await this.processSafetyAlert(alert);
         await this.delay(this.rateLimitDelay);
       }
-      
+
       console.log(`[MHRA Scraper] Safety alerts collection completed: ${mockAlerts.length} alerts`);
     } catch (error) {
       console.error('[MHRA Scraper] Error collecting safety alerts:', error);
@@ -100,7 +100,7 @@ export class MHRAScrapingService {
         rawData: device,
         publishedAt: new Date(device.registrationDate),
       };
-      
+
       await storage.createRegulatoryUpdate(regulatoryUpdate);
       console.log(`[MHRA Scraper] Created device registration: ${device.deviceName}`);
     } catch (error) {
@@ -127,7 +127,7 @@ export class MHRAScrapingService {
         rawData: alert,
         publishedAt: new Date(alert.publishedDate),
       };
-      
+
       await storage.createRegulatoryUpdate(regulatoryUpdate);
       console.log(`[MHRA Scraper] Created safety alert: ${alert.title}`);
     } catch (error) {

@@ -1,6 +1,6 @@
-import { Logger } from './logger.service';
-import { storage } from '../storage';
-import { legalDataService } from './legalDataService';
+import { Logger } from './logger.service.js';
+import { storage } from '../storage.js';
+import { legalDataService } from './legalDataService.js';
 
 const logger = new Logger('BackgroundInitService');
 
@@ -30,7 +30,7 @@ export class BackgroundInitService {
     }
 
     this.initializationPromise = this.performBackgroundInit();
-    
+
     // Don't await - let it run in background
     this.initializationPromise.catch(error => {
       logger.error('Background initialization failed', { error });
@@ -51,17 +51,17 @@ export class BackgroundInitService {
 
   private async performBackgroundInit(): Promise<void> {
     logger.info("Starting background data initialization...");
-    
+
     try {
       // Initialize data sources
       await this.initializeDataSources();
-      
+
       // Initialize legal data if needed
       await this.initializeLegalDataIfNeeded();
-      
-      // Initialize regulatory data if needed  
+
+      // Initialize regulatory data if needed
       await this.initializeRegulatoryDataIfNeeded();
-      
+
       logger.info("Background initialization completed successfully");
     } catch (error) {
       logger.error("Background initialization failed", { error });
@@ -73,11 +73,11 @@ export class BackgroundInitService {
     try {
       const existingSources = await storage.getAllDataSources();
       logger.info(`Found ${existingSources.length} existing data sources`);
-      
+
       // Only initialize if we have fewer than expected sources
       if (existingSources.length < 46) {
         logger.info("Initializing additional data sources...");
-        
+
         const requiredSources = [
           // GRIP Platform - Global Intelligence
           { id: 'grip_platform', name: 'GRIP Regulatory Intelligence', endpoint: 'https://grip-app.pureglobal.com', country: 'GLOBAL', region: 'Global', type: 'intelligence', category: 'regulatory', isActive: true },
@@ -86,7 +86,7 @@ export class BackgroundInitService {
           { id: 'fda_recalls', name: 'FDA Device Recalls', endpoint: 'https://api.fda.gov/device/recall.json', country: 'US', region: 'North America', type: 'safety', category: 'recalls', isActive: true },
           // Add only essential sources for performance
         ];
-        
+
         for (const source of requiredSources) {
           try {
             await storage.createDataSource(source);
@@ -97,10 +97,10 @@ export class BackgroundInitService {
           }
         }
       }
-      
+
       const finalCount = await storage.getAllDataSources();
       logger.info(`Data sources ready: ${finalCount.length} sources available`);
-      
+
     } catch (error) {
       logger.error("Error initializing data sources", { error });
       throw error;
@@ -111,12 +111,12 @@ export class BackgroundInitService {
     try {
       const currentLegalCases = await storage.getAllLegalCases();
       logger.info(`Current legal cases in database: ${currentLegalCases.length}`);
-      
+
       // Only initialize if we have insufficient data
       if (currentLegalCases.length < 100) {
         logger.info("Initializing legal data in background...");
         await legalDataService.initializeLegalData();
-        
+
         const updatedLegalCount = await storage.getAllLegalCases();
         logger.info(`Legal data initialized: ${updatedLegalCount.length} legal cases`);
       }
@@ -130,18 +130,18 @@ export class BackgroundInitService {
     try {
       const currentUpdates = await storage.getAllRegulatoryUpdates();
       logger.info(`Current regulatory updates: ${currentUpdates.length}`);
-      
+
       // Only collect if we have insufficient data
       if (currentUpdates.length < 1000) {
         logger.info("Starting regulatory data collection in background...");
-        
+
         // Import and initialize data collection service
         const { DataCollectionService } = await import("./dataCollectionService");
         const dataService = new DataCollectionService();
-        
+
         // Perform limited initial collection to avoid overwhelming startup
         await dataService.performLimitedDataCollection(10);
-        
+
         const updatedCount = await storage.getAllRegulatoryUpdates();
         logger.info(`Regulatory data collection completed: ${updatedCount.length} updates`);
       }

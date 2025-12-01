@@ -1,4 +1,4 @@
-import { Logger } from './logger.service';
+import { Logger } from './logger.service.js';
 // Define types locally since @shared/types doesn't exist
 interface IStorage {
   // Add minimal interface for the methods we need
@@ -24,7 +24,7 @@ interface LegalCase {
 
 class AppError extends Error {
   public readonly statusCode: number;
-  
+
   constructor(message: string, statusCode: number = 500) {
     super(message);
     this.statusCode = statusCode;
@@ -66,7 +66,7 @@ export class KnowledgeExtractionService {
    */
   async extractArticlesFromAllSources(): Promise<ArticleExtractionStats> {
     logger.info('Starting knowledge article extraction from all data sources');
-    
+
     const stats: ArticleExtractionStats = {
       totalProcessed: 0,
       articlesExtracted: 0,
@@ -84,7 +84,7 @@ export class KnowledgeExtractionService {
       const legalStats = await this.extractFromLegalCases();
       this.mergeStats(stats, legalStats);
 
-      logger.info('Knowledge article extraction completed', { 
+      logger.info('Knowledge article extraction completed', {
         totalProcessed: stats.totalProcessed,
         articlesExtracted: stats.articlesExtracted,
         duplicatesSkipped: stats.duplicatesSkipped,
@@ -102,7 +102,7 @@ export class KnowledgeExtractionService {
    */
   private async extractFromRegulatoryUpdates(): Promise<Partial<ArticleExtractionStats>> {
     logger.info('Extracting articles from regulatory updates');
-    
+
     const stats = {
       totalProcessed: 0,
       articlesExtracted: 0,
@@ -120,11 +120,11 @@ export class KnowledgeExtractionService {
           const extracted = this.extractArticleFromRegulatoryUpdate(update);
           if (extracted) {
             const isDuplicate = await this.checkForDuplicate(extracted);
-            
+
             if (!isDuplicate) {
               await this.createKnowledgeArticle(extracted);
               stats.articlesExtracted++;
-              
+
               logger.debug('Created knowledge article from regulatory update', {
                 title: extracted.title,
                 source: extracted.source
@@ -154,7 +154,7 @@ export class KnowledgeExtractionService {
    */
   private async extractFromLegalCases(): Promise<Partial<ArticleExtractionStats>> {
     logger.info('Extracting articles from legal cases');
-    
+
     const stats = {
       totalProcessed: 0,
       articlesExtracted: 0,
@@ -172,11 +172,11 @@ export class KnowledgeExtractionService {
           const extracted = this.extractArticleFromLegalCase(legalCase);
           if (extracted) {
             const isDuplicate = await this.checkForDuplicate(extracted);
-            
+
             if (!isDuplicate) {
               await this.createKnowledgeArticle(extracted);
               stats.articlesExtracted++;
-              
+
               logger.debug('Created knowledge article from legal case', {
                 title: extracted.title,
                 source: extracted.source
@@ -306,7 +306,7 @@ export class KnowledgeExtractionService {
     if (legalCase.document_url) {
       return legalCase.document_url;
     }
-    
+
     // Fallback: Suchlink basierend auf Gerichtshof und Fallnummer
     const searchQuery = encodeURIComponent(`${legalCase.court} ${legalCase.case_number || legalCase.caseNumber || legalCase.id}`);
     return `https://www.google.com/search?q=${searchQuery}`;
@@ -318,10 +318,10 @@ export class KnowledgeExtractionService {
   private async checkForDuplicate(extracted: ExtractedArticle): Promise<boolean> {
     try {
       const existingArticles = await this.storage.getAllKnowledgeArticles();
-      
-      return existingArticles.some(article => 
-        article.title === extracted.title || 
-        (extracted.link && extracted.link !== '' && 
+
+      return existingArticles.some(article =>
+        article.title === extracted.title ||
+        (extracted.link && extracted.link !== '' &&
          article.content && article.content.includes(extracted.link))
       );
     } catch (error) {
@@ -335,7 +335,7 @@ export class KnowledgeExtractionService {
    */
   private async createKnowledgeArticle(extracted: ExtractedArticle): Promise<void> {
     const articleContent = this.generateArticleContent(extracted);
-    
+
     await this.storage.addKnowledgeArticle({
       title: extracted.title,
       content: articleContent,
@@ -352,10 +352,10 @@ export class KnowledgeExtractionService {
   private generateArticleContent(extracted: ExtractedArticle): string {
     return `# ${extracted.title}
 
-**Quelle:** ${extracted.source}  
-**Region:** ${extracted.region}  
-**Typ:** ${extracted.sourceType === 'regulatory' ? 'Regulatorisches Update' : 'Rechtsfall'}  
-**Kategorie:** ${extracted.category}  
+**Quelle:** ${extracted.source}
+**Region:** ${extracted.region}
+**Typ:** ${extracted.sourceType === 'regulatory' ? 'Regulatorisches Update' : 'Rechtsfall'}
+**Kategorie:** ${extracted.category}
 **Extrahiert am:** ${extracted.extractedAt.toLocaleDateString('de-DE')}
 
 ## Originalquelle
@@ -409,7 +409,7 @@ export class KnowledgeExtractionService {
    */
   async extractFromSpecificSources(sourceIds: string[]): Promise<ArticleExtractionStats> {
     logger.info('Extracting articles from specific sources', { sourceIds });
-    
+
     const stats: ArticleExtractionStats = {
       totalProcessed: 0,
       articlesExtracted: 0,

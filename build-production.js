@@ -8,177 +8,161 @@
 import { build } from 'esbuild';
 import { execSync } from 'child_process';
 import fs from 'fs';
-import path from 'path';
+import path from 'path'; // path-Modul importieren
 
-const log = (message) => console.log(`[PROD-BUILD] ${message}`);
+const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
+
+// Lade den Inhalt der package.json zur Build-Zeit.
+const packageJsonContent = fs.readFileSync(path.resolve(process.cwd(), 'package.json'), 'utf-8');
 
 async function buildForProduction() {
-  try {
-    log('Starting production build...');
+  console.log('[PROD-BUILD] Starting production build...');
 
-    // 1. First build the frontend with Vite
-    log('Building frontend...');
-    execSync('npx vite build --config vite.config.ts', { stdio: 'inherit', cwd: process.cwd() });
+  // 1. First build the frontend with Vite
+  console.log('[PROD-BUILD] Building frontend...');
+  execSync('npx vite build --config vite.config.ts', { stdio: 'inherit', cwd: process.cwd() });
 
-    // 2. Build the backend with selective bundling
-    log('Building backend...');
+  // 2. Build the backend with selective bundling
+  console.log('[PROD-BUILD] Building backend...');
 
-    // Bundle common problematic packages but keep Node.js built-ins external
-    const bundlePackages = [
-      'cors',
+  // Bundle common problematic packages but keep Node.js built-ins external
+  const bundlePackages = [
+    'cors',
+    'express',
+    'drizzle-orm',
+    'drizzle-zod',
+    'zod',
+    'nanoid',
+    'memoizee',
+    'archiver',
+    'cheerio',
+    'axios',
+    'node-fetch'
+  ];
+
+  await build({
+    entryPoints: ['server/index.ts'],
+    bundle: true,
+    outfile: 'dist/index.js',
+    platform: 'node',
+    target: 'node18',
+    format: 'esm', // Wechsel zu ESM als Build-Format
+    // 'define' und 'banner' werden nicht mehr für den import.meta.url-Polyfill benötigt.
+    // sourcemap: true, // Deaktiviert für schnelleren Build
+    plugins: [
+      // Hier könnten weitere Plugins hinzugefügt werden
+    ],
+    external: [
       'express',
+      'vite',
       'drizzle-orm',
+      'pg',
       'drizzle-zod',
       'zod',
-      'nanoid',
-      'memoizee',
-      'archiver',
+      'node-cron',
       'cheerio',
       'axios',
-      'node-fetch'
-    ];
+      'form-data',
+      'multer',
+      'winston',
+      'tsx',
+      'chokidar',
+      'fsevents',
+      'shell-quote',
+      'ws',
+      'http-proxy',
+      'sirv',
+      'source-map-support',
+      'dotenv',
+      'agentkeepalive',
+      'node-fetch',
+      'pdf-parse',
+      'mammoth',
+      'xlsx',
+      'langchain',
+      '@langchain/community',
+      '@langchain/core',
+      '@langchain/openai',
+      'hnswlib-node',
+      'JSONStream',
+      'es-module-lexer',
+      'magic-string',
+      'micromatch',
+      'picocolors',
+      'postcss',
+      'rollup',
+      'resolve',
+      'source-map',
+      'ws',
+      '@babel/core',
+      '@babel/preset-typescript',
+      'lightningcss',
+      'esbuild',
+    ],
+  });
 
-    await build({
-      entryPoints: ['server/index.ts'],
-      bundle: true,
-      platform: 'node',
-      target: 'node20',
-      format: 'esm',
-      outdir: 'dist',
-      external: [
-        // Keep Node.js built-ins external
-        'fs',
-        'path',
-        'http',
-        'https',
-        'crypto',
-        'os',
-        'url',
-        'util',
-        'events',
-        'stream',
-        'buffer',
-        'querystring',
-        'child_process',
-        // Keep large/complex packages external but ensure they're in dependencies
-        'nodemailer',
-        '@anthropic-ai/sdk',
-        'openai',
-        '@sendgrid/mail',
-        'winston',
-        'pg',
-        '@neondatabase/serverless',
-        'passport',
-        'passport-local',
-        'express-session',
-        'connect-pg-simple',
-        'memorystore'
-        ,'lightningcss'
-        ,'@babel/preset-typescript'
-        ,'@babel/preset-typescript/package.json'
-      ],
-      define: {
-        'import.meta.url': 'import.meta.url'
-      },
-      banner: {
-        js: `
-// Production build banner
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-        `.trim()
-      }
-    });
+  // 2b. Import-Skripte bündeln
+  const importScripts = [
+    'scripts/script-db.ts',
+    'scripts/import-fda-510k.ts',
+    'scripts/import-ema-news.ts',
+    'scripts/import-who-guidance.ts',
+    'scripts/import-mhra-updates.ts',
+    'scripts/import-healthcanada-notices.ts',
+    'scripts/import-tga-updates.ts',
+    'scripts/import-pmda-announcements.ts'
+  ];
+  console.log('[PROD-BUILD] Bundling import scripts...');
+  await build({
+    entryPoints: importScripts,
+    bundle: true,
+    platform: 'node',
+    target: 'node20',
+    format: 'cjs', // Konsistent auf 'cjs' geändert
+    outdir: 'dist/import-scripts',
+    external: ['pg', '@neondatabase/serverless', 'drizzle-orm'],
+  });
 
-    // 2b. Bundle Import Scripts (regulatory source ingestion) für Betrieb ohne devDependencies
-    const importScripts = [
-      'scripts/script-db.ts',
-      'scripts/import-fda-510k.ts',
-      'scripts/import-ema-news.ts',
-      'scripts/import-who-guidance.ts',
-      'scripts/import-mhra-updates.ts',
-      'scripts/import-healthcanada-notices.ts',
-      'scripts/import-tga-updates.ts',
-      'scripts/import-pmda-announcements.ts'
-    ];
-    log('Bundling import scripts...');
-    await build({
-      entryPoints: importScripts,
-      bundle: true,
-      platform: 'node',
-      target: 'node20',
-      format: 'esm',
-      outdir: 'dist/import-scripts',
-      external: [
-        'fs','path','http','https','crypto','os','url','util','events','stream','buffer','querystring','child_process',
-        'nodemailer','@anthropic-ai/sdk','openai','@sendgrid/mail','winston','pg','@neondatabase/serverless','passport','passport-local','express-session','connect-pg-simple','memorystore'
-        ,'lightningcss','@babel/preset-typescript','@babel/preset-typescript/package.json'
-      ],
-      banner: { js: `import { createRequire } from 'module'; const require = createRequire(import.meta.url);` }
-    });
+  // 3. Production package.json erstellen
+  console.log('[PROD-BUILD] Creating production package.json...');
+  const originalPackageJson = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
+  const prodDependencies = originalPackageJson.dependencies; // Definition hinzugefügt
+  const productionPackageJson = {
+    name: originalPackageJson.name,
+    version: originalPackageJson.version,
+    // "type": "module" entfernt, damit Node das CJS-Bundle korrekt lädt
+    dependencies: prodDependencies, // prodDependencies verwenden
+    scripts: {
+      "start": "node -r dotenv/config index.js" // -r Flag für CJS verwenden
+    }
+  };
 
-    // 3. Create a minimal package.json for production
-    log('Creating production package.json...');
+  fs.writeFileSync(
+    path.join('dist', 'package.json'),
+    JSON.stringify(productionPackageJson, null, 2)
+  );
 
-    const originalPkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
+  // 4. Create deployment info
+  const deployInfo = {
+    buildTime: new Date().toISOString(),
+    buildType: 'production-optimized',
+    // bundledPackages: bundlePackages, // bundlePackages ist hier nicht im Scope
+    externalPackages: Object.keys(prodDependencies),
+    nodeVersion: process.version
+  };
 
-    // Only include essential runtime dependencies
-    const prodDependencies = {
-      'nodemailer': originalPkg.dependencies.nodemailer,
-      '@anthropic-ai/sdk': originalPkg.dependencies['@anthropic-ai/sdk'],
-      'openai': originalPkg.dependencies.openai,
-      '@sendgrid/mail': originalPkg.dependencies['@sendgrid/mail'],
-      'winston': originalPkg.dependencies.winston,
-      'pg': originalPkg.dependencies.pg || '^8.11.3',
-      '@neondatabase/serverless': originalPkg.dependencies['@neondatabase/serverless'],
-      'passport': originalPkg.dependencies.passport,
-      'passport-local': originalPkg.dependencies['passport-local'],
-      'express-session': originalPkg.dependencies['express-session'],
-      'connect-pg-simple': originalPkg.dependencies['connect-pg-simple'],
-      'memorystore': originalPkg.dependencies.memorystore
-    };
+  fs.writeFileSync(
+    path.join('dist', 'deploy-info.json'),
+    JSON.stringify(deployInfo, null, 2)
+  );
 
-    const prodPackage = {
-      name: originalPkg.name,
-      version: originalPkg.version,
-      type: 'module',
-      scripts: {
-        start: 'node index.js'
-      },
-      dependencies: prodDependencies
-    };
-
-    fs.writeFileSync(
-      path.join('dist', 'package.json'),
-      JSON.stringify(prodPackage, null, 2)
-    );
-
-    // 4. Create deployment info
-    const deployInfo = {
-      buildTime: new Date().toISOString(),
-      buildType: 'production-optimized',
-      bundledPackages: bundlePackages,
-      externalPackages: Object.keys(prodDependencies),
-      nodeVersion: process.version
-    };
-
-    fs.writeFileSync(
-      path.join('dist', 'deploy-info.json'),
-      JSON.stringify(deployInfo, null, 2)
-    );
-
-    log('✅ Production build completed successfully!');
-    log('📦 Build artifacts:');
-    log('  - dist/index.js (server bundle)');
-    log('  - dist/public/ (frontend assets)');
-    log('  - dist/package.json (production dependencies)');
-    log('  - dist/import-scripts/* (gebündelte Import-Skripte)');
-    log('  - dist/deploy-info.json (build information)');
-
-  } catch (error) {
-    log(`❌ Production build failed: ${error.message}`);
-    console.error(error);
-    process.exit(1);
-  }
+  console.log('✅ Production build completed successfully!');
+  console.log('📦 Build artifacts:');
+  console.log('  - dist/index.js (server bundle)');
+  console.log('  - dist/public/ (frontend assets)');
+  console.log('  - dist/package.json (production dependencies)');
+  console.log('  - dist/import-scripts/* (gebündelte Import-Skripte)');
+  console.log('  - dist/deploy-info.json (build information)');
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

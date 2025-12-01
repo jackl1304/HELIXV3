@@ -1,6 +1,6 @@
-import { Logger } from './logger.service';
-import { storage } from '../storage';
-import { JAMANetworkScrapingService } from './jamaNetworkScrapingService';
+import { Logger } from './logger.service.js';
+import { storage } from '../storage.js';
+import { JAMANetworkScrapingService } from './jamaNetworkScrapingService.js';
 
 interface AuthenticKnowledgeSource {
   id: string;
@@ -48,7 +48,7 @@ export class AuthenticKnowledgeExtractor {
    */
   async extractAuthenticKnowledgeArticles(): Promise<ExtractionStats> {
     this.logger.info('Starting AUTHENTIC knowledge extraction - NO DEMO DATA');
-    
+
     const stats: ExtractionStats = {
       totalSources: this.authenticSources.length,
       processedSources: 0,
@@ -72,7 +72,7 @@ export class AuthenticKnowledgeExtractor {
         });
 
         const articles = await this.extractFromAuthenticSource(source);
-        
+
         for (const article of articles) {
           try {
             // Store authentic articles as regulatory updates
@@ -91,15 +91,15 @@ export class AuthenticKnowledgeExtractor {
               relevanceScore: 9,
               difficulty: 'advanced'
             });
-            
+
             stats.articlesExtracted++;
           } catch (error: any) {
             if (error.message?.includes('duplicate')) {
               stats.duplicatesSkipped++;
             } else {
-              this.logger.error('Failed to store authentic article', { 
-                error: error.message, 
-                title: article.title 
+              this.logger.error('Failed to store authentic article', {
+                error: error.message,
+                title: article.title
               });
               stats.errors++;
             }
@@ -136,7 +136,7 @@ export class AuthenticKnowledgeExtractor {
     switch (source.extractorService) {
       case 'JAMANetworkScrapingService':
         return await this.jamaService.scrapeJAMAArticles();
-      
+
       default:
         this.logger.warn(`No authentic extractor available for ${source.name}`);
         return [];
@@ -146,13 +146,13 @@ export class AuthenticKnowledgeExtractor {
   /**
    * Get statistics for authenticated sources only
    */
-  getAuthenticSourcesInfo(): { 
-    totalConfigured: number; 
-    authenticated: number; 
-    pendingAPIKeys: number; 
+  getAuthenticSourcesInfo(): {
+    totalConfigured: number;
+    authenticated: number;
+    pendingAPIKeys: number;
   } {
     const authenticated = this.authenticSources.filter(s => s.authenticAPI).length;
-    
+
     return {
       totalConfigured: this.authenticSources.length,
       authenticated,

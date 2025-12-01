@@ -1,5 +1,5 @@
-import { apiManagementService } from './apiManagementService';
-import { storage } from '../storage';
+import { apiManagementService } from './apiManagementService.js';
+import { storage } from '../storage.js';
 import type { InsertRegulatoryUpdate } from '@shared/schema';
 
 /**
@@ -60,7 +60,7 @@ export class RealFDAApiService {
   private readonly sourceId = 'fda_openfda';
   private readonly baseEndpoints = {
     devices510k: '/device/510k.json',
-    devicesPMA: '/device/pma.json', 
+    devicesPMA: '/device/pma.json',
     devicesRecalls: '/device/recall.json',
     devicesEnforcement: '/device/enforcement.json',
     deviceClassification: '/device/classification.json'
@@ -73,7 +73,7 @@ export class RealFDAApiService {
     try {
       const endpoint = `${this.baseEndpoints.devices510k}?limit=${limit}&skip=${skip}`;
       const response = await apiManagementService.callAPI(this.sourceId, endpoint);
-      
+
       if (!response.success) {
         console.error('[Real FDA API] 510k fetch failed:', response.error);
         return [];
@@ -93,7 +93,7 @@ export class RealFDAApiService {
     try {
       const endpoint = `${this.baseEndpoints.devicesPMA}?limit=${limit}&skip=${skip}`;
       const response = await apiManagementService.callAPI(this.sourceId, endpoint);
-      
+
       if (!response.success) {
         console.error('[Real FDA API] PMA fetch failed:', response.error);
         return [];
@@ -113,7 +113,7 @@ export class RealFDAApiService {
     try {
       const endpoint = `${this.baseEndpoints.devicesRecalls}?limit=${limit}&skip=${skip}`;
       const response = await apiManagementService.callAPI(this.sourceId, endpoint);
-      
+
       if (!response.success) {
         console.error('[Real FDA API] Recalls fetch failed:', response.error);
         return [];
@@ -133,7 +133,7 @@ export class RealFDAApiService {
     try {
       const endpoint = `${this.baseEndpoints.devicesEnforcement}?limit=${limit}&skip=${skip}`;
       const response = await apiManagementService.callAPI(this.sourceId, endpoint);
-      
+
       if (!response.success) {
         console.error('[Real FDA API] Enforcement fetch failed:', response.error);
         return [];
@@ -154,7 +154,7 @@ export class RealFDAApiService {
       const encodedQuery = encodeURIComponent(searchQuery);
       const endpoint = `${this.baseEndpoints.devices510k}?search=${encodedQuery}&limit=${limit}`;
       const response = await apiManagementService.callAPI(this.sourceId, endpoint);
-      
+
       if (!response.success) {
         console.error('[Real FDA API] Device search failed:', response.error);
         return [];
@@ -171,12 +171,12 @@ export class RealFDAApiService {
    * Convert FDA 510k data to Helix regulatory update format
    */
   private convert510kToRegulatoryUpdate(device: OpenFDADevice): InsertRegulatoryUpdate {
-    const deviceName = device.device_name || 
-                      device.openfda?.device_name?.[0] || 
+    const deviceName = device.device_name ||
+                      device.openfda?.device_name?.[0] ||
                       'Unknown Device';
-    
+
     const specialty = device.openfda?.medical_specialty_description?.[0] || 'General';
-    
+
     return {
       title: `510(k) Clearance: ${deviceName}`,
       content: this.buildDeviceContent(device),
@@ -197,14 +197,14 @@ export class RealFDAApiService {
    * Convert FDA recall data to Helix regulatory update format
    */
   private convertRecallToRegulatoryUpdate(recall: OpenFDARecall): InsertRegulatoryUpdate {
-    const deviceName = recall.product_description || 
-                      recall.openfda?.device_name?.[0] || 
+    const deviceName = recall.product_description ||
+                      recall.openfda?.device_name?.[0] ||
                       'Unknown Device';
-    
+
     const classification = recall.classification || 'Unknown';
-    const impactLevel = classification.includes('Class I') ? 'high' : 
+    const impactLevel = classification.includes('Class I') ? 'high' :
                        classification.includes('Class II') ? 'medium' : 'low';
-    
+
     return {
       title: `Device Recall: ${deviceName}`,
       content: this.buildRecallContent(recall),
@@ -223,56 +223,56 @@ export class RealFDAApiService {
 
   private buildDeviceContent(device: OpenFDADevice): string {
     const sections = [];
-    
+
     sections.push(`**Geräteinformationen:**`);
     sections.push(`- Gerätename: ${device.device_name || 'Nicht angegeben'}`);
     sections.push(`- Antragsteller: ${device.applicant || 'Nicht angegeben'}`);
     sections.push(`- K-Nummer: ${device.k_number || 'Nicht angegeben'}`);
     sections.push(`- Produktcode: ${device.product_code || 'Nicht angegeben'}`);
-    
+
     if (device.openfda) {
       sections.push(`\n**Regulatorische Details:**`);
       sections.push(`- Geräteklasse: ${device.openfda.device_class || 'Nicht angegeben'}`);
       sections.push(`- Medizinische Spezialisierung: ${device.openfda.medical_specialty_description?.join(', ') || 'Nicht angegeben'}`);
       sections.push(`- Regulierungsnummer: ${device.openfda.regulation_number?.join(', ') || 'Nicht angegeben'}`);
     }
-    
+
     sections.push(`\n**Verfahrensinformationen:**`);
     sections.push(`- Entscheidungsdatum: ${device.decision_date || 'Nicht angegeben'}`);
     sections.push(`- Entscheidung: ${device.decision || 'Nicht angegeben'}`);
     sections.push(`- Clearance-Typ: ${device.clearance_type || 'Standard'}`);
-    
+
     if (device.statement_or_summary) {
       sections.push(`\n**Zusammenfassung:**`);
       sections.push(device.statement_or_summary);
     }
-    
+
     return sections.join('\n');
   }
 
   private buildRecallContent(recall: OpenFDARecall): string {
     const sections = [];
-    
+
     sections.push(`**Rückruf-Informationen:**`);
     sections.push(`- Rückruf-Nummer: ${recall.recall_number || 'Nicht angegeben'}`);
     sections.push(`- Status: ${recall.status || 'Nicht angegeben'}`);
     sections.push(`- Klassifizierung: ${recall.classification || 'Nicht angegeben'}`);
     sections.push(`- Rückrufendes Unternehmen: ${recall.recalling_firm || 'Nicht angegeben'}`);
-    
+
     sections.push(`\n**Produktdetails:**`);
     sections.push(`- Produktbeschreibung: ${recall.product_description || 'Nicht angegeben'}`);
-    
+
     if (recall.openfda) {
       sections.push(`- Gerätename: ${recall.openfda.device_name?.join(', ') || 'Nicht angegeben'}`);
       sections.push(`- Geräteklasse: ${recall.openfda.device_class || 'Nicht angegeben'}`);
     }
-    
+
     sections.push(`\n**Rückrufgrund:**`);
     sections.push(recall.reason_for_recall || 'Grund nicht spezifiziert');
-    
+
     sections.push(`\n**Initiierungsdatum:**`);
     sections.push(recall.recall_initiation_date || 'Nicht angegeben');
-    
+
     return sections.join('\n');
   }
 
@@ -281,7 +281,7 @@ export class RealFDAApiService {
    */
   async syncAllFDAData(): Promise<{ success: boolean; processed: number; errors: number }> {
     console.log('[Real FDA API] Starting comprehensive FDA data sync...');
-    
+
     let processed = 0;
     let errors = 0;
 

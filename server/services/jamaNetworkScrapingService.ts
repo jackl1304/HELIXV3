@@ -1,5 +1,5 @@
-import { Logger } from './logger.service';
-import { storage } from '../storage';
+import { Logger } from './logger.service.js';
+import { storage } from '../storage.js';
 
 interface JAMAArticle {
   title: string;
@@ -15,7 +15,7 @@ interface JAMAArticle {
 export class JAMANetworkScrapingService {
   private logger = new Logger('JAMANetworkScraping');
   private baseUrl = 'https://jamanetwork.com';
-  
+
   /**
    * **PRODUCTION MODE**: NO DEMO DATA
    * Extract articles from JAMA Network Medical Devices collection
@@ -24,7 +24,7 @@ export class JAMANetworkScrapingService {
     this.logger.warn('JAMA Network extraction DISABLED - No authentic API access available');
     return [];
   }
-  
+
   /**
    * **PRODUCTION MODE**: NO DEMO DATA
    * Extract articles from a single page

@@ -1,5 +1,5 @@
 import { storage } from "../storage";
-import type { DataSource, RegulatoryUpdate } from "@shared/schema";
+import type { DataSource, RegulatoryUpdate } from "../../shared/schema.js";
 
 interface MeditechFHIRResource {
   resourceType: string;
@@ -105,7 +105,7 @@ export class MeditechApiService {
       }
 
       console.log('[MEDITECH-API] Authenticating with OAuth 2.0...');
-      
+
       // In production, this would make a real OAuth call
       // For development, we simulate successful authentication
       if (!this.config.clientId || !this.config.clientSecret) {
@@ -144,8 +144,8 @@ export class MeditechApiService {
   }
 
   private isTokenValid(): boolean {
-    return this.accessToken !== null && 
-           this.tokenExpiry !== null && 
+    return this.accessToken !== null &&
+           this.tokenExpiry !== null &&
            this.tokenExpiry > new Date();
   }
 
@@ -153,9 +153,9 @@ export class MeditechApiService {
   async fetchDeviceData(): Promise<MeditechDeviceData[]> {
     try {
       await this.authenticate();
-      
+
       console.log('[MEDITECH-API] Fetching device data via FHIR...');
-      
+
       // Simulate FHIR Device resource response
       const simulatedDevices: MeditechDeviceData[] = [
         {
@@ -215,9 +215,9 @@ export class MeditechApiService {
   async fetchDeviceObservations(deviceId: string): Promise<MeditechFHIRResource[]> {
     try {
       await this.authenticate();
-      
+
       console.log(`[MEDITECH-API] Fetching observations for device: ${deviceId}`);
-      
+
       // Simulate FHIR Observation resources
       const simulatedObservations: MeditechFHIRResource[] = [
         {
@@ -344,7 +344,7 @@ Last updated: ${device.lastUpdate}
   async syncToDatabase(): Promise<{ success: boolean; synced: number; errors: number }> {
     try {
       console.log('[MEDITECH-SYNC] Starting MEDITECH FHIR data synchronization...');
-      
+
       const updates = await this.generateRegulatoryUpdates();
       let synced = 0;
       let errors = 0;
@@ -360,7 +360,7 @@ Last updated: ${device.lastUpdate}
       }
 
       console.log(`[MEDITECH-SYNC] Synchronization completed: ${synced} synced, ${errors} errors`);
-      
+
       return { success: true, synced, errors };
     } catch (error) {
       console.error('[MEDITECH-SYNC] Synchronization failed:', error);
@@ -372,7 +372,7 @@ Last updated: ${device.lastUpdate}
   async healthCheck(): Promise<{ status: 'healthy' | 'unhealthy'; details: string }> {
     try {
       const isAuthenticated = await this.authenticate();
-      
+
       if (isAuthenticated) {
         return {
           status: 'healthy',

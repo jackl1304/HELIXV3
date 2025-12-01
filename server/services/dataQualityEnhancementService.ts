@@ -1,5 +1,5 @@
-import { storage } from '../storage';
-import { DataQualityService, DuplicateMatch, ValidationResult } from './dataQualityService';
+import { storage } from '../storage.js';
+import { DataQualityService, DuplicateMatch, ValidationResult } from './dataQualityService.js';
 
 interface DuplicateReport {
   totalRecords: number;
@@ -40,7 +40,7 @@ interface StandardizationReport {
 
 export class DataQualityEnhancementService {
   private qualityService: DataQualityService;
-  
+
   constructor() {
     this.qualityService = new DataQualityService();
   }
@@ -51,18 +51,18 @@ export class DataQualityEnhancementService {
   async detectDuplicates(): Promise<DuplicateReport> {
     try {
       console.log('[Enhancement] Starting enhanced duplicate detection...');
-      
+
       const allUpdates = await storage.getAllRegulatoryUpdates();
-      
+
       // Use the base quality service for duplicate detection
       const duplicateMatches = await this.qualityService.findDuplicates(allUpdates, 0.85);
-      
+
       // Group duplicates for enhanced reporting
       const duplicateGroups = this.groupDuplicateMatches(duplicateMatches);
       const removalCandidates = this.selectRemovalCandidates(duplicateGroups);
 
       console.log(`[Enhancement] Enhanced duplicate detection completed: ${duplicateGroups.length} groups, ${removalCandidates.length} removal candidates`);
-      
+
       return {
         totalRecords: allUpdates.length,
         duplicatesFound: removalCandidates.length,
@@ -86,29 +86,29 @@ export class DataQualityEnhancementService {
   private groupDuplicateMatches(matches: DuplicateMatch[]): DuplicateGroup[] {
     const groups: DuplicateGroup[] = [];
     const processed = new Set<string>();
-    
+
     for (const match of matches) {
       if (processed.has(match.id)) continue;
-      
-      const relatedMatches = matches.filter(m => 
-        m.id !== match.id && 
-        m.similarity >= 0.8 && 
+
+      const relatedMatches = matches.filter(m =>
+        m.id !== match.id &&
+        m.similarity >= 0.8 &&
         !processed.has(m.id)
       );
-      
+
       if (relatedMatches.length > 0) {
         const group: DuplicateGroup = {
           key: `group_${match.id}`,
           records: [match, ...relatedMatches],
           confidence: Math.min(...relatedMatches.map(m => m.similarity))
         };
-        
+
         groups.push(group);
         processed.add(match.id);
         relatedMatches.forEach(m => processed.add(m.id));
       }
     }
-    
+
     return groups;
   }
 
@@ -117,14 +117,14 @@ export class DataQualityEnhancementService {
    */
   private selectRemovalCandidates(groups: DuplicateGroup[]): string[] {
     const candidates: string[] = [];
-    
+
     for (const group of groups) {
       // Keep the first record, mark others for removal
       for (let i = 1; i < group.records.length; i++) {
         candidates.push(group.records[i].id);
       }
     }
-    
+
     return candidates;
   }
 
@@ -134,7 +134,7 @@ export class DataQualityEnhancementService {
   async standardizeData(): Promise<StandardizationReport> {
     try {
       console.log('[Enhancement] Starting data standardization...');
-      
+
       const allUpdates = await storage.getAllRegulatoryUpdates();
       let countriesStandardized = 0;
       let datesFixed = 0;
@@ -143,14 +143,14 @@ export class DataQualityEnhancementService {
 
       // Use base quality service for cleaning
       const cleanedData = await this.qualityService.cleanBatchData(allUpdates.slice(0, 100));
-      
+
       // Count improvements (simplified)
       countriesStandardized = cleanedData.filter(item => item.region).length;
       datesFixed = cleanedData.filter(item => item.published_at).length;
       categoriesNormalized = cleanedData.filter(item => item.category).length;
-      
+
       console.log('[Enhancement] Data standardization completed');
-      
+
       return {
         countriesStandardized,
         datesFixed,
@@ -174,15 +174,15 @@ export class DataQualityEnhancementService {
   async calculateQualityMetrics(): Promise<QualityMetrics> {
     try {
       const allUpdates = await storage.getAllRegulatoryUpdates();
-      
+
       // Calculate metrics based on data quality
       const sampleSize = Math.min(allUpdates.length, 10);
-      const completenessScore = allUpdates.slice(0, sampleSize).filter(item => 
+      const completenessScore = allUpdates.slice(0, sampleSize).filter(item =>
         item.title && item.description && item.published_at
       ).length / sampleSize * 100;
-      
+
       const avgScore = completenessScore;
-      
+
       const metrics: QualityMetrics = {
         completeness: Math.min(avgScore + 10, 100),
         consistency: Math.min(avgScore + 5, 100),
@@ -190,7 +190,7 @@ export class DataQualityEnhancementService {
         freshness: Math.min(avgScore + 15, 100),
         overall: avgScore
       };
-      
+
       return metrics;
     } catch (error) {
       console.error('[Enhancement] Error calculating metrics:', error);
@@ -210,9 +210,9 @@ export class DataQualityEnhancementService {
   async validateAndCleanData(): Promise<{ success: boolean; report: any }> {
     try {
       console.log('[Enhancement] Starting comprehensive data validation and cleaning...');
-      
+
       const startTime = Date.now();
-      
+
       // Run all quality improvement processes
       const [
         duplicateReport,
@@ -220,12 +220,12 @@ export class DataQualityEnhancementService {
         qualityMetrics
       ] = await Promise.all([
         this.detectDuplicates(),
-        this.standardizeData(), 
+        this.standardizeData(),
         this.calculateQualityMetrics()
       ]);
-      
+
       const processingTime = Date.now() - startTime;
-      
+
       const report = {
         processingTimeMs: processingTime,
         duplicateReport,
@@ -235,21 +235,21 @@ export class DataQualityEnhancementService {
         summary: {
           totalRecords: duplicateReport.totalRecords,
           duplicatesRemoved: standardizationReport.duplicatesRemoved,
-          dataStandardized: standardizationReport.countriesStandardized + 
-                           standardizationReport.datesFixed + 
+          dataStandardized: standardizationReport.countriesStandardized +
+                           standardizationReport.datesFixed +
                            standardizationReport.categoriesNormalized,
           overallQuality: qualityMetrics.overall
         }
       };
-      
+
       console.log(`[Enhancement] Validation and cleaning completed in ${processingTime}ms`);
       console.log(`[Enhancement] Overall quality score: ${qualityMetrics.overall}%`);
-      
+
       return { success: true, report };
     } catch (error) {
       console.error('[Enhancement] Error in validation and cleaning:', error);
-      return { 
-        success: false, 
+      return {
+        success: false,
         report: { error: error instanceof Error ? error.message : 'Unknown error' }
       };
     }

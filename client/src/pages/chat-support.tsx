@@ -24,9 +24,9 @@ export default function ChatSupportPage() {
   return (
     <ResponsiveLayout>
       <NavigationHeader showTenantLinks={true} currentView="tenant" />
-      
+
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        
+
         {/* Header Card */}
         <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
           <CardHeader>
@@ -113,10 +113,10 @@ export default function ChatSupportPage() {
               <div>
                 <h4 className="font-semibold text-gray-900 mb-2">Prioritäten:</h4>
                 <ul className="space-y-1 text-gray-600">
-                  <li>• <strong>Dringend:</strong> Kritische Probleme (< 2h)</li>
-                  <li>• <strong>Hoch:</strong> Wichtige Probleme (< 4h)</li>
-                  <li>• <strong>Normal:</strong> Allgemeine Anfragen (< 24h)</li>
-                  <li>• <strong>Niedrig:</strong> Vorschläge (< 48h)</li>
+                  <li>• <strong>Dringend:</strong> Kritische Probleme (&lt; 2h)</li>
+                  <li>• <strong>Hoch:</strong> Wichtige Probleme (&lt; 4h)</li>
+                  <li>• <strong>Normal:</strong> Allgemeine Anfragen (&lt; 24h)</li>
+                  <li>• <strong>Niedrig:</strong> Vorschläge (&lt; 48h)</li>
                 </ul>
               </div>
             </div>

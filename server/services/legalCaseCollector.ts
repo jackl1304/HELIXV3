@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import { storage } from '../storage';
-import { Logger } from './logger.service';
+import { storage } from '../storage.js';
+import { Logger } from './logger.service.js';
 
 const logger = new Logger('LegalCaseCollector');
 

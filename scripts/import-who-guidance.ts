@@ -7,7 +7,7 @@ import fetch from 'node-fetch';
 import { parseStringPromise } from 'xml2js';
 import crypto from 'node:crypto';
 import { regulatoryUpdates } from '../shared/schema.js';
-import { getScriptDb } from './script-db';
+import { getScriptDb } from './script-db.js';
 
 // Kandidaten-Feeds (WHO hat verschiedene Pfade; einige liefern 404 je nach Region)
 const FEEDS = [

@@ -1,6 +1,6 @@
 import { storage } from "../storage";
 import { aiService } from "./aiService";
-import type { RegulatoryUpdate, LegalCase } from "@shared/schema";
+import type { RegulatoryUpdate, LegalCase } from "../../shared/schema.js";
 
 interface ApprovalDecision {
   approved: boolean;
@@ -97,12 +97,12 @@ export class AIApprovalService {
 
       // Risk assessment for legal cases
       const riskFactors = this.assessLegalRisk(legalCase, legalAnalysis);
-      
+
       const confidence = this.calculateLegalConfidence(relevanceScore, precedentValue, legalAnalysis);
 
       let approved = false;
       let reviewLevel: 'auto' | 'senior' | 'expert' | 'board' = 'expert';
-      
+
       if (confidence >= this.autoApprovalThreshold && precedentValue === 'high') {
         approved = true;
         reviewLevel = 'auto';
@@ -188,10 +188,10 @@ export class AIApprovalService {
     if (update.description) {
       if (update.description.length >= 100) score += 0.15;
       if (update.description.length >= 300) score += 0.10;
-      
+
       // Check for regulatory keywords
       const regKeywords = ['regulation', 'compliance', 'approval', 'standard', 'guideline'];
-      const foundKeywords = regKeywords.filter(keyword => 
+      const foundKeywords = regKeywords.filter(keyword =>
         update.description.toLowerCase().includes(keyword)
       );
       score += Math.min(foundKeywords.length * 0.05, 0.15);
@@ -284,7 +284,7 @@ export class AIApprovalService {
    * Assess content risk factors
    */
   private async assessContentRisk(
-    update: RegulatoryUpdate, 
+    update: RegulatoryUpdate,
     analysis: any
   ): Promise<string[]> {
     const riskFactors: string[] = [];
@@ -432,7 +432,7 @@ export class AIApprovalService {
     let score = 0.3;
 
     const content = `${legalCase.title} ${legalCase.summary}`.toLowerCase();
-    
+
     // Medical device specific terms
     const medTechKeywords = [
       'medical device', 'implant', 'pacemaker', 'catheter', 'stent',
@@ -506,7 +506,7 @@ export class AIApprovalService {
 
     // Theme relevance
     const relevantThemes = ['Produkthaftung', 'Regulatorische Compliance', 'KI/ML-Geräte'];
-    const foundRelevantThemes = analysis.themes.filter((theme: string) => 
+    const foundRelevantThemes = analysis.themes.filter((theme: string) =>
       relevantThemes.includes(theme)
     );
     confidence += Math.min(foundRelevantThemes.length * 0.05, 0.15);

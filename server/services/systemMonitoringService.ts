@@ -1,4 +1,4 @@
-import { storage } from '../storage';
+import { storage } from '../storage.js';
 
 interface SystemHealth {
   overall: 'excellent' | 'good' | 'fair' | 'poor';
@@ -55,16 +55,16 @@ interface PerformanceMetrics {
 }
 
 export class SystemMonitoringService {
-  
+
   async getSystemHealth(): Promise<SystemHealth> {
     try {
       console.log('[System Monitor] Performing comprehensive system health check...');
-      
+
       const startTime = Date.now();
-      
+
       // Get system metrics
       const metrics = await this.gatherSystemMetrics();
-      
+
       // Evaluate component health
       const components: ComponentHealth[] = [
         {
@@ -96,14 +96,14 @@ export class SystemMonitoringService {
           lastCheck: new Date().toISOString()
         }
       ];
-      
+
       // Calculate overall health
       const overallScore = components.reduce((sum, c) => sum + c.score, 0) / components.length;
       const overall = this.getHealthLevel(overallScore);
-      
+
       const processingTime = Date.now() - startTime;
       console.log(`[System Monitor] Health check completed in ${processingTime}ms - Overall: ${overall} (${overallScore.toFixed(1)}%)`);
-      
+
       return {
         overall,
         score: Math.round(overallScore * 10) / 10,
@@ -128,7 +128,7 @@ export class SystemMonitoringService {
       const allUpdates = await storage.getAllRegulatoryUpdates();
       const allLegalCases = await storage.getAllLegalCases();
       const dbConnectionTime = Date.now() - dbStartTime;
-      
+
       const recentUpdates = allUpdates.filter(update => {
         const publishedDate = new Date(update.published_at || 0);
         const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -203,54 +203,54 @@ export class SystemMonitoringService {
 
   private calculateDatabaseScore(metrics: DatabaseMetrics): number {
     let score = 100;
-    
+
     // Penalize slow connections
     if (metrics.connectionTime > 1000) score -= 15;
     if (metrics.connectionTime > 3000) score -= 25;
-    
+
     // Reward high record counts
     if (metrics.recordCount > 5000) score += 5;
     if (metrics.recordCount > 10000) score += 10;
-    
+
     // Reward recent data
     if (metrics.recentUpdates > 1000) score += 5;
     if (metrics.recentUpdates > 2000) score += 10;
-    
+
     return Math.max(0, Math.min(100, score));
   }
 
   private calculateAPIScore(metrics: APIMetrics): number {
     let score = metrics.lastSyncSuccess; // Start with success rate
-    
+
     // Adjust for error rate
     score -= metrics.errorRate * 0.5;
-    
+
     // Adjust for response time
     if (metrics.averageResponseTime < 1000) score += 5;
     if (metrics.averageResponseTime > 3000) score -= 10;
     if (metrics.averageResponseTime > 5000) score -= 20;
-    
+
     // Reward high number of active sources
     if (metrics.activeSources > 40) score += 5;
-    
+
     return Math.max(0, Math.min(100, score));
   }
 
   private calculatePerformanceScore(metrics: PerformanceMetrics): number {
     let score = 100;
-    
+
     // Memory usage penalty
     if (metrics.memoryUsage > 75) score -= 15;
     if (metrics.memoryUsage > 90) score -= 30;
-    
+
     // Response time penalty
     if (metrics.responseTime > 1000) score -= 10;
     if (metrics.responseTime > 2000) score -= 25;
-    
+
     // Throughput bonus
     if (metrics.throughput > 1000) score += 5;
     if (metrics.throughput > 2000) score += 10;
-    
+
     return Math.max(0, Math.min(100, score));
   }
 
@@ -265,7 +265,7 @@ export class SystemMonitoringService {
     try {
       const health = await this.getSystemHealth();
       const alerts = [];
-      
+
       for (const component of health.components) {
         if (component.status === 'error') {
           alerts.push({
@@ -285,7 +285,7 @@ export class SystemMonitoringService {
           });
         }
       }
-      
+
       // Add specific alerts based on metrics
       if (health.score < 70) {
         alerts.push({
@@ -296,7 +296,7 @@ export class SystemMonitoringService {
           timestamp: health.timestamp
         });
       }
-      
+
       return alerts;
     } catch (error) {
       console.error('[System Monitor] Error getting system alerts:', error);
@@ -307,13 +307,13 @@ export class SystemMonitoringService {
   async generateSystemReport(): Promise<any> {
     try {
       console.log('[System Monitor] Generating comprehensive system report...');
-      
+
       const health = await this.getSystemHealth();
       const alerts = await this.getSystemAlerts();
-      
+
       // Generate recommendations
       const recommendations = this.generateRecommendations(health);
-      
+
       const report = {
         timestamp: new Date().toISOString(),
         systemHealth: health,
@@ -328,9 +328,9 @@ export class SystemMonitoringService {
           totalComponents: health.components.length
         }
       };
-      
+
       console.log(`[System Monitor] System report generated - Status: ${health.overall}, Score: ${health.score}%`);
-      
+
       return report;
     } catch (error) {
       console.error('[System Monitor] Error generating system report:', error);
@@ -343,7 +343,7 @@ export class SystemMonitoringService {
 
   private generateRecommendations(health: SystemHealth): string[] {
     const recommendations = [];
-    
+
     for (const component of health.components) {
       if (component.name === 'Database' && component.status !== 'healthy') {
         if (component.metrics.connectionTime > 2000) {
@@ -353,7 +353,7 @@ export class SystemMonitoringService {
           recommendations.push('Increase data collection frequency to ensure fresh content');
         }
       }
-      
+
       if (component.name === 'API Integration' && component.status !== 'healthy') {
         if (component.metrics.errorRate > 15) {
           recommendations.push('Review API error logs and implement better error handling');
@@ -362,14 +362,14 @@ export class SystemMonitoringService {
           recommendations.push('Optimize API timeout settings and implement retry mechanisms');
         }
       }
-      
+
       if (component.name === 'Data Quality' && component.status !== 'healthy') {
         if (component.metrics.overallScore < 70) {
           recommendations.push('Run data quality enhancement processes more frequently');
         }
         recommendations.push('Implement automated data validation rules');
       }
-      
+
       if (component.name === 'Performance' && component.status !== 'healthy') {
         if (component.metrics.memoryUsage > 80) {
           recommendations.push('Monitor memory usage and consider increasing available memory');
@@ -379,13 +379,13 @@ export class SystemMonitoringService {
         }
       }
     }
-    
+
     // General recommendations
     if (health.score < 80) {
       recommendations.push('Schedule regular maintenance and monitoring');
       recommendations.push('Consider implementing automated health checks');
     }
-    
+
     return recommendations;
   }
 }

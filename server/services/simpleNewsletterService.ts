@@ -1,5 +1,5 @@
-import { Logger } from './logger.service';
-import { storage } from '../storage';
+import { Logger } from './logger.service.js';
+import { storage } from '../storage.js';
 
 export class SimpleNewsletterService {
   private logger = new Logger('SimpleNewsletterService');

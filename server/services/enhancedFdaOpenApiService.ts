@@ -1,6 +1,6 @@
-import { storage } from '../storage';
-import { nlpService } from './nlpService';
-import type { InsertRegulatoryUpdate } from '@shared/schema';
+import { storage } from '../storage.js';
+import { nlpService } from './nlpService.js';
+import type { InsertRegulatoryUpdate } from '../../shared/schema.js';
 
 interface FDADevice {
   k_number?: string;
@@ -70,18 +70,18 @@ export class EnhancedFDAOpenAPIService {
   private async makeRequest(endpoint: string): Promise<any> {
     try {
       console.log(`[Enhanced FDA API] Requesting: ${endpoint}`);
-      
+
       const response = await fetch(endpoint);
-      
+
       if (!response.ok) {
         throw new Error(`FDA API error: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
-      
+
       // Rate limiting
       await this.delay(this.rateLimitDelay);
-      
+
       return data;
     } catch (error) {
       console.error(`[Enhanced FDA API] Request failed:`, error);
@@ -92,20 +92,20 @@ export class EnhancedFDAOpenAPIService {
   async collect510kDevices(limit: number = 100): Promise<void> {
     try {
       console.log(`[Enhanced FDA API] Collecting 510(k) devices (limit: ${limit})`);
-      
+
       const endpoint = `${this.baseUrl}/device/510k.json?limit=${limit}&sort=date_received:desc`;
       const data = await this.makeRequest(endpoint);
-      
+
       if (!data.results || !Array.isArray(data.results)) {
         throw new Error('Invalid FDA 510k response format');
       }
-      
+
       console.log(`[Enhanced FDA API] Found ${data.results.length} 510(k) devices`);
-      
+
       for (const device of data.results as FDADevice[]) {
         await this.process510kDevice(device);
       }
-      
+
       console.log(`[Enhanced FDA API] 510(k) collection completed`);
     } catch (error) {
       console.error('[Enhanced FDA API] Error collecting 510k devices:', error);
@@ -132,7 +132,7 @@ export class EnhancedFDAOpenAPIService {
         rawData: device,
         publishedAt: this.parseDate(device.date_received) || new Date(),
       };
-      
+
       await storage.createRegulatoryUpdate(regulatoryUpdate);
       console.log(`[Enhanced FDA API] Successfully created regulatory update: ${regulatoryUpdate.title}`);
     } catch (error) {
@@ -143,20 +143,20 @@ export class EnhancedFDAOpenAPIService {
   async collectRecalls(limit: number = 100): Promise<void> {
     try {
       console.log(`[Enhanced FDA API] Collecting device recalls (limit: ${limit})`);
-      
+
       const endpoint = `${this.baseUrl}/device/recall.json?limit=${limit}&sort=recall_initiation_date:desc`;
       const data = await this.makeRequest(endpoint);
-      
+
       if (!data.results || !Array.isArray(data.results)) {
         throw new Error('Invalid FDA recall response format');
       }
-      
+
       console.log(`[Enhanced FDA API] Found ${data.results.length} recalls`);
-      
+
       for (const recall of data.results as FDARecall[]) {
         await this.processRecall(recall);
       }
-      
+
       console.log(`[Enhanced FDA API] Recall collection completed`);
     } catch (error) {
       console.error('[Enhanced FDA API] Error collecting recalls:', error);
@@ -183,7 +183,7 @@ export class EnhancedFDAOpenAPIService {
         rawData: recall,
         publishedAt: this.parseDate(recall.recall_initiation_date) || new Date(),
       };
-      
+
       await storage.createRegulatoryUpdate(regulatoryUpdate);
       console.log(`[Enhanced FDA API] Successfully created recall update: ${regulatoryUpdate.title}`);
     } catch (error) {
@@ -193,7 +193,7 @@ export class EnhancedFDAOpenAPIService {
 
   private formatDeviceContent(device: FDADevice): string {
     const parts = [];
-    
+
     if (device.device_name) parts.push(`Device: ${device.device_name}`);
     if (device.applicant) parts.push(`Applicant: ${device.applicant}`);
     if (device.decision) parts.push(`Decision: ${device.decision}`);
@@ -209,7 +209,7 @@ export class EnhancedFDAOpenAPIService {
 
   private formatRecallContent(recall: FDARecall): string {
     const parts = [];
-    
+
     if (recall.product_description) parts.push(`Product: ${recall.product_description}`);
     if (recall.reason_for_recall) parts.push(`Reason: ${recall.reason_for_recall}`);
     if (recall.recalling_firm) parts.push(`Recalling Firm: ${recall.recalling_firm}`);

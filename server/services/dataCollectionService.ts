@@ -2,7 +2,7 @@ import { storage } from "../storage";
 import { fdaOpenApiService } from "./fdaOpenApiService";
 import { aiService } from "./aiService";
 import { gripService } from "./gripService";
-import type { InsertRegulatoryUpdate } from "@shared/schema";
+import type { InsertRegulatoryUpdate } from "../../shared/schema.js";
 
 // Dynamic import to avoid module resolution issues during compilation
 async function getNlpService() {
@@ -13,8 +13,8 @@ async function getNlpService() {
     console.warn("NLP service not available, using fallback:", error);
     // Fallback service for development
     return {
-      categorizeContent: async (content: string) => ({ 
-        categories: ["medical-device"], 
+      categorizeContent: async (content: string) => ({
+        categories: ["medical-device"],
         confidence: 0.8,
         deviceTypes: ["unknown"],
         riskLevel: "medium",
@@ -25,7 +25,7 @@ async function getNlpService() {
 }
 
 export class DataCollectionService {
-  
+
   /**
    * Optimierte Synchronisation für Enterprise-Performance
    */
@@ -42,26 +42,26 @@ export class DataCollectionService {
     sourceInfo: any;
   }> {
     console.log(`[DataCollectionService] Starting optimized sync for: ${sourceId}`, options);
-    
+
     const startTime = Date.now();
     let newItems = 0;
     let existingItems = 0;
     let processedItems = 0;
     let errors = 0;
     let totalRequests = 0;
-    
+
     try {
       // Hole Datenquelle Details
       const dataSources = await storage.getAllDataSources();
       const source = dataSources.find(ds => ds.id === sourceId);
-      
+
       if (!source) {
         throw new Error(`Data source ${sourceId} not found`);
       }
-      
+
       // Bestehende Updates zählen
       existingItems = await storage.countRegulatoryUpdatesBySource(sourceId);
-      
+
       // Optimierte API-Aufrufe basierend auf Quellen-Typ
       switch (sourceId) {
         case 'fda_historical':
@@ -76,7 +76,7 @@ export class DataCollectionService {
           totalRequests = fdaResult.totalRequests;
           errors = fdaResult.errors;
           break;
-          
+
         default:
           // Standard-Sync für andere Quellen mit vollständiger Datensammlung
           const syncResult = await this.syncDataSource(sourceId);
@@ -85,10 +85,10 @@ export class DataCollectionService {
           totalRequests = 1;
           break;
       }
-      
+
       const duration = Date.now() - startTime;
       console.log(`[DataCollectionService] Optimized sync completed for ${sourceId} in ${duration}ms`);
-      
+
       return {
         newItems,
         existingItems,
@@ -97,20 +97,20 @@ export class DataCollectionService {
         totalRequests,
         sourceInfo: source
       };
-      
+
     } catch (error) {
       console.error(`[DataCollectionService] Optimized sync failed for ${sourceId}:`, error);
       errors++;
       throw error;
     }
   }
-  
+
   /**
    * Erweitert kurze Update-Beschreibungen zu vollständigen, detaillierten Inhalten
    */
   private enhanceUpdateContent(update: InsertRegulatoryUpdate): string {
     const baseContent = update.description || 'Vollständige Informationen werden aus der Originaldatenquelle geladen...';
-    
+
     if (baseContent.length > 1000) {
       return baseContent; // Bereits vollständiger Inhalt
     }
@@ -270,24 +270,24 @@ export class DataCollectionService {
    */
   async enhanceExistingUpdates(): Promise<void> {
     console.log('[DataCollectionService] Enhancing existing regulatory updates...');
-    
+
     try {
       const allUpdates = await storage.getAllRegulatoryUpdates();
       let enhancedCount = 0;
-      
+
       for (const update of allUpdates) {
         // Prüfe ob Update bereits ausführlich ist (>1000 Zeichen)
         if (update.description && update.description.length < 1000) {
           const enhancedDescription = this.enhanceUpdateContent(update);
-          
+
           // Update in der Datenbank mit SQL
           await storage.sql`UPDATE regulatory_updates SET description = ${enhancedDescription} WHERE id = ${update.id}`;
-          
+
           enhancedCount++;
           console.log(`[DataCollectionService] Enhanced update: ${update.title}`);
         }
       }
-      
+
       console.log(`[DataCollectionService] Enhanced ${enhancedCount} regulatory updates with detailed content`);
     } catch (error) {
       console.error('[DataCollectionService] Error enhancing existing updates:', error);
@@ -299,21 +299,21 @@ export class DataCollectionService {
    */
   async syncDataSource(sourceId: string): Promise<void> {
     console.log(`[DataCollectionService] Starting sync for source: ${sourceId}`);
-    
+
     try {
       // Hole Datenquelle Details
       const dataSources = await storage.getAllDataSources();
       const source = dataSources.find(ds => ds.id === sourceId);
-      
+
       if (!source) {
         throw new Error(`Data source ${sourceId} not found`);
       }
-      
+
       console.log(`[DataCollectionService] Syncing ${source.name}...`);
-      
+
       // Echte API-Aufrufe basierend auf Quellen-Typ
       let newUpdates: InsertRegulatoryUpdate[] = [];
-      
+
       switch (sourceId) {
         case 'fda_historical':
         case 'fda_510k':
@@ -323,7 +323,7 @@ export class DataCollectionService {
         case 'fda_guidance':
           newUpdates = await this.syncFDASourceActive(sourceId);
           break;
-          
+
         case 'ema_historical':
         case 'ema_epar':
         case 'ema_guidelines':
@@ -331,26 +331,26 @@ export class DataCollectionService {
         case 'ema_safety':
           newUpdates = await this.syncEMASourceActive(sourceId);
           break;
-          
+
         case 'bfarm_guidelines':
         case 'bfarm_approvals':
           newUpdates = await this.syncBfARMSourceActive(sourceId);
           break;
-          
+
         case 'swissmedic_guidelines':
         case 'swissmedic_approvals':
           newUpdates = await this.syncSwissmedicSourceActive(sourceId);
           break;
-          
+
         case 'mhra_guidance':
         case 'mhra_alerts':
           newUpdates = await this.syncMHRASourceActive(sourceId);
           break;
-          
+
         default:
           newUpdates = await this.syncGenericSourceActive(sourceId);
       }
-      
+
       // Speichere neue Updates in der Datenbank
       for (const update of newUpdates) {
         try {
@@ -359,53 +359,53 @@ export class DataCollectionService {
           console.warn(`[DataCollectionService] Failed to save update:`, error);
         }
       }
-      
+
       console.log(`[DataCollectionService] Sync completed for ${source.name}: ${newUpdates.length} new updates`);
-      
+
     } catch (error) {
       console.error(`[DataCollectionService] Sync failed for ${sourceId}:`, error);
       throw error;
     }
   }
-  
+
   private async syncFDASourceActive(sourceId: string): Promise<InsertRegulatoryUpdate[]> {
     console.log(`[DataCollectionService] ACTIVATING FDA source: ${sourceId}`);
-    
+
     try {
       let fdaData: any[] = [];
-      
+
       if (sourceId === 'fda_510k' || sourceId === 'fda_historical') {
         console.log(`[DataCollectionService] Collecting fresh FDA 510(k) data for ${sourceId}...`);
         fdaData = await fdaOpenApiService.collect510kDevices(3); // Real API call
         console.log(`[DataCollectionService] FDA 510k sync: ${fdaData.length} new devices collected`);
       } else if (sourceId === 'fda_recalls') {
         console.log(`[DataCollectionService] Collecting fresh FDA recalls for ${sourceId}...`);
-        fdaData = await fdaOpenApiService.collectRecalls(2); // Real API call  
+        fdaData = await fdaOpenApiService.collectRecalls(2); // Real API call
         console.log(`[DataCollectionService] FDA recalls sync: ${fdaData.length} new recalls collected`);
       } else {
         console.log(`[DataCollectionService] FDA source ${sourceId} - checking for new data...`);
         // For other FDA sources, we simulate checking but don't create fake data
         return [];
       }
-      
+
       console.log(`[DataCollectionService] FDA sync ACTIVATED for ${sourceId}: ${fdaData.length} items processed from real API`);
-      
+
       // Return empty since FDA services save directly to database
       // This prevents duplicate entries while maintaining real data integrity
       return [];
-      
+
     } catch (error) {
       console.error(`[DataCollectionService] FDA sync error for ${sourceId}:`, error);
       return [];
     }
   }
-  
+
   private async syncEMASourceActive(sourceId: string): Promise<InsertRegulatoryUpdate[]> {
     console.log(`[DataCollectionService] ACTIVATING EMA source: ${sourceId}`);
-    
+
     const updates: InsertRegulatoryUpdate[] = [];
     const currentDate = new Date().toISOString();
-    
+
     try {
       // EMA API-Aufrufe je nach Quelle
       switch (sourceId) {
@@ -413,7 +413,7 @@ export class DataCollectionService {
           // EPAR (European Public Assessment Reports) sammeln
           const eparUrl = 'https://www.ema.europa.eu/en/medicines/download-medicine-data';
           console.log(`[DataCollectionService] Collecting EMA EPAR reports...`);
-          
+
           updates.push({
             title: `EMA EPAR: Comprehensive Medical Device Assessment Reports - Scientific Evaluation Update ${new Date().toLocaleDateString('de-DE')}`,
             content: `The European Medicines Agency (EMA) has released comprehensive European Public Assessment Reports (EPAR) for advanced medical devices, representing a significant milestone in European regulatory oversight. These detailed scientific evaluations encompass breakthrough technologies including AI-powered diagnostic systems, next-generation implantable devices, and innovative drug-device combination products.
@@ -449,11 +449,11 @@ The EPAR evaluations contribute to global regulatory convergence through collabo
             language: 'en'
           });
           break;
-          
+
         case 'ema_guidelines':
           // EMA Guidelines sammeln
           console.log(`[DataCollectionService] Collecting EMA Guidelines...`);
-          
+
           updates.push({
             title: `EMA Guidelines Update: Comprehensive Medical Device Regulation Framework - Complete Implementation Guide ${new Date().toLocaleDateString('de-DE')}`,
             content: `The European Medicines Agency (EMA) has published exhaustive updates to its medical device regulation guidance documents, establishing a new paradigm for device oversight across the European Union. These comprehensive guidelines represent the most significant regulatory evolution since the introduction of the Medical Device Regulation (MDR), incorporating cutting-edge scientific advances and addressing emerging technological challenges.
@@ -560,11 +560,11 @@ The updated EMA guidelines position European medical device regulation as the gl
             language: 'en'
           });
           break;
-          
+
         case 'ema_safety':
           // EMA Safety Updates sammeln
           console.log(`[DataCollectionService] Collecting EMA Safety Updates...`);
-          
+
           updates.push({
             title: `EMA Safety Alert: Medical Device Vigilance Report - ${new Date().toLocaleDateString('de-DE')}`,
             content: `The European Medicines Agency has issued new safety communications regarding medical device vigilance. Recent reports highlight device malfunctions, adverse events, and corrective actions taken by manufacturers. Healthcare professionals are advised to report any suspected device-related incidents through the national competent authorities.`,
@@ -580,27 +580,27 @@ The updated EMA guidelines position European medical device regulation as the gl
           });
           break;
       }
-      
+
       console.log(`[DataCollectionService] EMA sync completed for ${sourceId}: ${updates.length} new updates`);
       return updates;
-      
+
     } catch (error) {
       console.error(`[DataCollectionService] EMA sync error for ${sourceId}:`, error);
       return [];
     }
   }
-  
+
   private async syncBfARMSourceActive(sourceId: string): Promise<InsertRegulatoryUpdate[]> {
     console.log(`[DataCollectionService] ACTIVATING BfArM source: ${sourceId}`);
-    
+
     const updates: InsertRegulatoryUpdate[] = [];
     const currentDate = new Date().toISOString();
-    
+
     try {
       switch (sourceId) {
         case 'bfarm_guidelines':
           console.log(`[DataCollectionService] Collecting BfArM Guidelines...`);
-          
+
           updates.push({
             title: `BfArM Leitfaden: Umfassende neue Anforderungen für Medizinprodukte - Detaillierte Regulierungsupdate ${new Date().toLocaleDateString('de-DE')}`,
             content: `Das Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM) hat umfassende neue Leitlinien für Medizinprodukte veröffentlicht, die fundamentale Änderungen in der deutschen Medizinprodukte-Regulierung einführen. Diese wegweisenden Bestimmungen stärken die Patientensicherheit und etablieren Deutschland als führenden Standort für innovative Medizintechnik.
@@ -663,10 +663,10 @@ Die neuen BfArM-Leitlinien sind vollständig kompatibel mit EU MDR, FDA QSR und 
             language: 'de'
           });
           break;
-          
+
         case 'bfarm_approvals':
           console.log(`[DataCollectionService] Collecting BfArM Approvals...`);
-          
+
           updates.push({
             title: `BfArM Zulassungen: Aktuelle Medizinprodukte-Genehmigungen - ${new Date().toLocaleDateString('de-DE')}`,
             content: `Das BfArM hat neue Zulassungen für Medizinprodukte der Klassen IIb und III erteilt. Die genehmigten Produkte umfassen innovative Diagnosesysteme, implantierbare Geräte und KI-gestützte Medizintechnik. Alle Zulassungen erfüllen die strengen Anforderungen der europäischen Medizinprodukteverordnung (MDR).`,
@@ -682,27 +682,27 @@ Die neuen BfArM-Leitlinien sind vollständig kompatibel mit EU MDR, FDA QSR und 
           });
           break;
       }
-      
+
       console.log(`[DataCollectionService] BfArM sync completed for ${sourceId}: ${updates.length} new updates`);
       return updates;
-      
+
     } catch (error) {
       console.error(`[DataCollectionService] BfArM sync error for ${sourceId}:`, error);
       return [];
     }
   }
-  
+
   private async syncSwissmedicSourceActive(sourceId: string): Promise<InsertRegulatoryUpdate[]> {
     console.log(`[DataCollectionService] ACTIVATING Swissmedic source: ${sourceId}`);
-    
+
     const updates: InsertRegulatoryUpdate[] = [];
     const currentDate = new Date().toISOString();
-    
+
     try {
       switch (sourceId) {
         case 'swissmedic_guidelines':
           console.log(`[DataCollectionService] Collecting Swissmedic Guidelines...`);
-          
+
           updates.push({
             title: `Swissmedic Guidance: Medical Device Approval Requirements - ${new Date().toLocaleDateString('de-DE')}`,
             content: `Swissmedic has published updated guidance documents for medical device approval procedures in Switzerland. The new requirements include enhanced clinical evidence standards, streamlined conformity assessment procedures, and alignment with EU MDR requirements for devices intended for both Swiss and EU markets.`,
@@ -717,10 +717,10 @@ Die neuen BfArM-Leitlinien sind vollständig kompatibel mit EU MDR, FDA QSR und 
             language: 'en'
           });
           break;
-          
+
         case 'swissmedic_approvals':
           console.log(`[DataCollectionService] Collecting Swissmedic Approvals...`);
-          
+
           updates.push({
             title: `Swissmedic Approvals: New Medical Device Authorizations - ${new Date().toLocaleDateString('de-DE')}`,
             content: `Swissmedic has granted new authorizations for innovative medical devices, including AI-powered diagnostic systems, minimally invasive surgical instruments, and next-generation implantable devices. All approved devices meet stringent Swiss safety and efficacy standards while maintaining compatibility with European regulatory frameworks.`,
@@ -736,27 +736,27 @@ Die neuen BfArM-Leitlinien sind vollständig kompatibel mit EU MDR, FDA QSR und 
           });
           break;
       }
-      
+
       console.log(`[DataCollectionService] Swissmedic sync completed for ${sourceId}: ${updates.length} new updates`);
       return updates;
-      
+
     } catch (error) {
       console.error(`[DataCollectionService] Swissmedic sync error for ${sourceId}:`, error);
       return [];
     }
   }
-  
+
   private async syncMHRASourceActive(sourceId: string): Promise<InsertRegulatoryUpdate[]> {
     console.log(`[DataCollectionService] ACTIVATING MHRA source: ${sourceId}`);
-    
+
     const updates: InsertRegulatoryUpdate[] = [];
     const currentDate = new Date().toISOString();
-    
+
     try {
       switch (sourceId) {
         case 'mhra_guidance':
           console.log(`[DataCollectionService] Collecting MHRA Guidance...`);
-          
+
           updates.push({
             title: `MHRA Guidance: Post-Brexit Medical Device Regulations - ${new Date().toLocaleDateString('de-DE')}`,
             content: `The Medicines and Healthcare products Regulatory Agency (MHRA) has issued comprehensive guidance on medical device regulations following Brexit transition arrangements. Key updates include new UKCA marking requirements, enhanced clinical evidence standards, and updated notified body procedures for the UK market.`,
@@ -771,10 +771,10 @@ Die neuen BfArM-Leitlinien sind vollständig kompatibel mit EU MDR, FDA QSR und 
             language: 'en'
           });
           break;
-          
+
         case 'mhra_alerts':
           console.log(`[DataCollectionService] Collecting MHRA Device Alerts...`);
-          
+
           updates.push({
             title: `MHRA Device Alert: Safety Notice for Medical Devices - ${new Date().toLocaleDateString('de-DE')}`,
             content: `The MHRA has issued new Medical Device Alerts (MDA) regarding safety concerns with specific device categories. Healthcare providers are advised to review current device inventories, implement additional safety measures, and report any adverse incidents. The alerts cover implantable devices, diagnostic equipment, and therapeutic devices currently in use across NHS facilities.`,
@@ -790,30 +790,30 @@ Die neuen BfArM-Leitlinien sind vollständig kompatibel mit EU MDR, FDA QSR und 
           });
           break;
       }
-      
+
       console.log(`[DataCollectionService] MHRA sync completed for ${sourceId}: ${updates.length} new updates`);
       return updates;
-      
+
     } catch (error) {
       console.error(`[DataCollectionService] MHRA sync error for ${sourceId}:`, error);
       return [];
     }
   }
-  
 
-  
+
+
   private async syncGenericSourceActive(sourceId: string): Promise<InsertRegulatoryUpdate[]> {
     console.log(`[DataCollectionService] ACTIVATING generic source: ${sourceId}`);
-    
+
     const updates: InsertRegulatoryUpdate[] = [];
     const currentDate = new Date().toISOString();
-    
+
     try {
       // Internationale Regulierungsbehörden
       switch (sourceId) {
         case 'health_canada':
           console.log(`[DataCollectionService] Collecting Health Canada updates...`);
-          
+
           updates.push({
             title: `Health Canada: Comprehensive Medical Device License Updates - Advanced Regulatory Framework ${new Date().toLocaleDateString('de-DE')}`,
             content: `Health Canada has published comprehensive medical device licensing decisions and regulatory updates, marking a significant advancement in Canadian medical device oversight. These developments strengthen Canada's position as a global leader in medical technology innovation while ensuring the highest standards of patient safety and clinical effectiveness.
@@ -922,10 +922,10 @@ The comprehensive Health Canada updates position Canadian medical device regulat
             language: 'en'
           });
           break;
-          
+
         case 'tga_australia':
           console.log(`[DataCollectionService] Collecting TGA Australia updates...`);
-          
+
           updates.push({
             title: `TGA Australia: Therapeutic Goods Administration Updates - ${new Date().toLocaleDateString('de-DE')}`,
             content: `The Therapeutic Goods Administration (TGA) has released new guidance for medical device manufacturers in Australia. Key updates include streamlined conformity assessment procedures, enhanced cybersecurity requirements for connected devices, and updated clinical evidence standards aligned with international best practices.`,
@@ -940,10 +940,10 @@ The comprehensive Health Canada updates position Canadian medical device regulat
             language: 'en'
           });
           break;
-          
+
         case 'pmda_japan':
           console.log(`[DataCollectionService] Collecting PMDA Japan updates...`);
-          
+
           updates.push({
             title: `PMDA Japan: Medical Device Approval Updates - ${new Date().toLocaleDateString('de-DE')}`,
             content: `The Pharmaceuticals and Medical Devices Agency (PMDA) of Japan has announced new medical device approvals and regulatory updates. Recent approvals include AI-powered diagnostic systems, advanced surgical robots, and innovative drug-device combination products. The updates also include revised consultation procedures for international manufacturers.`,
@@ -958,10 +958,10 @@ The comprehensive Health Canada updates position Canadian medical device regulat
             language: 'en'
           });
           break;
-          
+
         case 'nmpa_china':
           console.log(`[DataCollectionService] Collecting NMPA China updates...`);
-          
+
           updates.push({
             title: `NMPA China: National Medical Products Administration Updates - ${new Date().toLocaleDateString('de-DE')}`,
             content: `The National Medical Products Administration (NMPA) of China has published new regulatory updates for medical devices. Recent developments include expedited approval pathways for innovative devices, updated clinical trial requirements, and enhanced post-market surveillance obligations for imported medical devices.`,
@@ -976,25 +976,25 @@ The comprehensive Health Canada updates position Canadian medical device regulat
             language: 'en'
           });
           break;
-          
+
         default:
           console.log(`[DataCollectionService] Unknown generic source: ${sourceId}`);
           break;
       }
-      
+
       console.log(`[DataCollectionService] Generic source sync completed for ${sourceId}: ${updates.length} new updates`);
       return updates;
-      
+
     } catch (error) {
       console.error(`[DataCollectionService] Generic source sync error for ${sourceId}:`, error);
       return [];
     }
   }
-  
+
   private getSourceName(sourceId: string): string {
     const sourceMap: Record<string, string> = {
       'fda_historical': 'FDA Historical Archive',
-      'fda_510k': 'FDA 510(k) Clearances',  
+      'fda_510k': 'FDA 510(k) Clearances',
       'fda_pma': 'FDA PMA Approvals',
       'fda_recalls': 'FDA Device Recalls',
       'fda_enforcement': 'FDA Enforcement Actions',
@@ -1011,7 +1011,7 @@ The comprehensive Health Canada updates position Canadian medical device regulat
       'mhra_guidance': 'MHRA Guidance',
       'mhra_alerts': 'MHRA Device Alerts'
     };
-    
+
     return sourceMap[sourceId] || `Source ${sourceId}`;
   }
 
@@ -1029,12 +1029,12 @@ The comprehensive Health Canada updates position Canadian medical device regulat
     errors: number;
   }> {
     console.log(`[DataCollectionService] Starting optimized FDA sync for: ${sourceId}`);
-    
+
     let newItems = 0;
     let processedItems = 0;
     let totalRequests = 0;
     let errors = 0;
-    
+
     try {
       // Performance-optimierte FDA API-Aufrufe
       switch (sourceId) {
@@ -1052,10 +1052,10 @@ The comprehensive Health Canada updates position Canadian medical device regulat
             newItems = 1; // Fallback activity
           }
           break;
-          
+
         case 'fda_recalls':
           try {
-            totalRequests++;  
+            totalRequests++;
             console.log(`[DataCollectionService] Collecting optimized FDA recalls...`);
             const recalls = await fdaOpenApiService.collectRecalls(options.optimized ? 2 : 3);
             processedItems += recalls.length;
@@ -1066,7 +1066,7 @@ The comprehensive Health Canada updates position Canadian medical device regulat
             newItems = 1; // Fallback activity
           }
           break;
-          
+
         case 'fda_pma':
         case 'fda_enforcement':
         case 'fda_guidance':
@@ -1078,9 +1078,9 @@ The comprehensive Health Canada updates position Canadian medical device regulat
           console.log(`[DataCollectionService] Optimized sync fallback for ${sourceId}: 1 activity`);
           break;
       }
-      
+
       console.log(`[DataCollectionService] Optimized FDA sync completed: ${newItems} new items, ${errors} errors`);
-      
+
     } catch (error) {
       errors++;
       console.error(`[DataCollectionService] Optimized FDA sync failed:`, error);
@@ -1089,7 +1089,7 @@ The comprehensive Health Canada updates position Canadian medical device regulat
       processedItems = Math.max(processedItems, 1);
       totalRequests = Math.max(totalRequests, 1);
     }
-    
+
     return {
       newItems,
       processedItems,

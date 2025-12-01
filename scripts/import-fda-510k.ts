@@ -11,7 +11,7 @@ import 'dotenv/config';
 import crypto from 'node:crypto';
 import fetch from 'node-fetch';
 import { regulatoryUpdates } from '../shared/schema.js';
-import { getScriptDb } from './script-db';
+import { getScriptDb } from './script-db.js';
 
 interface FdaRecord {
   k_number: string;

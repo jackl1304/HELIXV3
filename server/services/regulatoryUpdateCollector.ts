@@ -2,8 +2,8 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 // Removed direct AI provider naming for neutrality
 import OpenAI from 'openai';
-import { db } from '../storage'; // reuse connection (side-effect import ok)
-import { regulatoryUpdates } from '../../shared/schema';
+import { db } from '../storage.js'; // reuse connection (side-effect import ok)
+import { regulatoryUpdates } from '../../shared/schema.js';
 
 /**
  * Lightweight automation for regulatory updates.

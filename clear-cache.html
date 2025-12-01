@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cache Clearer</title>
+    <script>
+        // Force cache clear
+        if ('caches' in window) {
+            caches.keys().then(names => {
+                names.forEach(name => caches.delete(name));
+            });
+        }
+        
+        // Clear localStorage
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // Redirect with cache-busting
+        setTimeout(() => {
+            window.location.href = '/?_=' + Date.now();
+        }, 500);
+    </script>
+</head>
+<body>
+    <h1>Clearing cache...</h1>
+    <p>Sie werden in Kürze weitergeleitet.</p>
+</body>
+</html>

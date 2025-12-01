@@ -48,12 +48,10 @@ export default function Dashboard() {
     recentUpdates: stats?.recentUpdates ?? 0,
     recentLegalCases: stats?.recentLegalCases ?? 0,
     activeDataSources: stats?.activeDataSources ?? 0,
-    totalPatents: stats?.totalPatents ?? 0,
-    dataQuality: stats?.dataQuality ?? 'Live'
+    totalPatents: stats?.totalPatents ?? 0
   };
 
   const getDisplayValue = (value: number) => (statsLoading ? '—' : formatNumber(value));
-  const dataQualityLabel = statsLoading ? 'Wird geladen' : metrics.dataQuality;
   const recentUpdatesLabel = statsLoading
     ? 'Synchronisierung läuft'
     : `${formatNumber(metrics.recentUpdates)} neue in 7 Tagen`;
@@ -69,7 +67,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* DELTAWAYS Dashboard Header - Exact Screenshot Recreation */}
+      {/* Dashboard Header ohne Infotexte */}
       <div className="deltaways-dashboard-card bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 rounded-xl p-8 text-white shadow-lg">
         <div className="flex items-center justify-between">
           <div className="flex-1">
@@ -77,10 +75,7 @@ export default function Dashboard() {
               <Activity className="h-6 w-6" />
               Regulatory Intelligence Dashboard
             </h1>
-            <p className="text-blue-100 mb-6 text-lg font-medium">
-              Professionelle Analyse • Echtzeit-Updates • 100% Datenqualität
-            </p>
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-6 mt-6">
               <div className="flex items-center gap-2 bg-white/10 rounded-lg px-4 py-2 deltaways-focus hover:bg-white/20 transition-all duration-300">
                 <Zap className="h-5 w-5 animate-pulse" />
                 <span className="font-medium">Live System</span>
@@ -95,8 +90,6 @@ export default function Dashboard() {
           <div className="text-right">
             <div className="text-6xl font-bold mb-2 deltaways-brand-text">{getDisplayValue(metrics.totalUpdates)}</div>
             <div className="text-blue-100 text-lg font-medium">Updates</div>
-            <div className="text-4xl font-bold mt-4 deltaways-brand-text">{dataQualityLabel}</div>
-            <div className="text-blue-100 text-lg font-medium">Datenqualität</div>
           </div>
         </div>
       </div>
@@ -116,12 +109,7 @@ export default function Dashboard() {
               <p className="text-sm text-green-600 font-medium mt-2">
                 {recentUpdatesLabel}
               </p>
-              <div className="flex items-center mt-3">
-                <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
-                <span className="text-xs text-gray-500 font-medium">
-                  {statsLoading ? 'Wird geladen…' : `Datenqualität: ${dataQualityLabel}`}
-                </span>
-              </div>
+              {/* Datenqualitätsanzeige entfernt */}
             </CardContent>
           </Card>
         </Link>

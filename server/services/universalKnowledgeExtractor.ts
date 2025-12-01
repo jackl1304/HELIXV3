@@ -1,6 +1,6 @@
-import { Logger } from './logger.service';
-import { storage } from '../storage';
-import { JAMANetworkScrapingService } from './jamaNetworkScrapingService';
+import { Logger } from './logger.service.js';
+import { storage } from '../storage.js';
+import { JAMANetworkScrapingService } from './jamaNetworkScrapingService.js';
 
 interface KnowledgeSource {
   id: string;

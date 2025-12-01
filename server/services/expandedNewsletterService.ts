@@ -1,5 +1,5 @@
-import { Logger } from './logger.service';
-import { storage } from '../storage';
+import { Logger } from './logger.service.js';
+import { storage } from '../storage.js';
 
 export class ExpandedNewsletterService {
   private logger = new Logger('ExpandedNewsletterService');
@@ -377,7 +377,7 @@ export class ExpandedNewsletterService {
     for (const source of activeSources) {
       try {
         this.logger.info(`Processing premium newsletter source: ${source.name}`);
-        
+
         // Simuliere Artikel-Extraktion basierend auf realen Quellen
         const extractedCount = 0; // MOCK DATA ENTFERNT - Keine automatische Artikel-Generierung
         results.articlesExtracted += extractedCount;

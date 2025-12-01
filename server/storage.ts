@@ -3,12 +3,10 @@
 import { config } from 'dotenv';
 config();
 
-// Datenbank-Treiber (Neon serverless vs. native pg)
-import { neon } from "@neondatabase/serverless";
-import { drizzle as drizzleNeon } from "drizzle-orm/neon-http";
+// Datenbank-Treiber (Native PG only - Neon HTTP removed for stability)
 import { Pool as PgPool } from 'pg';
 import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres';
-import { dataSources, aiTasks, type AiTask, type InsertAiTask } from "../shared/schema";
+import { dataSources, aiTasks, type AiTask, type InsertAiTask } from "../shared/schema.js";
 import { eq, lt, desc, and } from "drizzle-orm";
 
 // Enhanced database connection with debug logging
@@ -72,43 +70,40 @@ if (!DATABASE_URL) {
       throw new Error('Invalid DATABASE_URL format in production');
     }
   } else {
-    try {
-      const isNeon = /\.neon\.tech/.test(DATABASE_URL);
-      if (isNeon) {
-        sql = neon(DATABASE_URL);
-        db = drizzleNeon(sql);
-        console.log('[DB] storage.ts: Neon serverless driver aktiv');
-      } else {
-        const pool = new PgPool({ connectionString: DATABASE_URL });
-        db = drizzlePg(pool);
-        // Einfacher SQL-Template-Helper für native pg
-        sql = (strings: TemplateStringsArray, ...values: any[]) => {
-          const text = strings.reduce((acc, part, i) => acc + part + (i < values.length ? `$${i + 1}` : ''), '');
-          return pool.query(text, values).then(r => r.rows);
-        };
-        console.log('[DB] storage.ts: Native pg driver aktiv');
-      }
-      isMockMode = false;
-    } catch (error) {
-      console.error('[DB ERROR] Failed to connect to database:', error);
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('[DB WARNING] Continuing with mock database in development mode');
-        isMockMode = true;
-        db = {
-          select: () => ({ from: () => Promise.resolve([]) }),
-          insert: () => ({ values: () => Promise.resolve([]) }),
-          update: () => ({ set: () => ({ where: () => Promise.resolve([]) }) }),
-          delete: () => ({ where: () => Promise.resolve([]) }),
-        };
-        // Mock SQL function
-        sql = (strings: TemplateStringsArray, ...values: any[]) => {
-          console.log('[MOCK SQL] Query:', strings.join('?'), 'Values:', values);
-          return Promise.resolve([]);
-        };
-      } else {
+    // ALWAYS use native PG Pool for stability (no Neon HTTP)
+    console.log('[DB] Initializing NATIVE PostgreSQL connection pool...');
+
+    const pool = new PgPool({
+      connectionString: DATABASE_URL,
+      max: 20, // Maximum pool size
+      idleTimeoutMillis: 30000, // 30 seconds
+      connectionTimeoutMillis: 5000, // 5 seconds connection timeout
+      ssl: DATABASE_URL.includes('neon.tech') ? { rejectUnauthorized: false } : undefined
+    });
+
+    // Test connection immediately (SYNCHRONOUS)
+    pool.query('SELECT NOW()').then(() => {
+      console.log('[DB] ✅ Connection pool established successfully');
+    }).catch((err) => {
+      console.error('[DB] ❌ Connection test failed:', err.message);
+    });
+
+    db = drizzlePg(pool);
+
+    // Enhanced SQL-Template-Helper with timeout protection
+    sql = async (strings: TemplateStringsArray, ...values: any[]) => {
+      const text = strings.reduce((acc, part, i) => acc + part + (i < values.length ? `$${i + 1}` : ''), '');
+      try {
+        const result = await pool.query(text, values);
+        return result.rows;
+      } catch (error: any) {
+        console.error('[DB] Query error:', error.message);
         throw error;
       }
-    }
+    };
+
+    console.log('[DB] storage.ts: Native PG driver with connection pooling ACTIVE');
+    isMockMode = false;
   }
 }
 
@@ -1046,7 +1041,7 @@ class MorningStorage implements IStorage {
   async getDataSources(): Promise<any[]> {
     try {
       console.log('[STORAGE] Fetching data sources...');
-      const result = await sql`SELECT id, name, type, country, is_active, created_at, endpoint FROM data_sources ORDER BY name`;
+      const result = await sql`SELECT id, name, type, country, is_active, created_at, api_endpoint FROM data_sources ORDER BY name`;
       console.log(`[STORAGE] Data sources fetched: ${result.length} items`);
       return Array.isArray(result) ? result : [];
     } catch (error: any) {

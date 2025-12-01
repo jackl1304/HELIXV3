@@ -1,4 +1,4 @@
-import { storage } from '../storage';
+import { storage } from '../storage.js';
 
 interface UpdateTemplate {
   deviceType: string;
@@ -12,7 +12,7 @@ interface UpdateTemplate {
 }
 
 export class ContentEnhancementService {
-  
+
   private updateTemplates: UpdateTemplate[] = [
     {
       deviceType: "InbellaMAX System",
@@ -52,7 +52,7 @@ export class ContentEnhancementService {
   async generateUniqueContent(update: any): Promise<string> {
     // Wähle Template basierend auf Update-Eigenschaften
     const template = this.selectTemplate(update);
-    
+
     const uniqueContent = `K-Nummer: ${template.kNumber}
 Antragsteller: ${template.companyName}
 Produktcode: ${this.generateProductCode(template.deviceType)}
@@ -111,7 +111,7 @@ ${template.marketImpact}
 
   private selectTemplate(update: any): UpdateTemplate {
     const titleLower = update.title?.toLowerCase() || '';
-    
+
     if (titleLower.includes('inbellamax')) {
       return this.updateTemplates[0];
     } else if (titleLower.includes('mf sc gen2')) {
@@ -119,7 +119,7 @@ ${template.marketImpact}
     } else if (titleLower.includes('isolator')) {
       return this.updateTemplates[2];
     }
-    
+
     // Fallback: Zufällige Auswahl mit Variation
     const randomIndex = Math.abs(update.id?.charCodeAt(0) || 0) % this.updateTemplates.length;
     return this.updateTemplates[randomIndex];
@@ -171,25 +171,25 @@ ${template.marketImpact}
    */
   async enhanceAllUpdatesWithUniqueContent(): Promise<void> {
     console.log('[ContentEnhancement] Starting unique content generation for all updates...');
-    
+
     try {
       const allUpdates = await storage.getAllRegulatoryUpdates();
       let processedCount = 0;
-      
+
       for (const update of allUpdates) {
         // Generiere einzigartigen Inhalt für jedes Update
         const uniqueContent = await this.generateUniqueContent(update);
-        
+
         // Update in der Datenbank
         await storage.sql`UPDATE regulatory_updates SET description = ${uniqueContent} WHERE id = ${update.id}`;
-        
+
         processedCount++;
         console.log(`[ContentEnhancement] Enhanced update ${processedCount}/${allUpdates.length}: ${update.title?.substring(0, 50)}...`);
-        
+
         // Kurze Pause um Datenbank nicht zu überlasten
         await new Promise(resolve => setTimeout(resolve, 50));
       }
-      
+
       console.log(`[ContentEnhancement] Successfully enhanced ${processedCount} regulatory updates with unique content`);
     } catch (error) {
       console.error('[ContentEnhancement] Error enhancing updates:', error);

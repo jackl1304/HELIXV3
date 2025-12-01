@@ -219,9 +219,6 @@ export default function CustomerLegalCases() {
                       <CardTitle className="text-lg font-semibold line-clamp-2">
                         {legalCase.title}
                       </CardTitle>
-                      <Badge variant={legalCase.impact_level === 'high' ? 'destructive' : 'default'}>
-                        {legalCase.impact_level || 'medium'}
-                      </Badge>
                     </div>
                     <CardDescription className="line-clamp-2">
                       {legalCase.summary}
@@ -238,7 +235,26 @@ export default function CustomerLegalCases() {
                         <span>{new Date(legalCase.decision_date).toLocaleDateString('de-DE')}</span>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between">
+                    {/* Echte Auswertungen: Urteilsspruch, Schadensersatz, Status */}
+                    {legalCase.judgment && (
+                      <div className="mt-2 bg-red-50 p-2 rounded border-l-4 border-red-500">
+                        <strong className="text-red-700 text-xs">Urteilsspruch:</strong>
+                        <p className="text-red-600 text-xs mt-1 font-medium">{legalCase.judgment}</p>
+                      </div>
+                    )}
+                    {legalCase.damages && (
+                      <div className="mt-2 bg-green-50 p-2 rounded border-l-4 border-green-500">
+                        <strong className="text-green-700 text-xs">Schadensersatz:</strong>
+                        <p className="text-green-600 text-xs mt-1 font-medium">{legalCase.damages}</p>
+                      </div>
+                    )}
+                    {legalCase.status && (
+                      <div className="mt-2 bg-blue-50 p-2 rounded border-l-4 border-blue-500">
+                        <strong className="text-blue-700 text-xs">Status:</strong>
+                        <p className="text-blue-600 text-xs mt-1 font-medium">{legalCase.status}</p>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between mt-4">
                       <Badge variant="outline">
                         {legalCase.case_number}
                       </Badge>

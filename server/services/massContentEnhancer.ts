@@ -1,11 +1,11 @@
 import { storage } from "../storage";
-import type { RegulatoryUpdate } from "@shared/schema";
+import type { RegulatoryUpdate } from "../../shared/schema.js";
 
 export class MassContentEnhancer {
-  
+
   // Massive content expansion with 80+ detailed points per update
   static expandContent(originalContent: string, deviceType: string, therapeuticArea: string, jurisdiction: string): string {
-    
+
     const enhancedSections = [
       {
         title: "🔬 Detaillierte Technische Spezifikationen",
@@ -145,7 +145,7 @@ export class MassContentEnhancer {
     ];
 
     let enhancedContent = originalContent + "\n\n";
-    
+
     enhancedSections.forEach(section => {
       enhancedContent += `## ${section.title}\n`;
       section.content.forEach((item, index) => {
@@ -157,12 +157,12 @@ export class MassContentEnhancer {
     enhancedContent += `
 ---
 
-**🚀 Content Enhancement Status**: MASSIV ERWEITERT  
-**📊 Content Depth**: 8 detaillierte Analysebereiche  
-**🔢 Total Data Points**: 80+ spezifische Informationspunkte  
-**📈 Content Volume**: 10x Original Content mit Technical/Regulatory/Clinical/Financial Details  
-**⏰ Enhanced**: ${new Date().toISOString()}  
-**🎯 Enhancement Level**: COMPREHENSIVE PROFESSIONAL ANALYSIS  
+**🚀 Content Enhancement Status**: MASSIV ERWEITERT
+**📊 Content Depth**: 8 detaillierte Analysebereiche
+**🔢 Total Data Points**: 80+ spezifische Informationspunkte
+**📈 Content Volume**: 10x Original Content mit Technical/Regulatory/Clinical/Financial Details
+**⏰ Enhanced**: ${new Date().toISOString()}
+**🎯 Enhancement Level**: COMPREHENSIVE PROFESSIONAL ANALYSIS
 
 **Enhanced Content umfasst:**
 - Technische Spezifikationen nach International Standards (ISO/IEC/FDA/EU)
@@ -201,7 +201,7 @@ export class MassContentEnhancer {
       'diagnostics': '30-40 Milliarden',
       'surgical': '25-35 Milliarden'
     };
-    
+
     const area = therapeuticArea?.toLowerCase();
     for (const [key, value] of Object.entries(areas)) {
       if (area?.includes(key)) {
@@ -215,10 +215,10 @@ export class MassContentEnhancer {
   static async massEnhanceAllContent(): Promise<{ enhanced: number; errors: number }> {
     try {
       console.log('[MASS-ENHANCER] Starting mass content enhancement for ALL regulatory updates...');
-      
+
       const allUpdates = await storage.getAllRegulatoryUpdates();
       console.log(`[MASS-ENHANCER] Found ${allUpdates.length} regulatory updates to enhance`);
-      
+
       let enhanced = 0;
       let errors = 0;
 
@@ -255,7 +255,7 @@ export class MassContentEnhancer {
           // Store enhanced version
           await storage.createRegulatoryUpdate(enhancedUpdate);
           enhanced++;
-          
+
           // Log progress
           if (enhanced % 50 === 0) {
             console.log(`[MASS-ENHANCER] Enhanced ${enhanced}/${allUpdates.length} updates...`);

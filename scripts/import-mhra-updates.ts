@@ -7,7 +7,7 @@ import fetch from 'node-fetch';
 import * as cheerio from 'cheerio';
 import crypto from 'node:crypto';
 import { regulatoryUpdates } from '../shared/schema.js';
-import { getScriptDb } from './script-db';
+import { getScriptDb } from './script-db.js';
 
 const BASE = 'https://www.gov.uk';
 const URL = BASE + '/government/organisations/medicines-and-healthcare-products-regulatory-agency';

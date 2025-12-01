@@ -1,5 +1,5 @@
 import { storage } from "../storage";
-import type { LegalCase } from "@shared/schema";
+import type { LegalCase } from "../../shared/schema.js";
 
 interface LegalAnalysisResult {
   themes: string[];
@@ -19,7 +19,7 @@ interface LegalTrendAnalysis {
 }
 
 export class LegalAnalysisService {
-  
+
   private legalThemes = {
     'Produkthaftung': {
       keywords: ['product liability', 'defective device', 'manufacturer liability', 'design defect', 'manufacturing defect'],
@@ -77,7 +77,7 @@ export class LegalAnalysisService {
   async analyzeLegalCase(legalCase: LegalCase): Promise<LegalAnalysisResult> {
     try {
       const fullText = `${legalCase.title} ${legalCase.summary} ${legalCase.keyIssues?.join(' ') || ''}`.toLowerCase();
-      
+
       const themes: string[] = [];
       let riskAssessment = 'Mittleres Risiko';
       let precedentValue: 'high' | 'medium' | 'low' = 'medium';
@@ -166,7 +166,7 @@ export class LegalAnalysisService {
 
   private determineComplianceImpact(themes: string[], jurisdiction?: string): string {
     let impact = 'Gering';
-    
+
     if (themes.includes('Regulatorische Compliance') || themes.includes('Produkthaftung')) {
       impact = 'Hoch - Direkte Auswirkungen auf Zulassungsverfahren möglich';
     } else if (themes.includes('KI/ML-Regulierung') || themes.includes('Datenschutz')) {
@@ -193,7 +193,7 @@ export class LegalAnalysisService {
       // Analyze recent cases (last 6 months)
       const sixMonthsAgo = new Date();
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-      
+
       const recentCases = legalCases.filter(legalCase => {
         const caseDate = new Date(legalCase.publishedAt);
         return caseDate > sixMonthsAgo;
@@ -208,10 +208,10 @@ export class LegalAnalysisService {
 
       // Analyze themes and trends
       const themeCount: { [key: string]: number } = {};
-      
+
       for (const legalCase of recentCases) {
         const analysis = await this.analyzeLegalCase(legalCase);
-        
+
         for (const theme of analysis.themes) {
           themeCount[theme] = (themeCount[theme] || 0) + 1;
           litigationTypes[theme] = (litigationTypes[theme] || 0) + 1;
@@ -220,7 +220,7 @@ export class LegalAnalysisService {
 
       // Identify emerging trends
       const sortedThemes = Object.entries(themeCount).sort(([,a], [,b]) => b - a);
-      
+
       if (sortedThemes.length > 0) {
         const topTheme = sortedThemes[0];
         if (topTheme[1] > 3) {
@@ -229,8 +229,8 @@ export class LegalAnalysisService {
       }
 
       // Specific trend analysis
-      const aiCases = recentCases.filter(c => 
-        c.title.toLowerCase().includes('ai') || 
+      const aiCases = recentCases.filter(c =>
+        c.title.toLowerCase().includes('ai') ||
         c.summary.toLowerCase().includes('artificial intelligence') ||
         c.keyIssues?.some(issue => issue.toLowerCase().includes('machine learning'))
       );
@@ -240,8 +240,8 @@ export class LegalAnalysisService {
         preventiveRecommendations.push('KI-Governance und Ethik-Richtlinien entwickeln');
       }
 
-      const cyberCases = recentCases.filter(c => 
-        c.title.toLowerCase().includes('cyber') || 
+      const cyberCases = recentCases.filter(c =>
+        c.title.toLowerCase().includes('cyber') ||
         c.summary.toLowerCase().includes('data breach')
       );
 
@@ -250,8 +250,8 @@ export class LegalAnalysisService {
         preventiveRecommendations.push('IT-Sicherheitsmaßnahmen verstärken');
       }
 
-      const gdprCases = recentCases.filter(c => 
-        c.title.toLowerCase().includes('gdpr') || 
+      const gdprCases = recentCases.filter(c =>
+        c.title.toLowerCase().includes('gdpr') ||
         c.summary.toLowerCase().includes('data protection')
       );
 

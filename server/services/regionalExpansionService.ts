@@ -1,4 +1,4 @@
-import { storage } from '../storage';
+import { storage } from '../storage.js';
 
 interface RegionalAuthority {
   id: string;
@@ -118,18 +118,18 @@ export class RegionalExpansionService {
   private async makeRequest(url: string): Promise<any> {
     try {
       console.log(`[Regional] Requesting: ${url}`);
-      
+
       const response = await fetch(url, {
         headers: {
           'User-Agent': 'Helix-Regional-Monitor/1.0',
           'Accept': 'application/json, application/xml, text/xml'
         }
       });
-      
+
       if (!response.ok) {
         throw new Error(`Regional API error: ${response.status} ${response.statusText}`);
       }
-      
+
       const contentType = response.headers.get('content-type');
       if (contentType?.includes('application/json')) {
         return await response.json();
@@ -279,10 +279,10 @@ export class RegionalExpansionService {
       for (const feedUrl of authority.rssFeeds) {
         try {
           const feedContent = await this.makeRequest(feedUrl);
-          
+
           // Simple RSS parsing (in production, use proper XML parser)
           const items = this.parseRSSFeed(feedContent, authority);
-          
+
           for (const item of items) {
             await this.processRegionalUpdate(item, authority);
           }
@@ -301,7 +301,7 @@ export class RegionalExpansionService {
     // Simplified RSS parsing - in production use proper XML parser
     try {
       const items: RegionalUpdate[] = [];
-      
+
       // For mock implementation, return sample data
       if (typeof feedContent === 'string' && feedContent.includes('xml')) {
         const mockItems = this.getMockRegionalData(authority.id);
@@ -320,17 +320,17 @@ export class RegionalExpansionService {
       console.log('[Regional] Starting sync for all regional authorities');
 
       const activeAuthorities = this.regionalAuthorities.filter(auth => auth.active);
-      
+
       for (const authority of activeAuthorities) {
         try {
           console.log(`[Regional] Syncing ${authority.name}...`);
-          
+
           // Collect updates via API
           await this.collectRegionalUpdates(authority.id);
-          
+
           // Monitor RSS feeds
           await this.monitorRSSFeeds(authority.id);
-          
+
           // Small delay between authorities
           await new Promise(resolve => setTimeout(resolve, 1000));
         } catch (error) {

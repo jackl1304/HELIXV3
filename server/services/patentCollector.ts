@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { storage } from '../storage';
-import { Logger } from './logger.service';
+import { storage } from '../storage.js';
+import { Logger } from './logger.service.js';
 
 const logger = new Logger('PatentCollector');
 

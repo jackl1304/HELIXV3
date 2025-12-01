@@ -76,7 +76,10 @@ const getNavigationStructure = (t: (key: string) => string): Record<string, Navi
         subItems: [
           { name: "Regulatory Updates", href: "/customer-area-1/regulatory", icon: FileText },
           { name: "Rechtsprechung", href: "/customer-area-1/rechtsprechung", icon: Scale },
-          { name: "Regulatory Assistent", href: "/assistent/regulatory", icon: Brain }
+          { name: "Regulatory Assistent", href: "/assistent/regulatory", icon: Brain },
+          // Neue Compliance‑Einträge direkt im Bereich 1
+
+          { name: "Compliance Checkliste", href: "/compliance-checklist", icon: CheckCircle }
         ]
       },
       {
@@ -118,9 +121,11 @@ const getNavigationStructure = (t: (key: string) => string): Record<string, Navi
       { name: "ASTM Standards", href: "/astm-standards", icon: FileSearch },
       { name: "EN Standards", href: "/en-standards", icon: Globe },
       { name: "AAMI Standards", href: "/aami-standards", icon: CheckCircle },
-      { name: "EU MDR 2017/745", href: "/eu-mdr", icon: Scale }
+      { name: "EU MDR 2017/745", href: "/eu-mdr", icon: Scale },
+
+      { name: "Compliance Checkliste", href: "/compliance-checklist", icon: CheckCircle }
     ],
-    defaultOpen: false
+    defaultOpen: true
   },
 
   // 4. PROFESSIONAL TOOLS (collapsible)

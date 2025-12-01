@@ -4,7 +4,7 @@
  * Regulatory Affairs, IP Law, Quality Management terminology
  */
 
-import type { ScrapedUpdate } from './universal-scraper';
+import type { ScrapedUpdate } from './universal-scraper.js';
 
 interface FormattedContent {
   title: string;

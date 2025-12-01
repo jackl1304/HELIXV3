@@ -1,14 +1,14 @@
 import { liveDataSourcesService } from './liveDataSourcesService';
-import { fdaOpenApiService } from './fdaOpenApiService';
+import { fdaOpenApiService } from './fdaOpenApiService.js';
 import { fdaPMAService } from './fdaPMAService';
 import { fdaEnforcementService } from './fdaEnforcementService';
 import { emaEparService } from './emaEparService';
 import { healthCanadaMDALLService } from './healthCanadaMDALLService';
 import { webScrapingService } from './webScrapingService';
-import { syncAllPatentSources } from './patentService';
-import { legalCaseCollector } from './legalCaseCollector';
-import { storage } from '../storage';
-import { Logger } from './logger.service';
+import { syncAllPatentSources } from './patentService.js';
+import { legalCaseCollector } from './legalCaseCollector.js';
+import { storage } from '../storage.js';
+import { Logger } from './logger.service.js';
 
 const logger = new Logger('DailySyncScheduler');
 

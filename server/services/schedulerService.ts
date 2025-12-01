@@ -1,6 +1,6 @@
-import { dataCollectionService } from "./dataCollectionService";
-import { emailService } from "./emailService";
-import { storage } from "../storage";
+import { dataCollectionService } from "./dataCollectionService.js";
+import { emailService } from "./emailService.js";
+import { storage } from "../storage.js";
 
 class SchedulerService {
   private intervals: NodeJS.Timeout[] = [];
@@ -54,14 +54,14 @@ class SchedulerService {
       const now = new Date();
       const targetTime = new Date();
       targetTime.setUTCHours(time.hour, time.minute, 0, 0);
-      
+
       // If target time has passed today, schedule for tomorrow
       if (now > targetTime) {
         targetTime.setUTCDate(targetTime.getUTCDate() + 1);
       }
-      
+
       const msUntilTarget = targetTime.getTime() - now.getTime();
-      
+
       setTimeout(() => {
         callback();
         // Schedule next execution
@@ -84,21 +84,21 @@ class SchedulerService {
     const runCallback = () => {
       const now = new Date();
       const targetTime = new Date();
-      
+
       // Set to target day of week (0 = Sunday, 1 = Monday, etc.)
       const currentDay = now.getUTCDay();
       const daysUntilTarget = (time.day - currentDay + 7) % 7;
-      
+
       targetTime.setUTCDate(now.getUTCDate() + daysUntilTarget);
       targetTime.setUTCHours(time.hour, time.minute, 0, 0);
-      
+
       // If target time has passed this week, schedule for next week
       if (now > targetTime && daysUntilTarget === 0) {
         targetTime.setUTCDate(targetTime.getUTCDate() + 7);
       }
-      
+
       const msUntilTarget = targetTime.getTime() - now.getTime();
-      
+
       setTimeout(() => {
         callback();
         // Schedule next execution
@@ -113,11 +113,11 @@ class SchedulerService {
   private async checkUrgentApprovals(): Promise<void> {
     try {
       const urgentApprovals = await storage.getApprovals({ status: 'pending' });
-      
+
       // Check if any approvals have been pending for more than 24 hours
       const now = new Date();
       const urgentThreshold = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-      
+
       const overdueApprovals = urgentApprovals.filter(approval => {
         const createdAt = approval.createdAt ? new Date(approval.createdAt) : new Date();
         return (now.getTime() - createdAt.getTime()) > urgentThreshold;
@@ -134,16 +134,16 @@ class SchedulerService {
   private async generateWeeklyNewsletter(): Promise<void> {
     try {
       // console.log("Generating weekly newsletter...");
-      
+
       // Get updates from the past week
       const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
       const recentUpdates = await storage.getRegulatoryUpdates({
         limit: 50,
         offset: 0
       });
-      
+
       // Filter updates from last week
-      const weeklyUpdates = recentUpdates.filter(update => 
+      const weeklyUpdates = recentUpdates.filter(update =>
         update.createdAt ? new Date(update.createdAt) > lastWeek : false
       );
 
@@ -154,7 +154,7 @@ class SchedulerService {
 
       // Generate newsletter content
       const newsletterContent = this.generateNewsletterContent(weeklyUpdates);
-      
+
       // Create newsletter
       const newsletter = await storage.createNewsletter({
         title: `Weekly MedTech Regulatory Updates - ${new Date().toLocaleDateString()}`,
@@ -165,10 +165,10 @@ class SchedulerService {
       });
 
       // console.log(`Weekly newsletter generated: ${newsletter.id}`);
-      
+
       // Notify admins that newsletter is ready for review
       await this.notifyAdminsOfNewsletter(newsletter);
-      
+
     } catch (error) {
       // console.error("Error generating weekly newsletter:", error);
     }
@@ -221,7 +221,7 @@ For detailed information and analysis, visit your Helix dashboard.
           📊 Weekly Regulatory Intelligence Report
         </h2>
         <p style="color: #6b7280; font-size: 14px;">Generated: ${new Date().toLocaleDateString()}</p>
-        
+
         <div style="background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0;">
           <h3 style="margin-top: 0; color: #1e40af;">Executive Summary</h3>
           <p>This week we tracked <strong>${updates.length} regulatory updates</strong> across FDA, EMA, and other key sources.</p>

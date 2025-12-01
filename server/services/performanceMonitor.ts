@@ -1,5 +1,5 @@
-import { Logger } from './logger.service';
-import { cachingService } from './cachingService';
+import { Logger } from './logger.service.js';
+import { cachingService } from './cachingService.js';
 
 const logger = new Logger('PerformanceMonitor');
 
@@ -146,7 +146,7 @@ export class PerformanceMonitor {
   getHealthSummary() {
     const stats = this.getPerformanceStats(15); // Last 15 minutes
     const cacheStats = cachingService.getStats();
-    
+
     let healthScore = 100;
     const issues: string[] = [];
 
@@ -155,17 +155,17 @@ export class PerformanceMonitor {
       healthScore -= 20;
       issues.push('High average response time');
     }
-    
+
     if (stats.errorRate > 5) {
       healthScore -= 25;
       issues.push('High error rate');
     }
-    
+
     if (stats.slowRequestCount > 0) {
       healthScore -= 10;
       issues.push('Slow requests detected');
     }
-    
+
     if (cacheStats.size > cacheStats.maxSize * 0.9) {
       healthScore -= 5;
       issues.push('Cache nearly full');
@@ -179,8 +179,8 @@ export class PerformanceMonitor {
 
     return {
       healthScore: Math.max(0, healthScore),
-      status: healthScore >= 90 ? 'excellent' : 
-              healthScore >= 70 ? 'good' : 
+      status: healthScore >= 90 ? 'excellent' :
+              healthScore >= 70 ? 'good' :
               healthScore >= 50 ? 'fair' : 'poor',
       issues,
       performance: stats,
@@ -196,11 +196,11 @@ export class PerformanceMonitor {
   createMiddleware() {
     return (req: any, res: any, next: any) => {
       const startTime = Date.now();
-      
+
       res.on('finish', () => {
         const duration = Date.now() - startTime;
         const cacheHit = res.getHeader('X-Cache-Hit') === 'true';
-        
+
         this.trackApiCall(
           req.path,
           req.method,
@@ -209,7 +209,7 @@ export class PerformanceMonitor {
           cacheHit
         );
       });
-      
+
       next();
     };
   }
@@ -223,12 +223,12 @@ export class PerformanceMonitor {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     const initialCount = this.metrics.length;
     this.metrics = this.metrics.filter(m => m.timestamp > oneHourAgo);
-    
+
     const cleaned = initialCount - this.metrics.length;
     if (cleaned > 0) {
-      logger.debug('Cleaned up old performance metrics', { 
-        cleaned, 
-        remaining: this.metrics.length 
+      logger.debug('Cleaned up old performance metrics', {
+        cleaned,
+        remaining: this.metrics.length
       });
     }
   }

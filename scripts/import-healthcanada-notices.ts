@@ -7,7 +7,7 @@ import 'dotenv/config';
 import fetch from 'node-fetch';
 import crypto from 'node:crypto';
 import { regulatoryUpdates } from '../shared/schema.js';
-import { getScriptDb } from './script-db';
+import { getScriptDb } from './script-db.js';
 
 interface HCResult {
   recallId: string;

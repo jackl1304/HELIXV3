@@ -1,5 +1,5 @@
-import { Logger } from './logger.service';
-import { storage } from '../storage';
+import { Logger } from './logger.service.js';
+import { storage } from '../storage.js';
 
 interface NewsletterSource {
   id: string;
@@ -180,7 +180,7 @@ export class EnhancedNewsletterService {
         });
 
         const articles = await this.extractFromSource(source);
-        
+
         // Speichere Artikel in der Wissensdatenbank
         for (const article of articles) {
           await this.storeKnowledgeArticle(article, source);
@@ -314,31 +314,31 @@ export class EnhancedNewsletterService {
   private generateAuthenticMedTechContent(category: string): string {
     const industryContent = [
       "Die Medizintechnik-Branche erlebt eine beispiellose Transformation durch künstliche Intelligenz und digitale Gesundheitslösungen. Neue FDA-Richtlinien für KI-basierte Medizinprodukte schaffen klare Regulierungsrahmen für Innovationen.",
-      
+
       "Robotische Chirurgiesysteme revolutionieren minimal-invasive Eingriffe. Aktuelle Studien zeigen eine 40% Verringerung der Operationszeit und verbesserte Patientenergebnisse bei kardiovaskulären Eingriffen.",
-      
+
       "Wearable Medizinprodukte und kontinuierliche Glukosemonitore (CGMs) erobern den Verbrauchermarkt. Der Direct-to-Consumer-Trend eröffnet MedTech-Unternehmen neue Einnahmequellen jenseits traditioneller B2B-Kanäle.",
-      
+
       "Digital Health und Telemedizin-Lösungen haben die Patientenversorgung nachhaltig verändert. Interoperabilitätsstandards und Datenschutz stehen im Fokus regulatorischer Entwicklungen.",
-      
+
       "3D-Printing-Technologien ermöglichen personalisierte Medizinprodukte und Implantate. FDA und EMA entwickeln spezifische Zulassungsverfahren für additiv gefertigte Medizinprodukte."
     ];
 
     const regulatoryContent = [
       "Die neue EU-Medizinprodukteverordnung (MDR) zeigt ihre Auswirkungen auf die Marktzulassung. Benannte Stellen berichten von verlängerten Bewertungszeiten und erhöhten Dokumentationsanforderungen.",
-      
+
       "FDA Breakthrough Device Designation Programme beschleunigt die Markteinführung innovativer Medizintechnologien. 2024 wurden bereits 87 Produkte mit Breakthrough-Status ausgezeichnet.",
-      
+
       "Cybersecurity-Anforderungen für vernetzte Medizinprodukte verschärfen sich. FDA und MHRA publizieren neue Guidance-Dokumente für Software as Medical Device (SaMD).",
-      
+
       "Post-Market Surveillance und Real-World Evidence gewinnen an Bedeutung. Regulierungsbehörden fordern kontinuierliche Datensammlung über den gesamten Produktlebenszyklus.",
-      
+
       "Harmonisierung globaler Medizinprodukte-Standards schreitet voran. IMDRF (International Medical Device Regulators Forum) entwickelt einheitliche Richtlinien für KI-basierte Diagnostik."
     ];
 
     const content = category === 'regulatory_newsletter' ? regulatoryContent : industryContent;
     const selectedParagraphs = this.getRandomElements(content, 2);
-    
+
     return selectedParagraphs.join('\n\n') + '\n\nQuelle: Authentische MedTech-Branchenanalyse';
   }
 
@@ -396,13 +396,13 @@ export class EnhancedNewsletterService {
 
   private generateRelevantTags(category: string): string[] {
     const baseTags = ['medtech', 'healthcare', 'innovation'];
-    
+
     if (category === 'regulatory_newsletter') {
       baseTags.push('regulation', 'compliance', 'FDA', 'EMA', 'MDR');
     } else {
       baseTags.push('technology', 'AI', 'digital health', 'startups', 'investment');
     }
-    
+
     return baseTags;
   }
 

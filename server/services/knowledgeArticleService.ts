@@ -1,4 +1,4 @@
-import { storage } from '../storage';
+import { storage } from '../storage.js';
 
 interface KnowledgeSource {
   id: string;
@@ -233,30 +233,30 @@ export class KnowledgeArticleService {
   async collectKnowledgeArticles(): Promise<{ success: boolean; summary: any }> {
     try {
       console.log('[Knowledge Service] Starting comprehensive knowledge article collection...');
-      
+
       const collectionResults = await Promise.allSettled(
         this.sources.map(source => this.processKnowledgeSource(source))
       );
-      
+
       let totalArticles = 0;
       let successfulSources = 0;
       const categoryBreakdown: any = {};
-      
+
       for (let i = 0; i < collectionResults.length; i++) {
         const result = collectionResults[i];
         const source = this.sources[i];
-        
+
         if (result.status === 'fulfilled' && result.value.success) {
           successfulSources++;
           totalArticles += result.value.articlesCreated;
-          
+
           if (!categoryBreakdown[source.category]) {
             categoryBreakdown[source.category] = 0;
           }
           categoryBreakdown[source.category] += result.value.articlesCreated;
         }
       }
-      
+
       const summary = {
         totalSources: this.sources.length,
         successfulSources,
@@ -264,9 +264,9 @@ export class KnowledgeArticleService {
         categoryBreakdown,
         processedAt: new Date().toISOString()
       };
-      
+
       console.log(`[Knowledge Service] Collection completed: ${totalArticles} articles from ${successfulSources}/${this.sources.length} sources`);
-      
+
       return { success: successfulSources > 0, summary };
     } catch (error) {
       console.error('[Knowledge Service] Error during collection:', error);
@@ -277,15 +277,15 @@ export class KnowledgeArticleService {
   private async processKnowledgeSource(source: KnowledgeSource): Promise<{ success: boolean; articlesCreated: number }> {
     try {
       console.log(`[Knowledge Service] Processing source: ${source.name}`);
-      
+
       // Generate simulated knowledge articles based on source type
       const articles = this.generateKnowledgeArticles(source);
-      
+
       let articlesCreated = 0;
-      
+
       for (const article of articles) {
         const regulatoryUpdate = this.transformToRegulatoryUpdate(article, source);
-        
+
         // Check if article already exists
         const exists = await this.checkIfArticleExists(regulatoryUpdate);
         if (!exists) {
@@ -293,11 +293,11 @@ export class KnowledgeArticleService {
           articlesCreated++;
         }
       }
-      
+
       // Update source status
       source.lastChecked = new Date().toISOString();
       source.status = 'active';
-      
+
       return { success: true, articlesCreated };
     } catch (error: any) {
       console.error(`[Knowledge Service] Error processing ${source.name}:`, error);
@@ -310,12 +310,12 @@ export class KnowledgeArticleService {
     const articles: KnowledgeArticle[] = [];
     // ALLE MOCK-DATEN ENTFERNT - Keine automatische Artikel-Generierung
     const count = 0;
-    
+
     console.log(`[Knowledge Service] MOCK DATA DELETED - No artificial articles for ${source.name}`);
-    
+
     // ALLE MOCK-ARTIKEL-GENERIERUNG KOMPLETT ENTFERNT
     console.log(`[Knowledge Service] No artificial articles generated for ${source.name}`);
-    
+
     return articles;
   }
 
@@ -439,7 +439,7 @@ export class KnowledgeArticleService {
         ]
       }
     };
-    
+
     const categoryTemplates = templates[category as keyof typeof templates];
     return categoryTemplates?.[language as keyof typeof categoryTemplates] || categoryTemplates?.['en'] || [];
   }
@@ -474,23 +474,23 @@ export class KnowledgeArticleService {
 
   private enhanceTags(baseTags: string[], source: KnowledgeSource): string[] {
     const enhancedTags = [...baseTags];
-    
+
     enhancedTags.push('knowledge_article');
     enhancedTags.push(source.category);
     enhancedTags.push(source.authority.toLowerCase().replace(/\s+/g, '-'));
-    
+
     if (source.region) {
       enhancedTags.push(source.region.toLowerCase().replace(/\s+/g, '-'));
     }
-    
+
     return enhancedTags;
   }
 
   private async checkIfArticleExists(article: any): Promise<boolean> {
     try {
       const allUpdates = await storage.getAllRegulatoryUpdates();
-      return allUpdates.some(existing => 
-        existing.url === article.url || 
+      return allUpdates.some(existing =>
+        existing.url === article.url ||
         (existing.title === article.title && existing.authority === article.authority)
       );
     } catch (error) {
@@ -511,7 +511,7 @@ export class KnowledgeArticleService {
     if (!source) {
       throw new Error(`Source not found: ${sourceId}`);
     }
-    
+
     return this.processKnowledgeSource(source);
   }
 }

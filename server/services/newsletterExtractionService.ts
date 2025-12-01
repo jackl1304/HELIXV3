@@ -1,5 +1,5 @@
-import { Logger } from './logger.service';
-import { storage } from '../storage';
+import { Logger } from './logger.service.js';
+import { storage } from '../storage.js';
 
 interface NewsletterSource {
   id: string;
@@ -54,7 +54,7 @@ export class NewsletterExtractionService {
       id: 'spectaris_medtech',
       name: 'SPECTARIS - MedTech News Deutschland',
       url: 'https://www.spectaris.de/presse-medien/pressemitteilungen/',
-      category: 'industry_newsletter', 
+      category: 'industry_newsletter',
       authority: 'SPECTARIS',
       region: 'Germany',
       language: 'de',
@@ -83,7 +83,7 @@ export class NewsletterExtractionService {
       priority: 'medium',
       extractorType: 'newsletter'
     },
-    
+
     // Internationale MedTech Newsletter
     {
       id: 'medtech_dive',
@@ -130,7 +130,7 @@ export class NewsletterExtractionService {
       priority: 'high',
       extractorType: 'newsletter'
     },
-    
+
     // Regulatory Newsletter
     {
       id: 'emergo_newsletter',
@@ -174,26 +174,26 @@ export class NewsletterExtractionService {
     };
 
     // Aktiviere echte Newsletter-Quellen
-    const activeNewsletterSources = this.newsletterSources.filter(source => 
+    const activeNewsletterSources = this.newsletterSources.filter(source =>
       source.priority === 'high' && source.rssUrl
     );
 
     for (const source of activeNewsletterSources.slice(0, 3)) {
       try {
         this.logger.info(`Processing authentic newsletter source: ${source.name}`);
-        
+
         // Echte RSS-Feed-Extraktion
         const articles = await this.extractFromRSSFeed(source);
-        
+
         for (const article of articles) {
           await this.saveNewsletterToKnowledgeBase(article, source);
           results.articlesExtracted++;
         }
-        
+
         results.processedSources++;
-        
+
         await this.delay(2000);
-        
+
       } catch (error: any) {
         const errorMsg = `Error processing ${source.name}: ${error.message}`;
         results.errors.push(errorMsg);
@@ -214,7 +214,7 @@ export class NewsletterExtractionService {
 
     // **PRODUCTION MODE**: NO DEMO ARTICLES
     return [];
-    
+
     // Deutsche Quellen
     if (source.language === 'de') {
       demoArticles.push({
@@ -300,8 +300,8 @@ export class NewsletterExtractionService {
 
       // Prüfe auf Duplikate
       const existingArticles = await storage.getAllKnowledgeArticles();
-      const isDuplicate = existingArticles.some(existing => 
-        existing.title === article.title && 
+      const isDuplicate = existingArticles.some(existing =>
+        existing.title === article.title &&
         existing.authority === article.authority
       );
 
@@ -350,22 +350,22 @@ export class NewsletterExtractionService {
    */
   private parseRSSContent(feedContent: string, source: NewsletterSource): any[] {
     const articles: any[] = [];
-    
+
     try {
       // Einfache XML-Parsing für RSS-Feeds
       const itemMatches = feedContent.match(/<item[^>]*>([\s\S]*?)<\/item>/gi);
-      
+
       if (!itemMatches) {
         this.logger.warn(`No RSS items found in feed from ${source.name}`);
         return [];
       }
-      
+
       for (const item of itemMatches.slice(0, 5)) { // Begrenzt auf 5 Artikel pro Quelle
         const title = this.extractXMLContent(item, 'title');
         const description = this.extractXMLContent(item, 'description');
         const link = this.extractXMLContent(item, 'link');
         const pubDate = this.extractXMLContent(item, 'pubDate');
-        
+
         if (title && description) {
           articles.push({
             title: title.substring(0, 200),
@@ -382,10 +382,10 @@ export class NewsletterExtractionService {
           });
         }
       }
-      
+
       this.logger.info(`Parsed ${articles.length} articles from RSS feed ${source.name}`);
       return articles;
-      
+
     } catch (error) {
       this.logger.error(`Error parsing RSS content from ${source.name}:`, error);
       return [];

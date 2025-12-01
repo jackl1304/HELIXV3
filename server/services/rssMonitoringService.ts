@@ -1,4 +1,4 @@
-import { storage } from '../storage';
+import { storage } from '../storage.js';
 
 interface RSSFeed {
   id: string;
@@ -104,22 +104,22 @@ export class RSSMonitoringService {
     try {
       // Simple RSS/Atom parser implementation
       // In a real implementation, you'd use a proper XML parser like 'fast-xml-parser'
-      
+
       const titleMatch = content.match(/<title[^>]*>([\s\S]*?)<\/title>/);
       const descriptionMatch = content.match(/<description[^>]*>([\s\S]*?)<\/description>/);
       const lastBuildDateMatch = content.match(/<lastBuildDate[^>]*>([\s\S]*?)<\/lastBuildDate>/);
-      
+
       // Extract items (ohne 's' flag für ältere TypeScript Versionen)
-      const itemMatches = content.match(/<item[^>]*>[\s\S]*?<\/item>/g) || 
+      const itemMatches = content.match(/<item[^>]*>[\s\S]*?<\/item>/g) ||
                          content.match(/<entry[^>]*>[\s\S]*?<\/entry>/g) || [];
-      
+
       const items: RSSItem[] = [];
-      
+
       for (const itemContent of itemMatches) {
         const item = this.parseRSSItem(itemContent);
         if (item) items.push(item);
       }
-      
+
       return {
         feedUrl: '',
         title: this.cleanText(titleMatch?.[1] || 'Unknown Feed'),
@@ -148,16 +148,16 @@ export class RSSMonitoringService {
                        itemContent.match(/<id[^>]*>([\s\S]*?)<\/id>/);
       const authorMatch = itemContent.match(/<author[^>]*>([\s\S]*?)<\/author>/) ||
                          itemContent.match(/<dc:creator[^>]*>([\s\S]*?)<\/dc:creator>/);
-      
+
       // Extract categories
       const categoryMatches = itemContent.match(/<category[^>]*>(.*?)<\/category>/g) || [];
       const categories = categoryMatches.map(cat => {
         const match = cat.match(/<category[^>]*>(.*?)<\/category>/);
         return match ? this.cleanText(match[1]) : '';
       }).filter(Boolean);
-      
+
       if (!titleMatch) return null;
-      
+
       return {
         title: this.cleanText(titleMatch[1]),
         link: this.cleanText(linkMatch?.[1] || ''),
@@ -189,26 +189,26 @@ export class RSSMonitoringService {
   async fetchFeed(feedUrl: string): Promise<ParsedRSSData | null> {
     try {
       console.log(`[RSS] Fetching feed: ${feedUrl}`);
-      
+
       const response = await fetch(feedUrl, {
         headers: {
           'User-Agent': 'Helix-RSS-Monitor/1.0',
           'Accept': 'application/rss+xml, application/xml, text/xml, application/atom+xml'
         }
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const content = await response.text();
       await this.delay(this.rateLimitDelay);
-      
+
       const parsed = await this.parseFeedFromContent(content);
       if (parsed) {
         parsed.feedUrl = feedUrl;
       }
-      
+
       return parsed;
     } catch (error) {
       console.error(`[RSS] Error fetching feed ${feedUrl}:`, error);
@@ -219,11 +219,11 @@ export class RSSMonitoringService {
   async processFeedUpdate(feed: RSSFeed, feedData: ParsedRSSData): Promise<void> {
     try {
       console.log(`[RSS] Processing ${feedData.items.length} items from ${feed.name}`);
-      
+
       for (const item of feedData.items) {
         await this.processRSSItem(feed, item);
       }
-      
+
       // Update last check time
       feed.lastCheck = new Date();
       console.log(`[RSS] Completed processing feed: ${feed.name}`);
@@ -236,7 +236,7 @@ export class RSSMonitoringService {
     try {
       // Check if we already have this item (by GUID or URL)
       const existingId = `rss-${feed.id}-${this.generateItemId(item)}`;
-      
+
       const regulatoryUpdate = {
         id: existingId,
         title: `${feed.authority}: ${item.title}`,
@@ -258,7 +258,7 @@ export class RSSMonitoringService {
           rssFeedUrl: feed.url
         }
       };
-      
+
       await storage.createRegulatoryUpdate(regulatoryUpdate);
       console.log(`[RSS] Successfully created update from RSS: ${item.title}`);
     } catch (error) {
@@ -277,18 +277,18 @@ export class RSSMonitoringService {
 
   private formatRSSContent(item: RSSItem, feed: RSSFeed): string {
     const parts = [];
-    
+
     parts.push(`**Source:** ${feed.name}`);
     if (item.author) parts.push(`**Author:** ${item.author}`);
     if (item.categories && item.categories.length > 0) {
       parts.push(`**Categories:** ${item.categories.join(', ')}`);
     }
     if (item.link) parts.push(`**Original Link:** ${item.link}`);
-    
+
     if (item.description) {
       parts.push(`**Description:**\n${item.description}`);
     }
-    
+
     return parts.join('\n\n');
   }
 
@@ -296,25 +296,25 @@ export class RSSMonitoringService {
     const title = item.title.toLowerCase();
     const description = item.description.toLowerCase();
     const content = `${title} ${description}`;
-    
+
     // Critical keywords
-    if (content.includes('recall') || content.includes('safety alert') || 
+    if (content.includes('recall') || content.includes('safety alert') ||
         content.includes('urgent') || content.includes('immediate action')) {
       return 'critical';
     }
-    
+
     // High priority keywords
     if (content.includes('warning') || content.includes('guidance') ||
         content.includes('approval') || content.includes('clearance')) {
       return 'high';
     }
-    
+
     // Medium priority for regulatory announcements
     if (content.includes('announcement') || content.includes('update') ||
         content.includes('new') || content.includes('change')) {
       return 'medium';
     }
-    
+
     return 'low';
   }
 
@@ -322,14 +322,14 @@ export class RSSMonitoringService {
     try {
       // Handle various RSS date formats
       let parsed = new Date(dateString);
-      
+
       if (isNaN(parsed.getTime())) {
         // Try parsing common RSS date formats
         const formats = [
           /\w{3}, \d{2} \w{3} \d{4} \d{2}:\d{2}:\d{2}/, // RFC 822
           /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/, // ISO 8601
         ];
-        
+
         for (const format of formats) {
           if (format.test(dateString)) {
             parsed = new Date(dateString);
@@ -337,7 +337,7 @@ export class RSSMonitoringService {
           }
         }
       }
-      
+
       return isNaN(parsed.getTime()) ? new Date() : parsed;
     } catch (error) {
       console.warn(`[RSS] Could not parse date: ${dateString}`);
@@ -350,15 +350,15 @@ export class RSSMonitoringService {
       const now = new Date();
       const timeSinceLastCheck = now.getTime() - feed.lastCheck.getTime();
       const checkInterval = feed.checkFrequency * 60 * 1000; // Convert to milliseconds
-      
+
       if (timeSinceLastCheck < checkInterval) {
         console.log(`[RSS] Skipping ${feed.name} - checked ${Math.round(timeSinceLastCheck / 60000)} minutes ago`);
         return;
       }
-      
+
       console.log(`[RSS] Checking feed: ${feed.name}`);
       const feedData = await this.fetchFeed(feed.url);
-      
+
       if (feedData) {
         await this.processFeedUpdate(feed, feedData);
       } else {
@@ -374,19 +374,19 @@ export class RSSMonitoringService {
       console.log('[RSS] Monitoring already in progress');
       return;
     }
-    
+
     try {
       this.isMonitoring = true;
       console.log('[RSS] Starting RSS monitoring cycle');
-      
+
       const activeFeeds = this.feeds.filter(feed => feed.active);
       console.log(`[RSS] Monitoring ${activeFeeds.length} active feeds`);
-      
+
       for (const feed of activeFeeds) {
         await this.checkFeed(feed);
         await this.delay(1000); // Small delay between feeds
       }
-      
+
       console.log('[RSS] RSS monitoring cycle completed');
     } catch (error) {
       console.error('[RSS] Error in RSS monitoring:', error);
@@ -397,10 +397,10 @@ export class RSSMonitoringService {
 
   async startContinuousMonitoring(): Promise<void> {
     console.log('[RSS] Starting continuous RSS monitoring');
-    
+
     // Monitor immediately
     await this.monitorAllFeeds();
-    
+
     // Set up interval for ongoing monitoring (every 30 minutes)
     setInterval(async () => {
       await this.monitorAllFeeds();

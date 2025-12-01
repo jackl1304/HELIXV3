@@ -1,5 +1,5 @@
-import { storage } from '../storage';
-import type { InsertRegulatoryUpdate } from '@shared/schema';
+import { storage } from '../storage.js';
+import type { InsertRegulatoryUpdate } from '../../shared/schema.js';
 
 /**
  * Zentrales API-Management-System für alle Datenquellen
@@ -150,8 +150,8 @@ export class APIManagementService {
 
     // Rate Limit Check
     if (!(await this.checkRateLimit(sourceId))) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: 'Rate limit exceeded',
         nextSyncTime: this.rateLimits.get(sourceId)?.resetTime || new Date()
       };
@@ -159,11 +159,11 @@ export class APIManagementService {
 
     try {
       const response = await this.executeAPICall(source, endpoint, options);
-      
+
       // Success - Reset error count
       source.errorCount = 0;
       source.lastSync = new Date();
-      
+
       return {
         success: true,
         data: response.data,
@@ -172,7 +172,7 @@ export class APIManagementService {
 
     } catch (error) {
       source.errorCount++;
-      
+
       // Automatic deactivation after 5 consecutive errors
       if (source.errorCount >= 5) {
         source.status = 'inactive';
@@ -188,7 +188,7 @@ export class APIManagementService {
 
   private async executeAPICall(source: DataSource, endpoint: string, options?: any): Promise<any> {
     const fullUrl = `${source.endpoint}${endpoint}`;
-    
+
     switch (source.type) {
       case 'official_api':
         return await this.callOfficialAPI(fullUrl, source, options);
@@ -244,7 +244,7 @@ export class APIManagementService {
     // 🔴 MOCK DATA - Web Scraping Implementation würde hier erfolgen
     // 🔴 MOCK DATA - Für jetzt Placeholder mit Logging - AUTHENTIC SCRAPER REQUIRED
     console.log(`[API Management] Web scraping ${url} - Implementation needed`);
-    
+
     // Return structured data format
     return {
       data: [],
@@ -255,7 +255,7 @@ export class APIManagementService {
   private async callPartnerAPI(url: string, source: DataSource, options?: any): Promise<any> {
     // Partner API calls (wie GRIP) würden hier implementiert
     console.log(`[API Management] Partner API call to ${url}`);
-    
+
     return {
       data: [],
       rateLimitRemaining: undefined
@@ -306,10 +306,10 @@ export class APIManagementService {
         }
       } catch (error) {
         unhealthy++;
-        results.push({ 
-          sourceId: source.id, 
-          status: 'unhealthy', 
-          error: error instanceof Error ? error.message : 'Unknown error' 
+        results.push({
+          sourceId: source.id,
+          status: 'unhealthy',
+          error: error instanceof Error ? error.message : 'Unknown error'
         });
       }
     }

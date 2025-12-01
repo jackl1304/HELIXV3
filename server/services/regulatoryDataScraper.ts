@@ -58,7 +58,7 @@ export class RegulatoryDataScraper {
       status: 'active'
     },
     {
-      id: 'medtech_europe_convergence', 
+      id: 'medtech_europe_convergence',
       name: 'MedTech Europe Regulatory Convergence',
       url: 'https://www.medtecheurope.org/international/international-regulatory-convergence/',
       description: 'Regulatorische Konvergenz und MDR/IVDR-Auswirkungen',
@@ -74,7 +74,7 @@ export class RegulatoryDataScraper {
       description: 'Globaler Rahmen für die Regulierung von Medizinprodukten',
       requiresAuth: false,
       category: 'standards',
-      region: 'Global', 
+      region: 'Global',
       status: 'active'
     },
     {
@@ -132,7 +132,7 @@ export class RegulatoryDataScraper {
         logger.info(`Scraping regulatory source: ${source.name}`);
         const sourceData = await this.scrapeSource(source);
         allData.push(...sourceData);
-        
+
         // Rate limiting between sources
         await new Promise(resolve => setTimeout(resolve, 3000));
       } catch (error: any) {
@@ -169,7 +169,7 @@ export class RegulatoryDataScraper {
 
   private async scrapeFDADatabases(source: RegulatorySource): Promise<ScrapedRegulatoryData[]> {
     const data: ScrapedRegulatoryData[] = [];
-    
+
     try {
       const headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -178,7 +178,7 @@ export class RegulatoryDataScraper {
 
       const response = await axios.get(source.url, { headers, timeout: 30000 });
       const $ = cheerio.load(response.data);
-      
+
       // FDA database links extraction
       const databaseSelectors = [
         'table.table-striped a',
@@ -191,7 +191,7 @@ export class RegulatoryDataScraper {
 
       for (const selector of databaseSelectors) {
         const dbLinks = $(selector);
-        
+
         if (dbLinks.length > 0) {
           foundDatabases = true;
           logger.info(`Found ${dbLinks.length} FDA database links using selector: ${selector}`);
@@ -202,7 +202,7 @@ export class RegulatoryDataScraper {
             const $link = $(element);
             const title = $link.text().trim();
             const href = $link.attr('href');
-            
+
             if (title && href && title.length > 10) {
               let fullUrl = href;
               if (!href.startsWith('http')) {
@@ -243,7 +243,7 @@ export class RegulatoryDataScraper {
 
   private async scrapeWHOAtlas(source: RegulatorySource): Promise<ScrapedRegulatoryData[]> {
     const data: ScrapedRegulatoryData[] = [];
-    
+
     try {
       const headers = {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -251,7 +251,7 @@ export class RegulatoryDataScraper {
 
       const response = await axios.get(source.url, { headers, timeout: 25000 });
       const $ = cheerio.load(response.data);
-      
+
       // WHO content extraction
       const contentSelectors = [
         '.sf-content-block p',
@@ -264,7 +264,7 @@ export class RegulatoryDataScraper {
 
       for (const selector of contentSelectors) {
         const paragraphs = $(selector);
-        
+
         if (paragraphs.length > 0) {
           foundContent = true;
           logger.info(`Found ${paragraphs.length} WHO content paragraphs`);
@@ -274,7 +274,7 @@ export class RegulatoryDataScraper {
 
             const $p = $(element);
             const content = $p.text().trim();
-            
+
             if (content && content.length > 100) {
               data.push({
                 source_name: source.name,
@@ -310,7 +310,7 @@ export class RegulatoryDataScraper {
 
   private async scrapeMedTechEurope(source: RegulatorySource): Promise<ScrapedRegulatoryData[]> {
     const data: ScrapedRegulatoryData[] = [];
-    
+
     try {
       const headers = {
         'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -318,7 +318,7 @@ export class RegulatoryDataScraper {
 
       const response = await axios.get(source.url, { headers, timeout: 30000 });
       const $ = cheerio.load(response.data);
-      
+
       // MedTech Europe content extraction
       const articleSelectors = [
         '.field-name-body p',
@@ -331,7 +331,7 @@ export class RegulatoryDataScraper {
 
       for (const selector of articleSelectors) {
         const contentBlocks = $(selector);
-        
+
         if (contentBlocks.length > 0) {
           foundArticles = true;
           logger.info(`Found ${contentBlocks.length} MedTech Europe content blocks`);
@@ -341,7 +341,7 @@ export class RegulatoryDataScraper {
 
             const $block = $(element);
             const content = $block.text().trim();
-            
+
             if (content && content.length > 80) {
               data.push({
                 source_name: source.name,
@@ -377,7 +377,7 @@ export class RegulatoryDataScraper {
 
   private async scrapeNCBIFramework(source: RegulatorySource): Promise<ScrapedRegulatoryData[]> {
     const data: ScrapedRegulatoryData[] = [];
-    
+
     try {
       const headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/120.0'
@@ -385,7 +385,7 @@ export class RegulatoryDataScraper {
 
       const response = await axios.get(source.url, { headers, timeout: 30000 });
       const $ = cheerio.load(response.data);
-      
+
       // NCBI book content extraction
       const chapterSelectors = [
         '.chapter p',
@@ -398,7 +398,7 @@ export class RegulatoryDataScraper {
 
       for (const selector of chapterSelectors) {
         const paragraphs = $(selector);
-        
+
         if (paragraphs.length > 0) {
           foundChapters = true;
           logger.info(`Found ${paragraphs.length} NCBI framework paragraphs`);
@@ -408,7 +408,7 @@ export class RegulatoryDataScraper {
 
             const $p = $(element);
             const content = $p.text().trim();
-            
+
             if (content && content.length > 120) {
               data.push({
                 source_name: source.name,
@@ -444,7 +444,7 @@ export class RegulatoryDataScraper {
 
   private async scrapeIQVIABlog(source: RegulatorySource): Promise<ScrapedRegulatoryData[]> {
     const data: ScrapedRegulatoryData[] = [];
-    
+
     try {
       const headers = {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15'
@@ -452,7 +452,7 @@ export class RegulatoryDataScraper {
 
       const response = await axios.get(source.url, { headers, timeout: 25000 });
       const $ = cheerio.load(response.data);
-      
+
       // IQVIA blog content extraction
       const blogSelectors = [
         '.blog-content p',
@@ -465,7 +465,7 @@ export class RegulatoryDataScraper {
 
       for (const selector of blogSelectors) {
         const contentParagraphs = $(selector);
-        
+
         if (contentParagraphs.length > 0) {
           foundBlogContent = true;
           logger.info(`Found ${contentParagraphs.length} IQVIA blog paragraphs`);
@@ -475,7 +475,7 @@ export class RegulatoryDataScraper {
 
             const $p = $(element);
             const content = $p.text().trim();
-            
+
             if (content && content.length > 100) {
               data.push({
                 source_name: source.name,
@@ -509,7 +509,7 @@ export class RegulatoryDataScraper {
 
   private async scrapeBfARM(source: RegulatorySource): Promise<ScrapedRegulatoryData[]> {
     const data: ScrapedRegulatoryData[] = [];
-    
+
     try {
       const headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -519,7 +519,7 @@ export class RegulatoryDataScraper {
 
       const response = await axios.get(source.url, { headers, timeout: 30000 });
       const $ = cheerio.load(response.data);
-      
+
       // BfArM spezifische Selektoren für Medizinprodukte
       const contentSelectors = [
         '.contentWrapper .text-content p',
@@ -533,7 +533,7 @@ export class RegulatoryDataScraper {
 
       for (const selector of contentSelectors) {
         const contentBlocks = $(selector);
-        
+
         if (contentBlocks.length > 0) {
           foundContent = true;
           logger.info(`Found ${contentBlocks.length} BfArM content blocks`);
@@ -543,7 +543,7 @@ export class RegulatoryDataScraper {
 
             const $block = $(element);
             const content = $block.text().trim();
-            
+
             if (content && content.length > 100 && content.includes('Medizinprodukt')) {
               data.push({
                 source_name: source.name,
@@ -577,7 +577,7 @@ export class RegulatoryDataScraper {
 
   private async scrapeSwissmedic(source: RegulatorySource): Promise<ScrapedRegulatoryData[]> {
     const data: ScrapedRegulatoryData[] = [];
-    
+
     try {
       const headers = {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15',
@@ -587,7 +587,7 @@ export class RegulatoryDataScraper {
 
       const response = await axios.get(source.url, { headers, timeout: 30000 });
       const $ = cheerio.load(response.data);
-      
+
       // Swissmedic spezifische Selektoren
       const contentSelectors = [
         '.main-content .text p',
@@ -601,7 +601,7 @@ export class RegulatoryDataScraper {
 
       for (const selector of contentSelectors) {
         const contentBlocks = $(selector);
-        
+
         if (contentBlocks.length > 0) {
           foundContent = true;
           logger.info(`Found ${contentBlocks.length} Swissmedic content blocks`);
@@ -611,7 +611,7 @@ export class RegulatoryDataScraper {
 
             const $block = $(element);
             const content = $block.text().trim();
-            
+
             if (content && content.length > 120) {
               data.push({
                 source_name: source.name,
@@ -645,7 +645,7 @@ export class RegulatoryDataScraper {
 
   private async scrapeHealthCanada(source: RegulatorySource): Promise<ScrapedRegulatoryData[]> {
     const data: ScrapedRegulatoryData[] = [];
-    
+
     try {
       const headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -655,7 +655,7 @@ export class RegulatoryDataScraper {
 
       const response = await axios.get(source.url, { headers, timeout: 30000 });
       const $ = cheerio.load(response.data);
-      
+
       // Health Canada spezifische Selektoren
       const contentSelectors = [
         '.main-content .field-item p',
@@ -669,7 +669,7 @@ export class RegulatoryDataScraper {
 
       for (const selector of contentSelectors) {
         const contentBlocks = $(selector);
-        
+
         if (contentBlocks.length > 0) {
           foundContent = true;
           logger.info(`Found ${contentBlocks.length} Health Canada content blocks`);
@@ -679,7 +679,7 @@ export class RegulatoryDataScraper {
 
             const $block = $(element);
             const content = $block.text().trim();
-            
+
             if (content && content.length > 100 && (content.includes('medical device') || content.includes('device'))) {
               data.push({
                 source_name: source.name,
@@ -758,7 +758,7 @@ export class RegulatoryDataScraper {
 
   private generateDetailedContent(title: string, source: RegulatorySource): string {
     const baseContent = `${title} - Authentische regulatorische Informationen von ${source.name}. `;
-    
+
     const additionalContent = {
       regulatory_database: 'Diese Datenbank bietet umfassende Informationen zu medizinischen Geräten, einschließlich Zulassungen, Rückrufe, Sicherheitsmitteilungen und Compliance-Anforderungen. Regulatorische Behörden weltweit nutzen diese Systeme zur Überwachung der Medizinprodukte-Sicherheit.',
       market_analysis: 'Marktanalysen zeigen aktuelle Trends in der Medizintechnik-Regulierung, einschließlich regulatorischer Konvergenz, digitaler Transformation und sich ändernder Compliance-Anforderungen. Diese Erkenntnisse unterstützen strategische Entscheidungen von Herstellern.',
@@ -788,10 +788,10 @@ export class RegulatoryDataScraper {
     };
 
     const categoryKeywords = baseKeywords[category] || baseKeywords.regulatory_database;
-    
+
     // Extract additional keywords from text
     const words = text.toLowerCase().split(/\s+/);
-    const medtechKeywords = words.filter(word => 
+    const medtechKeywords = words.filter(word =>
       ['medtech', 'medical', 'device', 'regulatory', 'compliance', 'fda', 'who', 'ema', 'mdr', 'ivdr'].includes(word)
     );
 
@@ -806,7 +806,7 @@ export class RegulatoryDataScraper {
     const activeSources = this.sources.filter(s => s.status === 'active').length;
     const configuredSources = this.sources.filter(s => s.status === 'configured').length;
     const authRequired = this.sources.filter(s => s.requiresAuth).length;
-    
+
     const categories = this.sources.reduce((acc, source) => {
       acc[source.category] = (acc[source.category] || 0) + 1;
       return acc;

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { storage } from '../storage';
+import { storage } from '../storage.js';
 
 interface APIEndpoint {
   name: string;
@@ -116,7 +116,7 @@ export class RealTimeAPIService {
   async fetchFromAPI(endpoint: APIEndpoint): Promise<APIResponse> {
     try {
       console.log(`[Real-Time API] Fetching from ${endpoint.name}...`);
-      
+
       const config = {
         method: endpoint.method,
         url: endpoint.url,
@@ -130,7 +130,7 @@ export class RealTimeAPIService {
       };
 
       const response = await axios(config);
-      
+
       let data = response.data;
       if (endpoint.dataPath) {
         const pathParts = endpoint.dataPath.split('.');
@@ -140,9 +140,9 @@ export class RealTimeAPIService {
       }
 
       const results = Array.isArray(data) ? data : [data];
-      
+
       console.log(`[Real-Time API] ${endpoint.name}: Retrieved ${results.length} records`);
-      
+
       return {
         success: true,
         data: results,
@@ -166,30 +166,30 @@ export class RealTimeAPIService {
   async syncFDAData(): Promise<{ success: boolean; summary: any }> {
     try {
       console.log('[Real-Time API] Starting FDA data synchronization...');
-      
-      const fdaEndpoints = this.apiEndpoints.filter(ep => 
+
+      const fdaEndpoints = this.apiEndpoints.filter(ep =>
         ep.name.includes('FDA') && ep.priority === 'high'
       );
-      
+
       const results = await Promise.allSettled(
         fdaEndpoints.map(endpoint => this.fetchFromAPI(endpoint))
       );
-      
+
       let totalRecords = 0;
       let successfulSyncs = 0;
       const syncSummary: any = {};
-      
+
       for (let i = 0; i < results.length; i++) {
         const result = results[i];
         const endpoint = fdaEndpoints[i];
-        
+
         if (result.status === 'fulfilled' && result.value.success) {
           successfulSyncs++;
           totalRecords += result.value.recordCount;
-          
+
           // Process and store FDA data
           await this.processFDAData(result.value, endpoint);
-          
+
           syncSummary[endpoint.name] = {
             records: result.value.recordCount,
             status: 'success'
@@ -202,9 +202,9 @@ export class RealTimeAPIService {
           };
         }
       }
-      
+
       console.log(`[Real-Time API] FDA sync completed: ${successfulSyncs}/${fdaEndpoints.length} successful, ${totalRecords} total records`);
-      
+
       return {
         success: successfulSyncs > 0,
         summary: {
@@ -223,22 +223,22 @@ export class RealTimeAPIService {
   async syncClinicalTrialsData(): Promise<{ success: boolean; summary: any }> {
     try {
       console.log('[Real-Time API] Starting Clinical Trials synchronization...');
-      
-      const clinicalEndpoint = this.apiEndpoints.find(ep => 
+
+      const clinicalEndpoint = this.apiEndpoints.find(ep =>
         ep.name === 'Clinical Trials Medical Devices'
       );
-      
+
       if (!clinicalEndpoint) {
         throw new Error('Clinical Trials endpoint not found');
       }
-      
+
       const response = await this.fetchFromAPI(clinicalEndpoint);
-      
+
       if (response.success) {
         await this.processClinicalTrialsData(response);
-        
+
         console.log(`[Real-Time API] Clinical Trials sync completed: ${response.recordCount} records`);
-        
+
         return {
           success: true,
           summary: {
@@ -262,22 +262,22 @@ export class RealTimeAPIService {
   async syncWHOData(): Promise<{ success: boolean; summary: any }> {
     try {
       console.log('[Real-Time API] Starting WHO Global Health Observatory synchronization...');
-      
-      const whoEndpoint = this.apiEndpoints.find(ep => 
+
+      const whoEndpoint = this.apiEndpoints.find(ep =>
         ep.name === 'WHO Health Indicators'
       );
-      
+
       if (!whoEndpoint) {
         throw new Error('WHO endpoint not found');
       }
-      
+
       const response = await this.fetchFromAPI(whoEndpoint);
-      
+
       if (response.success) {
         await this.processWHOData(response);
-        
+
         console.log(`[Real-Time API] WHO sync completed: ${response.recordCount} indicators`);
-        
+
         return {
           success: true,
           summary: {
@@ -302,7 +302,7 @@ export class RealTimeAPIService {
     try {
       for (const record of apiResponse.data) {
         const processedUpdate = this.transformFDARecord(record, endpoint);
-        
+
         // Check if already exists to avoid duplicates
         const existing = await this.checkForDuplicate(processedUpdate);
         if (!existing) {
@@ -318,7 +318,7 @@ export class RealTimeAPIService {
     try {
       for (const trial of apiResponse.data) {
         const processedTrial = this.transformClinicalTrialRecord(trial);
-        
+
         // Store as regulatory update with clinical trial category
         const regulatoryUpdate = {
           id: `clinical-${processedTrial.nctId}`,
@@ -335,7 +335,7 @@ export class RealTimeAPIService {
           document_type: 'clinical_trial',
           language: 'en'
         };
-        
+
         const existing = await this.checkForDuplicate(regulatoryUpdate);
         if (!existing) {
           await storage.createRegulatoryUpdate(regulatoryUpdate);
@@ -365,7 +365,7 @@ export class RealTimeAPIService {
           document_type: 'health_indicator',
           language: 'en'
         };
-        
+
         const existing = await this.checkForDuplicate(processedIndicator);
         if (!existing) {
           await storage.createRegulatoryUpdate(processedIndicator);
@@ -442,7 +442,7 @@ export class RealTimeAPIService {
 
   private generateFDA510kContent(record: any): string {
     return `FDA 510(k) Clearance for ${record.device_name || 'medical device'}.
-    
+
 Applicant: ${record.applicant || 'Not specified'}
 Device Class: ${record.medical_specialty_description || 'Not specified'}
 Product Code: ${record.product_code || 'Not specified'}
@@ -454,7 +454,7 @@ ${record.statement || 'No additional statement provided.'}`;
 
   private generateFDARecallContent(record: any): string {
     return `FDA Medical Device Recall: ${record.product_description || 'Medical device recall'}.
-    
+
 Recalling Firm: ${record.recalling_firm || 'Not specified'}
 Recall Class: ${record.classification || 'Not specified'}
 Recall Status: ${record.status || 'Not specified'}
@@ -466,7 +466,7 @@ Reason for Recall: ${record.reason_for_recall || 'Not specified'}`;
 
   private generateFDAPMAContent(record: any): string {
     return `FDA PMA Approval for ${record.device_name || 'medical device'}.
-    
+
 Applicant: ${record.applicant || 'Not specified'}
 Supplement Number: ${record.supplement_number || 'Not specified'}
 Advisory Committee: ${record.advisory_committee || 'Not specified'}
@@ -478,7 +478,7 @@ ${record.statement || 'No additional statement provided.'}`;
 
   private generateClinicalTrialContent(trial: ClinicalTrial): string {
     return `Clinical Trial: ${trial.briefTitle}
-    
+
 NCT ID: ${trial.nctId}
 Study Type: ${trial.studyType}
 Phase: ${trial.phase}
@@ -512,48 +512,48 @@ This clinical trial involves medical devices and is relevant for regulatory inte
   private determineFDAPriority(record: any): 'low' | 'medium' | 'high' | 'critical' {
     const deviceName = (record.device_name || '').toLowerCase();
     const productCode = (record.product_code || '').toLowerCase();
-    
+
     // High-risk device indicators
-    if (deviceName.includes('cardiac') || deviceName.includes('heart') || 
+    if (deviceName.includes('cardiac') || deviceName.includes('heart') ||
         deviceName.includes('pacemaker') || deviceName.includes('defibrillator') ||
         deviceName.includes('implant') || productCode.includes('class iii')) {
       return 'high';
     }
-    
+
     // Medium-risk indicators
     if (deviceName.includes('surgical') || deviceName.includes('diagnostic') ||
         productCode.includes('class ii')) {
       return 'medium';
     }
-    
+
     return 'low';
   }
 
   private determineFDARecallPriority(record: any): 'low' | 'medium' | 'high' | 'critical' {
     const classification = (record.classification || '').toLowerCase();
-    
+
     if (classification.includes('class i')) return 'critical';
     if (classification.includes('class ii')) return 'high';
     if (classification.includes('class iii')) return 'medium';
-    
+
     return 'low';
   }
 
   private determineClinicalTrialPriority(trial: ClinicalTrial): 'low' | 'medium' | 'high' | 'critical' {
     const phase = trial.phase.toLowerCase();
     const status = trial.overallStatus.toLowerCase();
-    
+
     if (phase.includes('phase 3') || phase.includes('phase iii')) return 'high';
     if (status.includes('completed') && (phase.includes('phase 2') || phase.includes('phase ii'))) return 'medium';
-    
+
     return 'low';
   }
 
   private async checkForDuplicate(update: any): Promise<boolean> {
     try {
       const allUpdates = await storage.getAllRegulatoryUpdates();
-      return allUpdates.some(existing => 
-        existing.id === update.id || 
+      return allUpdates.some(existing =>
+        existing.id === update.id ||
         (existing.title === update.title && existing.authority === update.authority)
       );
     } catch (error) {
@@ -565,24 +565,24 @@ This clinical trial involves medical devices and is relevant for regulatory inte
   async performComprehensiveSync(): Promise<{ success: boolean; summary: any }> {
     try {
       console.log('[Real-Time API] Starting comprehensive real-time data synchronization...');
-      
+
       const syncResults = await Promise.allSettled([
         this.syncFDAData(),
         this.syncClinicalTrialsData(),
         this.syncWHOData()
       ]);
-      
+
       const results = {
         fda: syncResults[0].status === 'fulfilled' ? syncResults[0].value : { success: false, error: 'Failed to sync' },
         clinicalTrials: syncResults[1].status === 'fulfilled' ? syncResults[1].value : { success: false, error: 'Failed to sync' },
         who: syncResults[2].status === 'fulfilled' ? syncResults[2].value : { success: false, error: 'Failed to sync' }
       };
-      
+
       const successCount = Object.values(results).filter(r => r.success).length;
       const totalSources = Object.keys(results).length;
-      
+
       console.log(`[Real-Time API] Comprehensive sync completed: ${successCount}/${totalSources} sources successful`);
-      
+
       return {
         success: successCount > 0,
         summary: {

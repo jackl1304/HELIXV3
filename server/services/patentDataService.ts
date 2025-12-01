@@ -1,4 +1,4 @@
-import { Logger } from './logger.service';
+import { Logger } from './logger.service.js';
 import fetch from 'node-fetch';
 
 const logger = new Logger('PatentDataService');
@@ -29,7 +29,7 @@ export async function fetchUSPatents(limit: number = 50): Promise<RealPatent[]> 
       },
       f: [
         "patent_number",
-        "patent_title", 
+        "patent_title",
         "patent_abstract",
         "assignee_organization",
         "inventor_name_first",
@@ -194,7 +194,7 @@ export async function fetchEuropeanPatents(limit: number = 50): Promise<RealPate
 // Main function: Sammle echte Patente von ALLEN Quellen
 export async function fetchAllRealPatents(paginSize: number = 25): Promise<RealPatent[]> {
   logger.info('Starting real patent data collection from worldwide sources');
-  
+
   try {
     const [usPatents, globalPatents, epPatents] = await Promise.all([
       fetchUSPatents(paginSize),

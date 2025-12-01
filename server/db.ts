@@ -1,5 +1,5 @@
 import ws from 'ws';
-import * as schema from '../shared/schema';
+import * as schema from '../shared/schema.js';
 
 // Driver Imports: Neon (serverless HTTP) & native pg for direkte lokale Verbindung
 import { neon, Pool as NeonPool, neonConfig } from '@neondatabase/serverless';

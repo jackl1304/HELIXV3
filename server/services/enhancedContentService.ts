@@ -1,5 +1,5 @@
 import { storage } from "../storage";
-import type { RegulatoryUpdate } from "@shared/schema";
+import type { RegulatoryUpdate } from "../../shared/schema.js";
 
 interface EnhancedContentData {
   technicalSpecifications: string[];
@@ -13,7 +13,7 @@ interface EnhancedContentData {
 }
 
 export class EnhancedContentService {
-  
+
   // Generate comprehensive technical specifications
   private generateTechnicalSpecs(deviceType: string, therapeuticArea: string): string[] {
     const specs = [
@@ -28,7 +28,7 @@ export class EnhancedContentService {
       `Post-Market Surveillance: Kontinuierliche Überwachung nach EU MDR Artikel 83-92`,
       `Qualitätsmanagement: ISO 13485 zertifizierte Herstellung`
     ];
-    
+
     return specs;
   }
 
@@ -46,7 +46,7 @@ export class EnhancedContentService {
       `EUDAMED Registrierung: Europäische Datenbank für Medizinprodukte`,
       `Globale Harmonisierung: IMDRF konforme Dokumentation für Mehrländer-Zulassung`
     ];
-    
+
     return pathways;
   }
 
@@ -64,7 +64,7 @@ export class EnhancedContentService {
       `Dosisfindung: Optimale Anwendungsparameter und Behandlungsprotokoll`,
       `Kombinationstherapie: Interaktionen mit bestehenden Behandlungsstandards`
     ];
-    
+
     return evidence;
   }
 
@@ -82,7 +82,7 @@ export class EnhancedContentService {
       `Patientenaufklärung: Disease Awareness und Patient Education Campaigns`,
       `Market Access: Managed Care Verträge und Value-Based Healthcare Modelle`
     ];
-    
+
     return impact;
   }
 
@@ -100,7 +100,7 @@ export class EnhancedContentService {
       `Digitale Integration: Connectivity und Health IT System Kompatibilität`,
       `Lifecycle Management: Roadmap für nächste Generation und Updates`
     ];
-    
+
     return analysis;
   }
 
@@ -118,7 +118,7 @@ export class EnhancedContentService {
       `Intellectual Property: Patent Infringement Claims und Freedom-to-Operate`,
       `Market Access: Reimbursement Delays und HTA Negative Assessments`
     ];
-    
+
     return risks;
   }
 
@@ -136,7 +136,7 @@ export class EnhancedContentService {
       `Regulatory Engagement: Kontinuierliche FDA/EMA Pre-Submission Meetings`,
       `Commercial Readiness: Sales Force Training, Distribution Setup, Marketing Launch`
     ];
-    
+
     return timeline;
   }
 
@@ -154,7 +154,7 @@ export class EnhancedContentService {
       `Reimbursement Impact: CMS/GBA Coverage Decisions und DRG Classifications`,
       `Investment Returns: NPV/IRR Kalkulationen mit verschiedenen Szenarien`
     ];
-    
+
     return financial;
   }
 
@@ -233,12 +233,12 @@ export class EnhancedContentService {
   private getMarketSize(therapeuticArea: string): string {
     const areas: { [key: string]: string } = {
       'cardiovascular': '$45-60 Milliarden',
-      'oncology': '$35-50 Milliarden', 
+      'oncology': '$35-50 Milliarden',
       'neurology': '$25-35 Milliarden',
       'orthopedics': '$20-30 Milliarden',
       'diabetes': '$15-25 Milliarden'
     };
-    
+
     const area = therapeuticArea?.toLowerCase();
     for (const [key, value] of Object.entries(areas)) {
       if (area?.includes(key)) {
@@ -252,11 +252,11 @@ export class EnhancedContentService {
   async enhanceRegulatoryUpdate(updateId: string): Promise<boolean> {
     try {
       console.log(`[ENHANCED-CONTENT] Enhancing content for update ${updateId}...`);
-      
+
       // Get the existing update
       const updates = await storage.getAllRegulatoryUpdates();
       const update = updates.find(u => u.id === updateId);
-      
+
       if (!update) {
         console.error(`[ENHANCED-CONTENT] Update ${updateId} not found`);
         return false;
@@ -304,9 +304,9 @@ ${enhancedData.financialImplications.map((financial, i) => `${i + 1}. ${financia
 
 ---
 
-**Enhanced Content Status**: Vollständig erweitert mit technischen, regulatorischen, klinischen, marktbezogenen und finanziellen Analysen  
-**Content Depth**: 8 detaillierte Analysebereiche mit jeweils 10 spezifischen Punkten  
-**Total Content Points**: 80+ detaillierte Informationspunkte pro Regulatory Update  
+**Enhanced Content Status**: Vollständig erweitert mit technischen, regulatorischen, klinischen, marktbezogenen und finanziellen Analysen
+**Content Depth**: 8 detaillierte Analysebereiche mit jeweils 10 spezifischen Punkten
+**Total Content Points**: 80+ detaillierte Informationspunkte pro Regulatory Update
 **Last Enhanced**: ${new Date().toISOString()}
       `;
 
@@ -326,7 +326,7 @@ ${enhancedData.financialImplications.map((financial, i) => `${i + 1}. ${financia
 
       // Store the enhanced update by recreating it with enhanced content
       await storage.createRegulatoryUpdate(updatedRegUpdate as RegulatoryUpdate);
-      
+
       console.log(`[ENHANCED-CONTENT] Successfully enhanced update ${updateId} with comprehensive content`);
       return true;
 
@@ -340,10 +340,10 @@ ${enhancedData.financialImplications.map((financial, i) => `${i + 1}. ${financia
   async batchEnhanceUpdates(count: number = 50): Promise<{ enhanced: number; errors: number }> {
     try {
       console.log(`[ENHANCED-CONTENT] Starting batch enhancement of ${count} updates...`);
-      
+
       const updates = await storage.getAllRegulatoryUpdates();
       const updatesToEnhance = updates.slice(0, count);
-      
+
       let enhanced = 0;
       let errors = 0;
 
@@ -360,10 +360,10 @@ ${enhancedData.financialImplications.map((financial, i) => `${i + 1}. ${financia
           } else {
             errors++;
           }
-          
+
           // Add small delay to prevent overwhelming the system
           await new Promise(resolve => setTimeout(resolve, 100));
-          
+
         } catch (error) {
           console.error(`[ENHANCED-CONTENT] Error enhancing update ${update.id}:`, error);
           errors++;

@@ -4,10 +4,14 @@ import { createServer as createViteServer, type ViteDevServer } from "vite";
 import { createLogger } from "vite";
 import viteConfig from "../vite.config";
 import path from "path";
+import { fileURLToPath } from 'url';
 import fs from "fs";
 import { nanoid } from "nanoid";
 import type { Server } from "http";
 
+
+// ESM __dirname Ersatz
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const viteLogger = createLogger();
 
 export function log(message: string, source = "vite") {
@@ -23,8 +27,8 @@ export function log(message: string, source = "vite") {
 export async function setupVite(app: Express, server: Server): Promise<void> {
   try {
     // Resolve the correct root path for client directory
-    const clientRoot = path.resolve(import.meta.dirname, "..", "client");
-    const projectRoot = path.resolve(import.meta.dirname, "..");
+    const clientRoot = path.resolve(__dirname, "..", "client");
+    const projectRoot = path.resolve(__dirname, "..");
 
     const vite = await createViteServer({
       ...viteConfig,
@@ -62,7 +66,7 @@ export async function setupVite(app: Express, server: Server): Promise<void> {
 
       try {
         const clientTemplate = path.resolve(
-          import.meta.dirname,
+          __dirname,
           "..",
           "client",
           "index.html"
@@ -90,7 +94,7 @@ export async function setupVite(app: Express, server: Server): Promise<void> {
 }
 
 export function serveStatic(app: Express): void {
-  const distPath = path.resolve(import.meta.dirname, "..", "dist", "public");
+  const distPath = path.resolve(__dirname, "..", "dist", "public");
 
   if (!fs.existsSync(distPath)) {
     log(`Build directory not found: ${distPath}`, "warning");

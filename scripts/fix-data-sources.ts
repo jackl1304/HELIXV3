@@ -1,4 +1,6 @@
-import { sql } from '../server/db-connection.js';
+import 'dotenv/config';
+import { getScriptDb } from './script-db.js';
+import { dataSources } from '../shared/schema.js';
 
 const requiredSources = [
   {
@@ -39,18 +41,19 @@ const requiredSources = [
 ];
 
 async function fixDataSources() {
+  const { sql, db } = getScriptDb();
   console.log('🔧 Fixing missing data sources...');
 
   for (const source of requiredSources) {
     try {
       await sql`
-        INSERT INTO data_sources (id, name, url, type, status, created_at, updated_at)
+        INSERT INTO data_sources (id, name, url, type, is_active, created_at, updated_at)
         VALUES (
           ${source.id},
           ${source.name},
           ${source.url},
           ${source.type},
-          ${source.status},
+          true,
           NOW(),
           NOW()
         )

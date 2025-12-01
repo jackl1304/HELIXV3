@@ -1,4 +1,4 @@
-import { storage } from '../storage';
+import { storage } from '../storage.js';
 
 interface EMAMedicine {
   name_of_medicine?: string;
@@ -37,14 +37,14 @@ export class EMAEparService {
   private async makeRequest(url: string, retryAttempt: number = 0): Promise<any> {
     try {
       console.log(`🔄 [EMA API] Requesting: ${url} (attempt ${retryAttempt + 1})`);
-      
+
       const response = await fetch(url, {
         headers: {
           'User-Agent': 'Helix-Regulatory-Intelligence/2.0 (MedTech Compliance Platform)',
           'Accept': 'application/json'
         }
       });
-      
+
       if (!response.ok) {
         if (response.status === 429 && retryAttempt < this.maxRetries) {
           console.log(`⏱️ [EMA API] Rate limited, retrying after backoff...`);
@@ -53,11 +53,11 @@ export class EMAEparService {
         }
         throw new Error(`EMA API error: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
-      
+
       await this.delay(this.rateLimitDelay);
-      
+
       console.log(`✅ [EMA API] Request successful - received ${Array.isArray(data) ? data.length : 'object'} items`);
       return data;
     } catch (error) {
@@ -66,7 +66,7 @@ export class EMAEparService {
         await this.exponentialBackoff(retryAttempt);
         return this.makeRequest(url, retryAttempt + 1);
       }
-      
+
       console.error(`❌ [EMA API] Request failed after ${retryAttempt + 1} attempts:`, error);
       throw error;
     }
@@ -75,14 +75,14 @@ export class EMAEparService {
   async collectMedicines(limit: number = 100): Promise<EMAMedicine[]> {
     try {
       console.log(`[EMA API] Collecting medicines (limit: ${limit})`);
-      
+
       const endpoint = `${this.baseUrl}/en/documents/report/medicines-output-medicines_json-report_en.json`;
       const data = await this.makeRequest(endpoint);
-      
+
       if (!Array.isArray(data)) {
         throw new Error('Invalid EMA response format - expected array');
       }
-      
+
       const recentMedicines = data
         .filter((m: any) => m.category && m.category.toLowerCase() === 'human')
         .sort((a: any, b: any) => {
@@ -91,13 +91,13 @@ export class EMAEparService {
           return dateB.getTime() - dateA.getTime();
         })
         .slice(0, limit);
-      
+
       console.log(`[EMA API] Found ${recentMedicines.length} recent medicines with EPAR`);
-      
+
       for (const medicine of recentMedicines as EMAMedicine[]) {
         await this.processMedicine(medicine);
       }
-      
+
       console.log(`[EMA API] Medicine collection completed`);
       return recentMedicines as EMAMedicine[];
     } catch (error) {
@@ -121,7 +121,7 @@ export class EMAEparService {
         rawData: medicine,
         publishedAt: this.parseDate(medicine.last_updated_date || medicine.first_published_date) || new Date(),
       };
-      
+
       await storage.createRegulatoryUpdate(regulatoryUpdate);
       console.log(`[EMA API] Successfully created regulatory update: ${regulatoryUpdate.title}`);
     } catch (error) {
@@ -158,7 +158,7 @@ export class EMAEparService {
 
   private parseDate(dateString: string | undefined): Date | null {
     if (!dateString) return null;
-    
+
     if (dateString.includes('/')) {
       const parts = dateString.split('/');
       if (parts.length === 3) {
@@ -171,7 +171,7 @@ export class EMAEparService {
         }
       }
     }
-    
+
     try {
       const date = new Date(dateString);
       if (!isNaN(date.getTime())) {
@@ -186,51 +186,51 @@ export class EMAEparService {
   private determinePriority(medicine: EMAMedicine): 'critical' | 'high' | 'medium' | 'low' {
     const therapeuticArea = medicine.therapeutic_area_mesh?.toLowerCase() || '';
     const status = medicine.medicine_status?.toLowerCase() || '';
-    
+
     if (medicine.orphan_medicine === 'Yes' || medicine.advanced_therapy === 'Yes') {
       return 'high';
     }
-    
-    if (status.includes('authorised') && 
-        (therapeuticArea.includes('oncology') || 
+
+    if (status.includes('authorised') &&
+        (therapeuticArea.includes('oncology') ||
          therapeuticArea.includes('cardiovascular') ||
          therapeuticArea.includes('rare disease'))) {
       return 'high';
     }
-    
+
     if (status.includes('suspended') || status.includes('withdrawn')) {
       return 'critical';
     }
-    
+
     if (status.includes('authorised')) {
       return 'medium';
     }
-    
+
     return 'low';
   }
 
   private async categorizeMedicine(medicine: EMAMedicine): Promise<string[]> {
     const categories: string[] = ['EMA EPAR', 'EU Regulatory'];
     const therapeuticArea = medicine.therapeutic_area_mesh?.toLowerCase() || '';
-    
+
     if (therapeuticArea.includes('cardio')) categories.push('Cardiovascular');
     if (therapeuticArea.includes('onco') || therapeuticArea.includes('cancer')) categories.push('Oncology');
     if (therapeuticArea.includes('neuro')) categories.push('Neurology');
     if (therapeuticArea.includes('rare')) categories.push('Rare Disease');
     if (therapeuticArea.includes('diabetes')) categories.push('Diabetes');
-    
+
     if (medicine.orphan_medicine === 'Yes') {
       categories.push('Orphan Medicine');
     }
-    
+
     if (medicine.advanced_therapy === 'Yes') {
       categories.push('Advanced Therapy');
     }
-    
+
     if (medicine.medicine_status?.toLowerCase().includes('authorised')) {
       categories.push('Marketing Authorisation');
     }
-    
+
     return categories;
   }
 }

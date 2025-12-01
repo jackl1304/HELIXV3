@@ -1,4 +1,4 @@
-import { storage } from '../storage';
+import { storage } from '../storage.js';
 
 interface PredictionRequest {
   deviceCategory?: string;
@@ -56,23 +56,23 @@ interface MarketOpportunity {
 export class PredictiveAnalyticsService {
   private readonly minimumDataPoints = 10;
   private readonly confidenceThreshold = 0.6;
-  
+
   async generatePredictions(request: PredictionRequest): Promise<PredictionResult> {
     try {
       console.log(`[Predictive] Generating ${request.predictionType} predictions for ${request.timeHorizon}`);
-      
+
       // Get historical data for analysis
       const historicalData = await this.getHistoricalData(request);
-      
+
       if (historicalData.length < this.minimumDataPoints) {
         throw new Error(`Insufficient data for prediction (${historicalData.length} points, minimum ${this.minimumDataPoints})`);
       }
-      
+
       // Generate predictions based on type
       const predictions = await this.analyzePredictionType(request, historicalData);
       const riskFactors = await this.identifyRiskFactors(request, historicalData);
       const recommendations = this.generateRecommendations(predictions, riskFactors);
-      
+
       const result: PredictionResult = {
         id: `prediction-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         predictionType: request.predictionType,
@@ -84,7 +84,7 @@ export class PredictiveAnalyticsService {
         basedOnDataPoints: historicalData.length,
         generatedAt: new Date()
       };
-      
+
       console.log(`[Predictive] Generated ${predictions.length} predictions with ${result.confidence}% confidence`);
       return result;
     } catch (error) {
@@ -97,29 +97,29 @@ export class PredictiveAnalyticsService {
     try {
       const allUpdates = await storage.getAllRegulatoryUpdates();
       const allLegalCases = await storage.getAllLegalCases();
-      
+
       let filteredData = [...allUpdates];
-      
+
       // Apply filters
       if (request.deviceCategory) {
-        filteredData = filteredData.filter(item => 
+        filteredData = filteredData.filter(item =>
           this.matchesDeviceCategory(item, request.deviceCategory!)
         );
       }
-      
+
       if (request.manufacturer) {
-        filteredData = filteredData.filter(item => 
+        filteredData = filteredData.filter(item =>
           this.matchesManufacturer(item, request.manufacturer!)
         );
       }
-      
+
       if (request.jurisdiction) {
-        filteredData = filteredData.filter(item => 
+        filteredData = filteredData.filter(item =>
           item.region?.toLowerCase().includes(request.jurisdiction!.toLowerCase()) ||
           item.authority?.toLowerCase().includes(request.jurisdiction!.toLowerCase())
         );
       }
-      
+
       // Include relevant legal cases for safety predictions
       if (request.predictionType === 'safety_alerts') {
         const relevantLegalCases = allLegalCases.filter(legalCase => {
@@ -130,10 +130,10 @@ export class PredictiveAnalyticsService {
         });
         filteredData.push(...relevantLegalCases);
       }
-      
+
       // Sort by date (most recent first)
-      return filteredData.sort((a, b) => 
-        new Date(b.published_at || b.filed_date || 0).getTime() - 
+      return filteredData.sort((a, b) =>
+        new Date(b.published_at || b.filed_date || 0).getTime() -
         new Date(a.published_at || a.filed_date || 0).getTime()
       );
     } catch (error) {
@@ -145,7 +145,7 @@ export class PredictiveAnalyticsService {
   private matchesDeviceCategory(item: any, category: string): boolean {
     const content = (item.title + ' ' + item.content + ' ' + (item.device_type || '')).toLowerCase();
     const categoryLower = category.toLowerCase();
-    
+
     // Device category mapping
     const categoryKeywords: Record<string, string[]> = {
       'cardiac': ['cardiac', 'heart', 'pacemaker', 'defibrillator', 'stent'],
@@ -155,7 +155,7 @@ export class PredictiveAnalyticsService {
       'software': ['software', 'ai', 'algorithm', 'digital', 'app'],
       'ivd': ['diagnostic', 'test', 'assay', 'laboratory', 'biomarker']
     };
-    
+
     const keywords = categoryKeywords[categoryLower] || [categoryLower];
     return keywords.some(keyword => content.includes(keyword));
   }
@@ -182,14 +182,14 @@ export class PredictiveAnalyticsService {
 
   private predictSafetyAlerts(data: any[], timeHorizon: string): Prediction[] {
     const predictions: Prediction[] = [];
-    
+
     // Analyze safety alert patterns
-    const safetyAlerts = data.filter(item => 
+    const safetyAlerts = data.filter(item =>
       this.isSafetyRelated(item.title + ' ' + item.content)
     );
-    
+
     const alertFrequency = this.calculateFrequency(safetyAlerts, timeHorizon);
-    
+
     if (alertFrequency.trend === 'increasing') {
       predictions.push({
         event: 'Increased safety alert activity',
@@ -204,14 +204,14 @@ export class PredictiveAnalyticsService {
         ]
       });
     }
-    
+
     // Device-specific safety predictions
     const deviceTypes = this.extractDeviceTypes(data);
     for (const deviceType of deviceTypes.slice(0, 3)) { // Top 3 device types
-      const deviceAlerts = safetyAlerts.filter(alert => 
+      const deviceAlerts = safetyAlerts.filter(alert =>
         this.matchesDeviceCategory(alert, deviceType)
       );
-      
+
       if (deviceAlerts.length >= 2) {
         predictions.push({
           event: `Potential safety concern for ${deviceType} devices`,
@@ -227,20 +227,20 @@ export class PredictiveAnalyticsService {
         });
       }
     }
-    
+
     return predictions;
   }
 
   private predictApprovals(data: any[], timeHorizon: string): Prediction[] {
     const predictions: Prediction[] = [];
-    
+
     // Analyze approval patterns
-    const approvals = data.filter(item => 
+    const approvals = data.filter(item =>
       this.isApprovalRelated(item.title + ' ' + item.content)
     );
-    
+
     const approvalFrequency = this.calculateFrequency(approvals, timeHorizon);
-    
+
     predictions.push({
       event: 'Device approval rate projection',
       probability: 0.85,
@@ -253,14 +253,14 @@ export class PredictiveAnalyticsService {
         'Regulatory pathway analysis shows consistent patterns'
       ]
     });
-    
+
     // Jurisdiction-specific approval predictions
     const jurisdictions = Array.from(new Set(data.map(item => item.authority)));
     for (const jurisdiction of jurisdictions.slice(0, 3)) {
-      const jurisdictionApprovals = approvals.filter(approval => 
+      const jurisdictionApprovals = approvals.filter(approval =>
         approval.authority === jurisdiction
       );
-      
+
       if (jurisdictionApprovals.length >= 3) {
         predictions.push({
           event: `${jurisdiction} approval timeline changes`,
@@ -276,20 +276,20 @@ export class PredictiveAnalyticsService {
         });
       }
     }
-    
+
     return predictions;
   }
 
   private predictRegulatoryChanges(data: any[], timeHorizon: string): Prediction[] {
     const predictions: Prediction[] = [];
-    
+
     // Analyze regulatory update patterns
-    const regulatoryUpdates = data.filter(item => 
+    const regulatoryUpdates = data.filter(item =>
       this.isRegulatoryChange(item.title + ' ' + item.content)
     );
-    
+
     const changeFrequency = this.calculateFrequency(regulatoryUpdates, timeHorizon);
-    
+
     if (changeFrequency.trend === 'increasing') {
       predictions.push({
         event: 'Accelerated regulatory framework updates',
@@ -304,14 +304,14 @@ export class PredictiveAnalyticsService {
         ]
       });
     }
-    
+
     // Technology-specific regulatory predictions
     const emergingTechs = ['AI/ML', 'Digital Therapeutics', 'Personalized Medicine'];
     for (const tech of emergingTechs) {
-      const techUpdates = data.filter(item => 
+      const techUpdates = data.filter(item =>
         this.matchesTechnology(item, tech)
       );
-      
+
       if (techUpdates.length >= 2) {
         predictions.push({
           event: `New ${tech} regulatory guidance`,
@@ -327,18 +327,18 @@ export class PredictiveAnalyticsService {
         });
       }
     }
-    
+
     return predictions;
   }
 
   private predictMarketTrends(data: any[], timeHorizon: string): Prediction[] {
     const predictions: Prediction[] = [];
-    
+
     // Analyze market-impacting events
-    const marketEvents = data.filter(item => 
+    const marketEvents = data.filter(item =>
       this.hasMarketImpact(item.title + ' ' + item.content)
     );
-    
+
     predictions.push({
       event: 'Market consolidation in regulated segments',
       probability: 0.6,
@@ -351,12 +351,12 @@ export class PredictiveAnalyticsService {
         'Compliance cost pressures on smaller players'
       ]
     });
-    
+
     // Regional market predictions
     const regions = Array.from(new Set(data.map(item => item.region))).filter(Boolean);
     for (const region of regions.slice(0, 3)) {
       const regionData = data.filter(item => item.region === region);
-      
+
       if (regionData.length >= 5) {
         predictions.push({
           event: `${region} market access opportunities`,
@@ -372,7 +372,7 @@ export class PredictiveAnalyticsService {
         });
       }
     }
-    
+
     return predictions;
   }
 
@@ -403,41 +403,41 @@ export class PredictiveAnalyticsService {
       'Digital Therapeutics': ['digital therapeutic', 'dtx', 'app', 'software treatment'],
       'Personalized Medicine': ['personalized', 'precision', 'genomic', 'biomarker', 'companion diagnostic']
     };
-    
+
     const keywords = techKeywords[tech] || [tech.toLowerCase()];
     return keywords.some(keyword => content.includes(keyword));
   }
 
   private calculateFrequency(data: any[], timeHorizon: string): { rate: number; trend: 'increasing' | 'stable' | 'decreasing' } {
     if (data.length === 0) return { rate: 0, trend: 'stable' };
-    
+
     // Calculate monthly rate
     const months = this.getMonthsFromHorizon(timeHorizon);
     const rate = data.length / months;
-    
+
     // Simple trend analysis
-    const sortedData = data.sort((a, b) => 
-      new Date(a.published_at || a.filed_date || 0).getTime() - 
+    const sortedData = data.sort((a, b) =>
+      new Date(a.published_at || a.filed_date || 0).getTime() -
       new Date(b.published_at || b.filed_date || 0).getTime()
     );
-    
+
     const midpoint = Math.floor(sortedData.length / 2);
     const firstHalf = sortedData.slice(0, midpoint);
     const secondHalf = sortedData.slice(midpoint);
-    
+
     let trend: 'increasing' | 'stable' | 'decreasing' = 'stable';
     if (secondHalf.length > firstHalf.length * 1.2) trend = 'increasing';
     else if (firstHalf.length > secondHalf.length * 1.2) trend = 'decreasing';
-    
+
     return { rate, trend };
   }
 
   private extractDeviceTypes(data: any[]): string[] {
     const deviceTypes: Record<string, number> = {};
-    
+
     for (const item of data) {
       const content = (item.title + ' ' + item.content).toLowerCase();
-      
+
       // Extract common device types
       const types = ['cardiac', 'orthopedic', 'diabetes', 'imaging', 'software', 'ivd'];
       for (const type of types) {
@@ -446,7 +446,7 @@ export class PredictiveAnalyticsService {
         }
       }
     }
-    
+
     return Object.entries(deviceTypes)
       .sort(([,a], [,b]) => b - a)
       .map(([type]) => type);
@@ -455,7 +455,7 @@ export class PredictiveAnalyticsService {
   private assessDeviceSafetyImpact(deviceType: string): 'low' | 'medium' | 'high' | 'critical' {
     const highRiskDevices = ['cardiac', 'implantable', 'life support'];
     const mediumRiskDevices = ['orthopedic', 'surgical', 'diabetes'];
-    
+
     if (highRiskDevices.some(risk => deviceType.includes(risk))) return 'critical';
     if (mediumRiskDevices.some(risk => deviceType.includes(risk))) return 'high';
     return 'medium';
@@ -483,12 +483,12 @@ export class PredictiveAnalyticsService {
 
   private async identifyRiskFactors(request: PredictionRequest, data: any[]): Promise<RiskFactor[]> {
     const riskFactors: RiskFactor[] = [];
-    
+
     // High-priority items risk
-    const highPriorityItems = data.filter(item => 
+    const highPriorityItems = data.filter(item =>
       item.priority === 'high' || item.priority === 'critical'
     );
-    
+
     if (highPriorityItems.length > data.length * 0.2) {
       riskFactors.push({
         factor: 'High volume of critical regulatory activity',
@@ -501,14 +501,14 @@ export class PredictiveAnalyticsService {
         ]
       });
     }
-    
+
     // Jurisdiction concentration risk
     const authorities = data.map(item => item.authority);
     const authorityFreq = authorities.reduce((acc: Record<string, number>, auth) => {
       acc[auth] = (acc[auth] || 0) + 1;
       return acc;
     }, {});
-    
+
     const maxAuthorityShare = Math.max(...Object.values(authorityFreq)) / data.length;
     if (maxAuthorityShare > 0.6) {
       riskFactors.push({
@@ -522,61 +522,61 @@ export class PredictiveAnalyticsService {
         ]
       });
     }
-    
+
     return riskFactors;
   }
 
   private calculateOverallConfidence(predictions: Prediction[]): number {
     if (predictions.length === 0) return 0;
-    
+
     const avgConfidence = predictions.reduce((sum, pred) => sum + pred.confidence, 0) / predictions.length;
     return Math.round(avgConfidence * 100);
   }
 
   private generateRecommendations(predictions: Prediction[], riskFactors: RiskFactor[]): string[] {
     const recommendations: string[] = [];
-    
+
     // High-probability predictions
     const highProbPredictions = predictions.filter(p => p.probability > 0.7);
     if (highProbPredictions.length > 0) {
       recommendations.push('Prioritize preparation for high-probability regulatory events');
     }
-    
+
     // High-impact predictions
-    const highImpactPredictions = predictions.filter(p => 
+    const highImpactPredictions = predictions.filter(p =>
       p.impactLevel === 'high' || p.impactLevel === 'critical'
     );
     if (highImpactPredictions.length > 0) {
       recommendations.push('Develop contingency plans for high-impact regulatory scenarios');
     }
-    
+
     // Risk factor mitigation
     const highSeverityRisks = riskFactors.filter(r => r.severity === 'high' || r.severity === 'critical');
     if (highSeverityRisks.length > 0) {
       recommendations.push('Implement immediate risk mitigation strategies for identified factors');
     }
-    
+
     // General recommendations
     recommendations.push('Maintain continuous monitoring of regulatory landscape');
     recommendations.push('Regular review and update of predictive models based on new data');
-    
+
     return recommendations;
   }
 
   async generateComplianceRiskAssessment(jurisdiction?: string): Promise<ComplianceRisk[]> {
     try {
       console.log('[Predictive] Generating compliance risk assessment');
-      
+
       const allUpdates = await storage.getAllRegulatoryUpdates();
-      const jurisdictions = jurisdiction ? [jurisdiction] : 
+      const jurisdictions = jurisdiction ? [jurisdiction] :
         Array.from(new Set(allUpdates.map(u => u.authority))).slice(0, 5);
-      
+
       const risks: ComplianceRisk[] = [];
-      
+
       for (const juris of jurisdictions) {
         const jurisdictionData = allUpdates.filter(u => u.authority === juris);
         const riskLevel = this.assessJurisdictionRisk(jurisdictionData);
-        
+
         risks.push({
           jurisdiction: juris,
           riskLevel,
@@ -585,7 +585,7 @@ export class PredictiveAnalyticsService {
           recommendations: this.generateJurisdictionRecommendations(juris, riskLevel)
         });
       }
-      
+
       console.log(`[Predictive] Generated compliance risk assessment for ${risks.length} jurisdictions`);
       return risks;
     } catch (error) {
@@ -600,11 +600,11 @@ export class PredictiveAnalyticsService {
       const sixMonthsAgo = new Date(Date.now() - 6 * 30 * 24 * 60 * 60 * 1000);
       return itemDate > sixMonthsAgo;
     });
-    
-    const highPriorityCount = recentData.filter(item => 
+
+    const highPriorityCount = recentData.filter(item =>
       item.priority === 'high' || item.priority === 'critical'
     ).length;
-    
+
     if (highPriorityCount > 5) return 'critical';
     if (highPriorityCount > 2) return 'high';
     if (recentData.length > 10) return 'medium';
@@ -613,28 +613,28 @@ export class PredictiveAnalyticsService {
 
   private identifyJurisdictionRiskFactors(data: any[]): string[] {
     const factors: string[] = [];
-    
+
     const safetyCount = data.filter(item => this.isSafetyRelated(item.title + ' ' + item.content)).length;
     if (safetyCount > data.length * 0.3) {
       factors.push('High volume of safety-related regulatory activity');
     }
-    
+
     const recentChanges = data.filter(item => {
       const itemDate = new Date(item.published_at || 0);
       const threeMonthsAgo = new Date(Date.now() - 3 * 30 * 24 * 60 * 60 * 1000);
       return itemDate > threeMonthsAgo && this.isRegulatoryChange(item.title + ' ' + item.content);
     }).length;
-    
+
     if (recentChanges > 3) {
       factors.push('Frequent regulatory framework updates');
     }
-    
+
     return factors;
   }
 
   private generateJurisdictionRecommendations(jurisdiction: string, riskLevel: string): string[] {
     const recommendations: string[] = [];
-    
+
     switch (riskLevel) {
       case 'critical':
         recommendations.push('Immediate compliance audit recommended');
@@ -652,7 +652,7 @@ export class PredictiveAnalyticsService {
         recommendations.push('Maintain standard monitoring protocols');
         break;
     }
-    
+
     recommendations.push(`Stay informed on ${jurisdiction} regulatory developments`);
     return recommendations;
   }

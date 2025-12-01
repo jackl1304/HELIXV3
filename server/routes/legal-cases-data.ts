@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db';
-import { legalCases } from '../../shared/schema';
+import { legalCases } from '../../shared/schema.js';
 import { eq, sql, isNull, or, and } from 'drizzle-orm';
 
 const router = Router();
